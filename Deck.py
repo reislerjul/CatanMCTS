@@ -6,7 +6,6 @@ import random
 # from the top of this stack.
 class Deck():
 
-    # TODO: complete the constructor
     def __init__(self):
         '''
         0 - Knight
@@ -27,17 +26,24 @@ class Deck():
             2 : 'Road Building', 3 : 'Monopoly', 4 : 'Year of Plenty'}[card]
 
 
-    # TODO: write a function that initializes a stack of cards. 
     def initialize_stack(self):
+        '''
+        initializes deck
+        '''
         self.cards_left = 25
         self.stack = [0] * 14 + [1] * 5 + [2] * 2 + [3] * 2 + [4] * 2
         random.shuffle(self.stack)
 
 
-    # TODO: write a function that allows a player to pull a dev
-    # card from the deck and updates the player's hand of dev cards.
     def take_card(self, player):
+        '''
+        takes a card from the top of the stack and gives it to the player
+        '''
         if cards_left > 0:
             self.cards_left -= 1
-            return self.stack[self.cards_left]
+            card = self.stack[self.cards_left]
+            if card in player.dev_cards:
+                player.dev_cards[card] += 1
+            else:
+                player.dev_cards[card] = 1
         return -1
