@@ -384,6 +384,7 @@ class Board():
     def allocate_resources(self, dice_roll):
         if dice_roll in self.r_allocator:
             # here is where we add resources by accessing the player and resource
+            # will also need to check the robbers location!
             pass
         return
     
@@ -400,9 +401,9 @@ class Board():
             die_val = vals[1]
             ret_resource = vals[0]
             if die_val in self.r_allocator:
-                self.r_allocator[die_val].append((player, ret_resource))
+                self.r_allocator[die_val].append((player, ret_resource, (r,c)))
             else: 
-                self.r_allocator[die_val] = [(player, ret_resource)]
+                self.r_allocator[die_val] = [(player, ret_resource, (r,c))]
     # TODO: Update the board with the move that the player makes. 
     def update_board(self):
         return
