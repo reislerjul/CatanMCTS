@@ -14,9 +14,7 @@ class Deck():
         3 - Monopoly
         4 - Year of plenty
         '''
-        self.cards_left = 25
-        self.stack = [0] * 14 + [1] * 5 + [2] * 2 + [3] * 2 + [4] * 2
-        random.shuffle(self.stack)
+        self.initialize_stack()
     
     def get_card_name(card):
         '''
