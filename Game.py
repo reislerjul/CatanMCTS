@@ -31,12 +31,15 @@ class Game():
     def round(self):
 
         for player in self.players:
+
+            # TODO: allow player to play dev card before rolling 
+
             dice1 = random.randint(1, 6)
             dice2 = random.randint(1, 6)
             self.board.allocate_resources(dice1 + dice2)
             
             # If the player has won, the game is over.
-            if player.make_turn():
+            if player.make_turn(self.board):
                 self.won = player
                 return 1
 

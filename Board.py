@@ -17,3 +17,8 @@ class Board():
     # each player based on the number rolled on the dice. 
     def allocate_resources(self, dice_roll):
         return
+
+
+    # TODO: Update the board with the move that the player makes. 
+    def update_board(self):
+        return
