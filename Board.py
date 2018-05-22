@@ -18,7 +18,8 @@ class Board():
         the coordinate system for settlements and road is defined as
         0,0 is top row leftest open location. First coordinate is the row
         second coordinate is the column. dictionaries are used so we can store
-        more info about the games state'''
+        more info about the games state
+        '''
         coords = {}
         coords[(0,0)] = {'player': 0,
                          'settlement': True,
@@ -26,7 +27,8 @@ class Board():
                          'ports': '3', 
                          'neighbours': [(1,0), (1,1)],
                          'roads' : {(1,0) : 0, (1,1) : 0},
-                         'available roads': [(1,0), (1,1)]
+                         'available roads': [(1,0), (1,1)], 
+                         'building type': 0
                          }
         coords[(0,1)] = {'player': 0,
                          'settlement': True,
@@ -409,12 +411,12 @@ class Board():
         if debug == True:
             for key, val in coords.items():
                 if val['available roads'] != val['neighbours']:
-                    print key
+                    print (key)
                 for i in val['resources locs']:
                     try:
                         a =self.resources[i[0]][i[1]]
                     except IndexError as e:
-                        print key, e
+                        print (key, e)
 
         return coords
         
