@@ -40,8 +40,6 @@ class Deck():
         if cards_left > 0:
             self.cards_left -= 1
             card = self.stack[self.cards_left]
-            if card in player.dev_cards:
-                player.dev_cards[card] += 1
-            else:
-                player.dev_cards[card] = 1
+            player.dev_cards[card] += 1
+            return 1
         return -1
