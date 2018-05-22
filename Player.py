@@ -9,7 +9,7 @@ class Player():
     # human, 1 if the player is the random AI, and 2 if the player is the 
     # MCTS AI
     def __init__(self, player_type):
-        self.9 = ''
+        self.player_name = ''
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
         self.vp_dev_cards = 0
         self.player_type = player_type
@@ -74,8 +74,8 @@ class Player():
                 # Does not overlap with already created road
                 if move[1] in state_o['available roads']:
                     # Next to another road or settlement
-                    if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) \
-                        or (move[0] in self.settlements) or (move[1] in self.settlements)):
+                    if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) or \
+                    (move[0] in self.settlements) or (move[1] in self.settlements):
                             return True
 
         if move_type == 2 and move in board.coords.keys():
@@ -137,96 +137,191 @@ class Player():
     # -1 if the move is not legal
     def make_move(self, move_type, board, deck):
 
-    legal_move = False
-    while not legal_move:
-        # End turn
-        if move_type == 0:
-            legal_move = True
-            return 0
+        legal_move = False
+        while not legal_move:
+            # End turn
+            if move_type == 0:
+                legal_move = True
+                return 0
 
-        # Build a road
-        elif move_type == 1:
-            move = self.build_road(board)
-            legal_move = self.check_legal_move(move, move_type, board)
-            if legal_move:
-                self.resources['b'] -= 1
-                self.resources['l'] -= 1
-                self.roads[move[0]] = move[1]
-                self.roads[move[1]] = move[0]
+            # Build a road
+            elif move_type == 1:
+                move = self.build_road(board)
+                legal_move = self.check_legal_move(move, move_type, board)
+                if legal_move:
+                    self.resources['b'] -= 1
+                    self.resources['l'] -= 1
+                    self.roads[move[0]] = move[1]
+                    self.roads[move[1]] = move[0]
 
-        # Build a settlement
-        elif move_type == 2:
-            move = self.build_settlement(board)
-            legal_move = self.check_legal_move(move, move_type, board)
-            if legal_move:
-                self.resources['b'] -= 1
-                self.resources['l'] -= 1
-                self.resources['g'] -= 1
-                self.resources['w'] -= 1
-                self.settlements.append(move)
-                state = board.coords[move]
-                if state.ports != '':
-                    self.ports.append(state.ports)
+            # Build a settlement
+            elif move_type == 2:
+                move = self.build_settlement(board)
+                legal_move = self.check_legal_move(move, move_type, board)
+                if legal_move:
+                    self.resources['b'] -= 1
+                    self.resources['l'] -= 1
+                    self.resources['g'] -= 1
+                    self.resources['w'] -= 1
+                    self.settlements.append(move)
+                    state = board.coords[move]
+                    if state.ports != '':
+                        self.ports.append(state.ports)
 
-        # Build a city
-        elif move_type == 3:
-            move = self.build_city(board)
-            legal_move = self.check_legal_move(move, move_type, board)
-            if legal_move:
-                self.resources['o'] -= 3
-                self.resources['g'] -= 2
-                self.cities.append(move)
+            # Build a city
+            elif move_type == 3:
+                move = self.build_city(board)
+                legal_move = self.check_legal_move(move, move_type, board)
+                if legal_move:
+                    self.resources['o'] -= 3
+                    self.resources['g'] -= 2
+                    self.cities.append(move)
 
-        # Draw a dev card
-        elif move_type == 4:
-            legal_move = self.check_legal_move(None, move_type, board, deck)
-            if legal_move:
-                move = self.drawDevCard(deck)
+            # Draw a dev card
+            elif move_type == 4:
+                legal_move = self.check_legal_move(None, move_type, board, deck)
+                if legal_move:
+                    move = self.drawDevCard(deck)
 
-        # Play a dev card 
-        #################### PLAY ONLY ONE ######################
-        elif move_type == 5:
-            move = self.playDevCard(board, deck)
-            legal_move = self.check_legal_move(move, move_type, board, deck)
-            if legal_move:
-                self.dev_cards[move] -= 1
-                if move == 'Knight':
-                    self.largest_army += 1
-                    move_type = 7
-        #################### PLAY ONLY ONE ######################
+            # Play a dev card 
+            #################### PLAY ONLY ONE ######################
+            elif move_type == 5:
+                move = self.playDevCard(board, deck)
+                legal_move = self.check_legal_move(move, move_type, board, deck)
+                if legal_move:
+                    self.dev_cards[move] -= 1
+                    if move == 'Knight':
+                        self.largest_army += 1
+                        move_type = 7
+            #################### PLAY ONLY ONE ######################
 
-        # Trade with bank
-        elif move_type == 6:
-            move = self.trade(board)
-            legal_move = self.check_legal_move(move, move_type, board)
-            if legal_move:
-                oldRes = move[0]
-                newRes = move[1]
-                self.resources[newRes] += 1
-                self.resources[oldRes[1]] -= int(oldRes[0])
+            # Trade with bank
+            elif move_type == 6:
+                move = self.trade(board)
+                legal_move = self.check_legal_move(move, move_type, board)
+                if legal_move:
+                    oldRes = move[0]
+                    newRes = move[1]
+                    self.resources[newRes] += 1
+                    self.resources[oldRes[1]] -= int(oldRes[0])
 
-        # Move robber
-        if move_type == 7:
-            move = self.moveRobber(board)
-            legal_move = self.check_legal_move(move, move_type, board)
-            move_type = 6
+            # Move robber
+            if move_type == 7:
+                move = self.moveRobber(board)
+                legal_move = self.check_legal_move(move, move_type, board)
+                move_type = 6
 
-        if not legal_move and self.player_type == 0: 
-            print('Illegal move')
-        elif not legal_move:
-            continue
-        else:
-            return 1 
+            if not legal_move and self.player_type == 0: 
+                print('Illegal move')
+            elif not legal_move:
+                continue
+            else:
+                return 1 
 
 
     
     # TODO: this function will be used to choose the move. it should 
     # be different depending on whether the player is a random AI, 
     # human, or MCTS AI
-    def decide_move(self):
+    def decide_move(self, dev_played, board):
         if self.player_type == 0:
             print('Moves available:')
 
+        # Case of random AI player. Here, we should create a list of 
+        # possible moves and choose a move from the list with a 
+        # uniform distribution. We will need to handle separately 
+        # moving the robber to a specific spot
+        if self.player_type == 1:
+
+            # We can always end our turn
+            possible_moves = [(0)]
+
+            # Can we buy dev card?
+            if self.resources['g'] > 0 and self.resources['w'] > 0 \
+            and self.resources['o'] > 0:
+                possible_moves.append((4)
+
+            # Can we play a dev card?
+            if (dev_played == 0):
+                for card in self.dev_cards.keys():
+                    if card != 'Victory Point':
+                        possible_moves.append((5, card))
+
+            # Can we build a city?
+            if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
+            len(self.cities) < 4:
+                settlement in self.settlements:
+                    possible_moves.append((3, settlement))
+
+            # Can we build a road?
+            if self.resources['b'] > 0 and self.resources['l'] > 0:
+                # Get the set of possible places we can build a road 
+                possible_roads = {}
+
+                for road_source in self.roads.keys():
+                    possible_sinks = \
+                    board.coords[road_source]['available roads']
+
+                    for sink in possible_sinks:
+                        if (road_source, sink) not in possible_roads and \
+                        (sink, road_source) not in possible_roads:
+                            possible_roads[(sink, road_source)] = True
+
+                # We now have the possible roads, so lets add those moves!
+                for road in possible_roads:
+                    possible_moves.append((1, road))
+
+            # Can we build a settlement?
+            if self.resources['w'] > 0 and self.resources['l'] > 0 and \
+            self.resources['b'] > 0 and self.resources['g'] > 0:
+
+                # Check the possible places for us to build a settlement
+                for source in self.roads.keys():
+                    if (can_build_settlement(source)):
+                        possible_moves.append((2, source))
+
+            # Should we trade in resources? Try cases for the 5 different resources
+            if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
+            (self.resources['w'] >= 3 and '3' in self.ports) or (self.resources['w'] >= 4):
+                possible_moves.append((6, 'w'))
+
+            if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
+            (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
+                possible_moves.append((6, 'o'))
+
+            if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
+            (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
+                possible_moves.append((6, 'l'))
+
+            if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
+            (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
+                possible_moves.append((6, 'b'))
+
+            if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
+            (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
+                possible_moves.append((6, 'g'))
+
+            # Choose a move randomly from the set of possible moves! 
+            return possible_moves[random.randint(0, len(possible_moves) - 1)]
+
+
+
+    # A helper function to check if we can build a settlement at a specific
+    # location 
+    def can_build_settlement(coords):
+
+       state = board.coords[coords]
+       # Does not overlap with already created settlement
+       if state['player'] == 0:
+            next_list = state['roads'] + state['available roads']
+
+            # Two spaces away from another settlement
+            for next in next_list:
+                next_state = board.coords[next]
+                if next_state['player'] != 0:
+                    return False
+            return True
+        return False
 
 
     # TODO: 
@@ -242,13 +337,26 @@ class Player():
     # victory points to be greater than or equal to 10, the function should 
     # immediately return 1. Otherwise, return 0 when the turn is over. 
     # Don't update dev cards till end of turn
-    def make_turn(self, board):
+    def make_turn(self, board, deck):
+
+        # This should indicate whether a dev card has already been 
+        # played during this turn. If so, we can't play another one. 
+        dev_played = 0
 
         while True:
-            move = self.decide_move()
+
+            # TODO: in case for human player, we will need to decrement
+            # dev_played later on if they chose to play a dev card 
+            # but then it wasn't a valid move
+            move = self.decide_move(dev_played, board)
+            if move == 4:
+                dev_played += 1
+
+            # TODO: resolve issue for if this is AI player
+            move_made = self.make_move(move, board, deck)
 
             # We made a move that is not passing our turn
-            if self.make_move(move) == 1:
+            if move_made == 1:
                 board.update_board()
 
                 # Did the move cause us to win?
@@ -256,7 +364,7 @@ class Player():
                     return 1
 
             # TODO: change this to 0 when we atually have the game playable
-            elif self.make_move(move) == 0:
+            elif move_made == 0:
                 return 1
 
     def build_road(self, board):
