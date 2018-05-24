@@ -189,28 +189,71 @@ class Player():
         # Play a dev card 
         elif move_type == 5:
             self.dev_cards[move] -= 1
-            if move == 'Knight':
-                self.num_knights_played += 1
-                move_type = 7
+            dev_card_handler(move, board)
 
         # Trade with bank
         # TODO: fix this to subtract correct amount
         elif move_type == 6:
-            oldRes = move[0]
-            newRes = move[1]
-            self.resources[newRes] += 1
-            self.resources[oldRes[1]] -= int(oldRes[0])
-            self.total_resources -= int(oldRes[0]) - 1
+            self.trade_resources(move[0], move[1])
 
         # Move robber
         # TODO: edit this
         if move_type == 7:
-            move = self.moveRobber(board)
+            self.moveRobber(board, move)
 
         return 1
 
 
+    # A helper function to move the robber and steal from 
+    # a player 
+    def moveRobber(self, board, move):
+        # Move the robber, determine players adjacent, 
+        # and steal a resource
+        board.move_robber(move[0], knight=move[1], player=self) 
+        possible_players = board.players_adjacent_to_hex(move[0])
+        if self in possible_players:
+            possible_players.remove(self)
+
+        if len(possible_players) > 0:
+            if self.player_type == 0:
+                victim = possible_players[int(input("Who do you want to steal from?"))]
+            else:
+                victim = possible_players[random.randint(0, len(possible_players) - 1)]
+            board.steal_from(victim, self)
+
+
+    # TODO: add dev cards other than knights
+    # A helper function to handle playing dev cards
+    def dev_card_handler(self, card_type, board):
+
+        # Handle the knight
+        if card_type == 'Knight':
+            self.num_knights_played += 1
+            if self.player_type == 0:
+                spot = input("Where are you moving the robber?")
+            elif self.player_type == 1:
+                spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
+                (0, 0), (2, 2), (0, 1)]
+                spots.remove(board.robber)
+                spot = spots[random.randint(0, len(spots) - 1)]
+            self.make_move(7, board, None, (spot, True))
+
+
+
+    # A helper function to decrement the resources correctly if the trade 
+    # with bank option is chosen.
+    def trade_resources(self, oldRes, newRes):
+        if '2 ' + oldRes in self.ports:
+            self.resources[oldRes] -= 2
+        elif '3' in self.ports:
+            self.resources[oldRes] -= 3
+        else:
+            self.resources[oldRes] -= 4
+        self.resources[newRes] += 1
+        return
     
+
     # TODO: this function will be used to choose the move. it should 
     # be different depending on whether the player is a random AI, 
     # human, or MCTS AI
