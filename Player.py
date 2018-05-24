@@ -11,6 +11,7 @@ class Player():
     def __init__(self, player_type):
         self.player_name = ''
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
+        self.total_resources = 0
         self.vp_dev_cards = 0
         self.player_type = player_type
         self.dev_cards = {'Knight': 0, 'Victory Point': 0,\
@@ -158,6 +159,7 @@ class Player():
         elif move_type == 1:
             self.resources['b'] -= 1
             self.resources['l'] -= 1
+            self.total_resources -= 2
             self.roads[move[0]] = move[1]
             self.roads[move[1]] = move[0]
 
@@ -167,6 +169,7 @@ class Player():
             self.resources['l'] -= 1
             self.resources['g'] -= 1
             self.resources['w'] -= 1
+            self.total_resources -= 4
             self.settlements.append(move)
             state = board.coords[move]
             if state.ports != '':
@@ -176,6 +179,7 @@ class Player():
         elif move_type == 3:
             self.resources['o'] -= 3
             self.resources['g'] -= 2
+            self.total_resources -= 5
             self.cities.append(move)
 
         # Draw a dev card
@@ -186,7 +190,7 @@ class Player():
         elif move_type == 5:
             self.dev_cards[move] -= 1
             if move == 'Knight':
-                self.largest_army += 1
+                self.num_knights_played += 1
                 move_type = 7
 
         # Trade with bank
@@ -196,6 +200,7 @@ class Player():
             newRes = move[1]
             self.resources[newRes] += 1
             self.resources[oldRes[1]] -= int(oldRes[0])
+            self.total_resources -= int(oldRes[0]) - 1
 
         # Move robber
         # TODO: edit this

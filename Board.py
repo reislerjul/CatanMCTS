@@ -1,3 +1,5 @@
+import random
+
 # This represents the catan board. The board should essentially have a
 # coordinate system that keeps track of where the ports are, where each
 # resource is, the number that is on each hexagon, where cities/settlements
@@ -12,6 +14,10 @@ class Board():
         self.coords = self.init_board(debug = False)
         self.r_allocator = {}
         self.adjacent = {}
+        self.largest_army_size = 2
+        self.largest_army_player = None
+        self.longest_road_size = 4
+        self.longest_road_player = None
         
     def init_board(self, debug = False):
         '''creates the coordinate system and inits the board 
@@ -414,7 +420,7 @@ class Board():
                     print (key)
                 for i in val['resources locs']:
                     try:
-                        a =self.resources[i[0]][i[1]]
+                        a = self.resources[i[0]][i[1]]
                     except IndexError as e:
                         print (key, e)
 
@@ -443,27 +449,72 @@ class Board():
                 6: [(1, 1), (4, 2)], 7: [], 8: [(2, 4), (3, 0)], 9: [(0, 2), (3, 2)],
                 10: [(1, 3), (3, 1)], 11: [(0, 0), (2, 2)], 12: [(0, 1)]}
     
-    def move_robber(self, loc):
+    def discard_random(self, player):
         '''
-        moves the robber to the given hex coordinate and returns the players adjacent to that hex
+        removes a random resource from the given player and returns it
         '''
-        self.robber = loc
+        resource_list = ['w', 'b', 'l', 'g', 'o']
+        
+        if player.total_resources > 0:
+            r = random.randint(1, player.total_resources)
+            for resource in resource_list:
+                if r <= player.resources[resource]:
+                    player.resources[resource] -= 1
+                    player.total_resources -= 1
+                    return resource
+                else:
+                    r -= player.resources[resource]
+    
+    def steal_from(self, victim_player, thief_player):
+        '''
+        gives thief_player a random resource card stolen from victim_player
+        '''
+        resource = self.discard_random(victim_player)
+        self.give_resource(resource, thief_player)
+    
+    def players_adjacent_to_hex(self, loc):
+        '''
+        returns a list of players adjacent to that hex
+        '''
         if loc in self.adjacent:
             return self.adjacent[loc]
         else:
             return []
     
+    def move_robber(self, loc, knight=False, player=None):
+        '''
+        moves the robber to the given hex coordinate
+        '''
+        self.robber = loc
+        if knight:
+            if player.num_knights_played > self.largest_army_size:
+                # update army size
+                self.largest_army_size = player.num_knights_played
+                
+                # move largest army card
+                if self.largest_army_player is not None:
+                    self.largest_army_player.largest_army = 0
+                player.largest_army = 2
+    
     def allocate_resources(self, dice_roll):
         '''
         given a die roll, gives the resources to the appropriate players
+        if the die roll is 7, instead, all players with more than 7 resources will discard half of their
+        total resources, rounded down
         '''
         if die_roll in self.r_allocator:
             vals = self.r_allocator[die_roll]
             for player, resource, loc in vals:
                 if self.robber is not loc:
                     self.give_resource(resource, player)
+        if die_roll == 7:
+            for player in players:
+                if player.total_resources >= 8:
+                    discard = player.total_resources // 2
+                    for _ in range(discard):
+                        self.discard_random(player)
+                
             
-    
     def give_resouce(self, resource, player):
         '''
         helper function to give a resource to a player
@@ -472,6 +523,48 @@ class Board():
             player.resources[resource] += 1
         else:
             player.resources[resource] = 1
+        player.total_resources += 1
+    
+    def build_road(self, loc1, loc2, player):
+        '''
+        builds a road from loc1 to loc2 (assuming they are adjacent)
+        '''
+        self.coords[loc1][loc2] = player
+        self.coords[loc2][loc1] = player
+        self.coords[loc1]['available roads'].remove(loc2)
+        self.coords[loc2]['available roads'].remove(loc1)
+        
+        longest_road = self.longest_road_2(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
+        if longest_road > self.longest_road_size:
+            self.longest_road_size = longest_road
+            
+            if self.longest_road_player is not None:
+                self.longest_road_player.longest_road = 0
+            player.longest_road = 2
+    
+    def longest_road(self, visited, current1, current2, player, length):
+        '''
+        helper function for finding longest road
+        '''
+        longest = length
+        
+        for neighbour in coords[current1]['neighbours']:
+            if coords[neighbour]['player'] == player
+                    and (current1, neighbour) not in visited
+                    and (neighbour, current1) not in visited:
+                new_visited = visited | set([(current1, neighbour)])
+                new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
+                longest = max(longest, new_longest)
+        
+        for neighbour in coords[current2]['neighbours']:
+            if coords[neighbour]['player'] == player
+                    and (current2, neighbour) not in visited
+                    and (neighbour, current2) not in visited:
+                new_visited = visited | set([(current2, neighbour)])
+                new_longest = self.longest_road(new_visited, current1, neighbour, player, length + 1)
+                longest = max(longest, new_longest)
+        
+        return longest
     
     def add_settlement(self, player, loc, initial_boost = False):
         '''
@@ -489,7 +582,8 @@ class Board():
             else: 
                 self.r_allocator[die_val] = [(player, ret_resource, hex_loc)]
             if hex_loc in self.adjacent:
-                self.adjacent[hex_loc].append(player)
+                if player not in self.adjacent[hex_loc]:
+                    self.adjacent[hex_loc].append(player)
             else:
                 self.adjacent[hex_loc] = [player]
             if initial_boost:
@@ -512,7 +606,72 @@ class Board():
             else: 
                 self.r_allocator[die_val] = [(player, ret_resource, loc)]
     
-    # TODO: Update the board with the move that the player makes. 
-    def update_board(self):
-        return
+    def update_board(self, player, move_type, move, additional=None):
+        '''
+        args:
+            player: Player object - 
+            move_type: int - 
+            move: move_type 1 - (loc1, loc2) - two coordinates to build a road between
+                  move_type 2 - loc - coordinate to build a settlement at
+                  move_type 3 - loc - coordinate to upgrade settlement
+                  move_type 5 - string - either 'Knight', 'Road Building',
+                                        'Monopoly', or 'Year of Plenty'
+                  move_type 7 - loc - coordinate to move robber to
+            additional:
+                  move_type 5, move 'Knight' - [loc, player] - array of 2 elements
+                                                               location to move robber and player
+                                                               to steal from
+                  move_type 5, move 'Road Building' - [loc1, loc2] - array of 2 elements
+                                                                     location 1 and location 2
+                                                                     to build road between
+                  move_type 5, move 'Monopoly' - string - resource to steal
+                  move_type 6 - string - player to steal from
+        '''
+        # End turn
+        if move_type == 0:
+            return 0
+
+        # Build a road
+        elif move_type == 1:
+            self.build_road(move[0], move[1], player)
+
+        # Build a settlement
+        elif move_type == 2:
+            self.add_settlement(player, move)
+
+        # Build a city
+        elif move_type == 3:
+            self.upgrade_settlement(player, move)
+
+        # Draw a dev card
+        elif move_type == 4:
+            pass
+
+        # Play a dev card 
+        elif move_type == 5:
+            if move == 'Knight':
+                self.move_robber(additional[0], knight=True, player=player)
+                self.steal_from(additional[1], player)
+            elif move == 'Road Building':
+                self.build_road(additional[0], additional[1] player)
+            elif move == 'Monopoly':
+                total = 0
+                for p in self.players:
+                    count = p.resources[additional]
+                    total += count
+                    p.total_resources -= count
+                    p.resources[additional] = 0
+                player.resources[additional] = total
+                player.total_resources += total
+            elif move == 'Year of Plenty':
+                pass
+            
+        # Trade with bank
+        elif move_type == 6:
+            pass
+
+        # Move robber
+        if move_type == 7:
+            self.move_robber(move)
+            self.steal_from(additional, player)
     
