@@ -1,4 +1,5 @@
 import random
+import settings
 
 # This represents the catan board. The board should essentially have a
 # coordinate system that keeps track of where the ports are, where each

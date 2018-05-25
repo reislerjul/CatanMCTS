@@ -3,6 +3,8 @@ from Player import Player
 from Board import Board
 from Deck import Deck
 from Game import Game
+import settings
+
 
 # This will contain the main method which will be the entry point into 
 # playing the Catan game.

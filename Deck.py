@@ -1,4 +1,5 @@
 import random
+import settings
 
 # This should represent the deck for dev cards. It should include the 
 # correct number of each dev card and should have this as a stack data
@@ -41,9 +42,6 @@ class Deck():
         if self.cards_left > 0:
             self.cards_left -= 1
             card = self.stack[self.cards_left]
-            if player.dev_cards[self.get_card_name(card)] > 1:
-                player.dev_cards[self.get_card_name(card)] += 1
-            else:
-                player.dev_cards[self.get_card_name(card)] = 1
+            player.dev_cards[self.get_card_name(card)] += 1
             return 1
         return -1
