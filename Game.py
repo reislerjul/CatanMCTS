@@ -20,16 +20,14 @@ class Game():
 
         # Place first settlement/road
         for player in self.players:
-            print('For player ', player.player_name)
+            if DEBUG:
+                print("Choose first settlement for player " + str(player.player_num))
             player.choose_spot(self.board, 1)
-
-        # for i in range(1,12):
-        #     if i != 7:
-        #         self.board.allocate_resources(i+1, self.players)
 
         # Place second settlement/road
         for player in self.players[::-1]:
-            print('For player ', player.player_name)
+            if DEBUG:
+                print("Choose second settlement for player " + str(player.player_num))
             player.choose_spot(self.board, 2)
 
 
@@ -38,20 +36,39 @@ class Game():
     # has one turn.
     def round(self):
 
-        for player in self.players:
-            print('Player ', player.player_name)
+        # print the board state at the beginning of the round
+        if DEBUG:
+            board.print_board_state()
 
+        for player in self.players:
             # TODO: allow player to play dev card before rolling 
 
             dice1 = random.randint(1, 6)
             dice2 = random.randint(1, 6)
-            print('Die rolled:', dice1 + dice2)
+
+            # Player's state before their turn
+            if DEBUG:
+                print("Player " + str(player.player_num) + "\'s turn.")
+                print("State of player before turn:")
+                player.printResources()
+                print("Dice Roll: " + str(dice1 + dice2))
+
             self.board.allocate_resources(dice1 + dice2, self.players)
             
             # If the player has won, the game is over.
             if player.make_turn(self.board, self.deck):
-                self.won = player
+                self.won = player.player_num
                 return 1
+
+            # Player's state after their turn
+            if DEBUG:
+                print("State of player after turn:")
+                player.printResources()
+
+
+        # print the board state at the end of the round
+        if DEBUG:
+            board.print_board_state()
 
         self.num_rounds += 1
         return 0

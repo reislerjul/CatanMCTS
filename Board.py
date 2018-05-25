@@ -426,7 +426,21 @@ class Board():
                         print (key, e)
 
         return coords
+
+
+    # Print the board state
+    def print_board_state(self):
+
+        # Print the coordinates if there is a settlement or city there.
+        board_items = coords.items()
+        for coordinate in board_items:
+            if coordinate[1]['player'] != 0:
+                print("Coordinates: " + str(coordinate[0]))
+                print(str(coordinate[1]))
+                print("\n")
+        print("Robber location " + str(self.robber))
         
+
     def init_resources(self):
         '''this function initializes the nodes of resources in a list like faction
         a resource is given by a tuple with the first element being the resource
@@ -470,8 +484,11 @@ class Board():
         '''
         gives thief_player a random resource card stolen from victim_player
         '''
-        resource = self.discard_random(victim_player)
-        self.give_resource(resource, thief_player)
+
+        # There is a case where robber is moved and nobody is stolen from
+        if victim_player != None:
+            resource = self.discard_random(victim_player)
+            self.give_resource(resource, thief_player)
     
     def players_adjacent_to_hex(self, loc):
         '''
@@ -514,6 +531,18 @@ class Board():
                     discard = player.total_resources // 2
                     for _ in range(discard):
                         self.discard_random(player)
+
+        # In debug mode, print the resources that each player now has
+        if DEBUG:
+            for player in self.players:
+                print("Player " + str(player.player_num) + " has resources:")
+                print("     w: " + str(player.resources['w']))
+                print("     l: " + str(player.resources['l']))
+                print("     b: " + str(player.resources['b']))
+                print("     o: " + str(player.resources['o']))
+                print("     g: " + str(player.resources['g']))
+
+
                 
             
     def give_resource(self, resource, player):

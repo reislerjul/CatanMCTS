@@ -21,9 +21,10 @@ def main():
     assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
 
     for idx, arg in enumerate(args):
-    	player_list.append(Player(int(arg), str(idx+1)))
+    	player_list.append(Player(int(arg), int(idx + 1)))
 
-    # Create the game, board, and deck
+    # Create the game, board, deck, and settings
+    settings.init()
     deck = Deck()
     deck.initialize_stack()
     board = Board(player_list)
@@ -34,7 +35,7 @@ def main():
     print("Starting Game.")
     game.place_spots()
     winner = game.play_game()
-    print("Game Over.")
+    print("Game Over. Player " + str(winner) + " won.")
 
 
 if __name__ == '__main__':

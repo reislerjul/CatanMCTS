@@ -10,8 +10,8 @@ class Player():
     # TODO: Complete this constructor. player_type should be 0 if the player is
     # human, 1 if the player is the random AI, and 2 if the player is the 
     # MCTS AI
-    def __init__(self, player_type, player_name):
-        self.player_name = player_name
+    def __init__(self, player_type, player_num):
+        self.player_num = player_num
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
         self.total_resources = 0
         self.player_type = player_type
@@ -24,6 +24,37 @@ class Player():
         self.cities = []    # [(0,0), (1,1)...]
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}     # {(0,0):(1,1), (1,1):(0,0)...}
+
+
+    # When in debug mode, use this function to print out the player's fields in a 
+    # readable way. 
+    def printResources(self):
+        print('Resources:', self.resources)
+        print("     w: " + str(self.resources['w']))
+        print("     l: " + str(self.resources['l']))
+        print("     b: " + str(self.resources['b']))
+        print("     o: " + str(self.resources['o']))
+        print("     g: " + str(self.resources['g']))
+        print("Total: " + str(self.total_resources))
+        print("\n")
+
+        print('Dev Cards:')
+        print("     Knights: " + str(self.self.dev_cards['Knights']))
+        print("     Victory Point: " + str(self.self.dev_cards['Victory Point']))
+        print("     Road Building: " + str(self.self.dev_cards['Road Building']))
+        print("     Monopoly: " + str(self.self.dev_cards['Monopoly']))
+        print("     Year of Plenty: " + str(self.self.dev_cards['Year of Plenty']))
+        print("Longest Road Points: " + str(self.longest_road))
+        print("Largest Army Points: " + str(self.largest_army))
+
+        print('Number of Victory Points: ', self.calculate_vp())
+        print('Knights Played: ', self.num_knights_played)
+        print('Roads: ', self.roads)
+        print('Settlements: ', self.settlements)
+        print('Cities: ', self.cities)
+        print("Ports: ", self.ports)
+        return 0
+
 
 
     # A getter function to return the player's hand of dev cards
@@ -187,6 +218,13 @@ class Player():
                 print("Illegal move!")
             return -1
 
+        # This is a legal move so if we're in debug mode, we should 
+        # print the move out! 
+        if DEBUG:
+            print("Printing the move:")
+            print("Move type: " + str(move_type))
+            print("Move: " + str(move))
+
         # End turn
         if move_type == 0:
             return 0
@@ -252,17 +290,39 @@ class Player():
     # A helper function to move the robber and steal from 
     # a player 
     def choose_victim(self, board, move):
-        # Move the robber, determine players adjacent, 
-        # and steal a resource
+
+        victim = None
+
+        # Determine the players adjacent to the robber
         possible_players = board.players_adjacent_to_hex(move)
+        
+        # Get a list of the player numbers
+        player_nums = []
+        for player in possible_players:
+            player_nums.append(player.player_num)
+
+        # We can't steal from ourself! 
         if self in possible_players:
             possible_players.remove(self)
+            player_nums.remove(self.player_num)
 
         if len(possible_players) > 0:
-            if self.player_type == 0:
-                victim = possible_players[int(input("Who do you want to steal from?"))]
-            else:
-                victim = possible_players[random.randint(0, len(possible_players) - 1)]
+
+            # Keep prompting the person until they enter a valid victim
+            while True:
+
+                if self.player_type == 0:
+                    num = int(input("Who do you want to steal from? (give player number)"))
+
+                    if num in player_nums:
+                        victim = possible_players[player_nums.index(num)]
+                        break
+                    else:
+                        print("Invalid victim. Please enter a valid player to steal from.")
+
+                elif self.player_type == 1:
+                    victim = possible_players[random.randint(0, len(possible_players) - 1)]
+                    break
         return victim
 
 
@@ -620,18 +680,6 @@ class Player():
     def drawDevCard(self, deck):
         move = deck.take_card(self)
         return move
-
-    def printResources(self):
-        print("Printing")
-        print('Resources', self.resources)
-        print('Dev cards', self.dev_cards)
-        print('Victory points', self.calculate_vp())
-        print('Knights played', self.num_knights_played)
-        print('Roads', self.roads)
-        print('Settlements', self.settlements)
-        print('Cities', self.cities)
-        return 0
-
 
     ##################################### WRITE DEV CARD CODE #####################################
     def playDevCard(self, board, deck):
