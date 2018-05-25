@@ -496,7 +496,7 @@ class Board():
                     self.largest_army_player.largest_army = 0
                 player.largest_army = 2
     
-    def allocate_resources(self, dice_roll):
+    def allocate_resources(self, die_roll, players):
         '''
         given a die roll, gives the resources to the appropriate players
         if the die roll is 7, instead, all players with more than 7 resources will discard half of their
@@ -515,7 +515,7 @@ class Board():
                         self.discard_random(player)
                 
             
-    def give_resouce(self, resource, player):
+    def give_resource(self, resource, player):
         '''
         helper function to give a resource to a player
         '''
@@ -534,13 +534,13 @@ class Board():
         self.coords[loc1]['available roads'].remove(loc2)
         self.coords[loc2]['available roads'].remove(loc1)
         
-        longest_road = self.longest_road_2(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
-        if longest_road > self.longest_road_size:
-            self.longest_road_size = longest_road
+        # longest_road = self.longest_road_2(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
+        # if longest_road > self.longest_road_size:
+        #     self.longest_road_size = longest_road
             
-            if self.longest_road_player is not None:
-                self.longest_road_player.longest_road = 0
-            player.longest_road = 2
+        #     if self.longest_road_player is not None:
+        #         self.longest_road_player.longest_road = 0
+        #     player.longest_road = 2
     
     def longest_road(self, visited, current1, current2, player, length):
         '''
@@ -587,7 +587,7 @@ class Board():
             else:
                 self.adjacent[hex_loc] = [player]
             if initial_boost:
-                self.give_resouce(ret_resource, player)
+                self.give_resource(ret_resource, player)
     
     def upgrade_settlement(self, player, loc):
         '''

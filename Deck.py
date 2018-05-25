@@ -14,9 +14,10 @@ class Deck():
         3 - Monopoly
         4 - Year of plenty
         '''
+        self.cards_left = 20
         self.initialize_stack()
     
-    def get_card_name(card):
+    def get_card_name(self, card):
         '''
         returns the name of the card id given
         '''
@@ -37,9 +38,12 @@ class Deck():
         '''
         takes a card from the top of the stack and gives it to the player
         '''
-        if cards_left > 0:
+        if self.cards_left > 0:
             self.cards_left -= 1
             card = self.stack[self.cards_left]
-            player.dev_cards[card] += 1
+            if player.dev_cards[self.get_card_name(card)] > 1:
+                player.dev_cards[self.get_card_name(card)] += 1
+            else:
+                player.dev_cards[self.get_card_name(card)] = 1
             return 1
         return -1

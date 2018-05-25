@@ -8,8 +8,8 @@ class Player():
     # TODO: Complete this constructor. player_type should be 0 if the player is
     # human, 1 if the player is the random AI, and 2 if the player is the 
     # MCTS AI
-    def __init__(self, player_type):
-        self.player_name = ''
+    def __init__(self, player_type, player_name):
+        self.player_name = player_name
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
         self.total_resources = 0
         self.player_type = player_type
@@ -30,28 +30,33 @@ class Player():
 
     # Allows the game to access the number of victory points that a player has
     def calculate_vp(self):
-        return self.dev_cards['Victory Point'] + len(self.cities.items()) + \
-        len(self.settlements.items()) + self.longest_road + self.largest_army
+        return self.dev_cards['Victory Point'] + len(self.cities) + \
+        len(self.settlements) + self.longest_road + self.largest_army
 
 
     # TODO: implement a function that allows the players to choose their 
     # settlement and road placement at the beginning of the game
-    def choose_spot(self, board):
+    def choose_spot(self, board, idx):
         legal_settlement = False
         legal_road = False
         while not legal_settlement:
             loc = self.build_settlement(board)
             legal_settlement = self.can_build_settlement(loc, board)
-        self.settlements.append(move)
-        state = board.coords[move]
-        if state.ports != '':
-            self.ports.append(state.ports)
+        self.settlements.append(loc)
+        state = board.coords[loc]
+        if state['ports'] != '':
+            self.ports.append(state['ports'])
+        if idx == 2:
+            board.add_settlement(self, loc, True)
+        else:
+            board.add_settlement(self, loc)
 
         while not legal_road:
             move = self.build_road(board)
             legal_road = self.can_build_road(move, board)
         self.roads[move[0]] = move[1]
         self.roads[move[1]] = move[0]
+        board.build_road(move[0], move[1], self)
 
 
     # TODO: this function should check that the move made is a legal move. 
@@ -74,7 +79,7 @@ class Player():
     # based on the ports that the player has
     # General: Make sure the player can only play the move if they have the 
     # required resources
-    def check_legal_move(self, move, move_type, board, deck=None):
+    def check_legal_move(self, move, move_type, board, deck):
         if move_type == 1 and move[0] in board.coords.keys():
             # Resources available to make a road
             if self.resources['b'] >= 1 and self.resources['l'] >=1:
@@ -93,7 +98,7 @@ class Player():
                state = board.coords[move]
                # Does not overlap with already created settlement
                if state['player'] == 0:
-                    next_list = state['roads'] + state['available roads']
+                    next_list = list(state['roads'].keys()) + state['available roads']
                     # Next to another road
                     if (move in self.roads.keys()):
                         # Two spaces away from another settlement
@@ -114,7 +119,7 @@ class Player():
         if move_type == 4:
             # Resources available to draw a dev card and enough dev cards in deck
             if self.resources['o'] >= 1 and self.resources['g'] >=1 \
-                and self.resources['w'] >=1 and deck.cards_left > 0:
+                and self.resources['w'] >=1:
                 return True
 
         if move_type == 5:
@@ -137,6 +142,9 @@ class Player():
         if move_type == 7 and move in board.coords.keys():
             return True
 
+        if move_type == 0:
+            return True
+
         return False
 
 
@@ -149,7 +157,7 @@ class Player():
         # need when a dev card is played
         play = None
 
-        if not self.check_legal_move(move, move_type, board):
+        if not self.check_legal_move(move, move_type, board, deck):
             if self.player_type == 0:
                 print("Illegal move!")
             return -1
@@ -188,6 +196,9 @@ class Player():
         # Draw a dev card
         elif move_type == 4:
             self.drawDevCard(deck)
+            self.resources['w'] -= 1
+            self.resources['g'] -= 1
+            self.resources['o'] -= 1
 
         # Play a dev card 
         elif move_type == 5:
@@ -310,14 +321,14 @@ class Player():
     # A helper function to decrement the resources correctly if the trade 
     # with bank option is chosen.
     def trade_resources(self, oldRes, newRes):
-        if '2 ' + oldRes in self.ports:
-            self.resources[oldRes] -= 2
+        if '2 ' + oldRes[1] in self.ports:
+            self.resources[oldRes[1]] -= 2
             self.total_resources -= 1
         elif '3' in self.ports:
-            self.resources[oldRes] -= 3
+            self.resources[oldRes[1]] -= 3
             self.total_resources -= 2
         else:
-            self.resources[oldRes] -= 4
+            self.resources[oldRes[1]] -= 4
             self.total_resources -= 3
         self.resources[newRes] += 1
         return
@@ -329,6 +340,7 @@ class Player():
     def decide_move(self, dev_played, board):
         if self.player_type == 0:
 
+            self.printResources()
             print('Moves available:')
             print('Enter 0 for ending/passing your turn')
             print('Enter 1 to build a road ')
@@ -344,30 +356,30 @@ class Player():
                 # function so that we can abstract make_move to work for
                 # both AI and human players
                 if move_type == 0:
-                    return (0)
+                    return [0]
 
                 elif move_type == 1:
                     move = self.build_road(board)
-                    return (1, move)
+                    return [1, move]
 
                 elif move_type == 2:
                     move = self.build_settlement(board)
-                    return (2, move)
+                    return [2, move]
 
                 elif move_type == 3:
                     move = self.build_city(board)
-                    return (3, move)
+                    return [3, move]
 
                 elif move_type == 4:
-                    return (4)
+                    return [4]
 
                 elif move_type == 5:
                     move = self.playDevCard(board, deck)
-                    return (5, move)
+                    return [5, move]
 
                 elif move_type == 6:
                     move = self.trade(board)
-                    return (6, move)
+                    return [6, move]
 
 
                 return move_type
@@ -465,7 +477,7 @@ class Player():
                 possible_moves.append((6, ('g', 'b')))
 
             # Choose a move randomly from the set of possible moves! 
-            return possible_moves[random.randint(0, len(possible_moves) - 1)]
+            return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
 
 
 
@@ -476,7 +488,7 @@ class Player():
         state = board.coords[coords]
         # Does not overlap with already created settlement
         if state['player'] == 0:
-            next_list = state['roads'] + state['available roads']
+            next_list = list(state['roads'].keys()) + state['available roads']
 
             # Two spaces away from another settlement
             for next in next_list:
@@ -527,7 +539,7 @@ class Player():
         while True:
 
             move = self.decide_move(dev_played, board)
-            # move is tuple
+            # move is list
 
             move_type = move[0]
             move_instructs = None
@@ -544,21 +556,21 @@ class Player():
                     return 1
 
             if move_made == 0:
-                return 0
+                break
 
 
     ######################### HELPER FUNCTIONS FOR HUMAN PLAYERS #############################
 
     def build_road(self, board):
-        r0,c0 = map(int, input("Coordinate for road origin (Input form: row# col#): ").split)
-        r1,c1 = map(int, input("Coordinate for road origin (Input form: row# col#): ").split)
+        r0,c0 = map(int, input("Coordinate for road beginning/origin (Input form: row# col#): ").split())
+        r1,c1 = map(int, input("Coordinate for road end (Input form: row# col#): ").split())
         print('Building road from (', r0, ', ', c0, ') to (', r1, ', ', c1, ') ...')
         move = ((r0, c0), (r1, c1))
         return move     # List of tuples: two coordinates
 
 
     def build_settlement(self, board):
-        r,c = map(int, input("Coordinate for settlement (Input form: row# col#): ").split)
+        r,c = map(int, input("Coordinate for settlement (Input form: row# col#): ").split())
         print('Building settlement at (', r, ', ', c, ') ...')
 
         move = (r, c)
@@ -566,7 +578,7 @@ class Player():
 
 
     def build_city(self, board):
-        r,c = map(int, input("Coordinate for city (Input form: row# col#): ").split)
+        r,c = map(int, input("Coordinate for city (Input form: row# col#): ").split())
         print('Building city at (', r, ', ', c, ') ...')
 
         move = (r, c)
@@ -576,6 +588,17 @@ class Player():
     def drawDevCard(self, deck):
         move = deck.take_card(self)
         return move
+
+    def printResources(self):
+        print("Printing")
+        print('Resources', self.resources)
+        print('Dev cards', self.dev_cards)
+        print('Victory points', self.calculate_vp())
+        print('Knights played', self.num_knights_played)
+        print('Roads', self.roads)
+        print('Settlements', self.settlements)
+        print('Cities', self.cities)
+        return 0
 
 
     ##################################### WRITE DEV CARD CODE #####################################

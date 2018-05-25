@@ -18,14 +18,14 @@ def main():
     args = sys.argv[1:]
     assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
 
-    for arg in args:
-    	player_list.append(Player(int(arg)))
+    for idx, arg in enumerate(args):
+    	player_list.append(Player(int(arg), str(idx+1)))
 
     # Create the game, board, and deck
     deck = Deck()
     deck.initialize_stack()
     board = Board(player_list)
-    board.setup_board()
+    board.init_board()
     game = Game(board, deck, player_list)
 
     # Play the game
