@@ -432,7 +432,7 @@ class Board():
     def print_board_state(self):
 
         # Print the coordinates if there is a settlement or city there.
-        board_items = coords.items()
+        board_items = self.coords.items()
         for coordinate in board_items:
             if coordinate[1]['player'] != 0:
                 print("Coordinates: " + str(coordinate[0]))
@@ -514,7 +514,7 @@ class Board():
                     self.largest_army_player.largest_army = 0
                 player.largest_army = 2
     
-    def allocate_resources(self, die_roll, players):
+    def allocate_resources(self, die_roll, players, DEBUG = False):
         '''
         given a die roll, gives the resources to the appropriate players
         if the die roll is 7, instead, all players with more than 7 resources will discard half of their
@@ -564,13 +564,13 @@ class Board():
         self.coords[loc1]['available roads'].remove(loc2)
         self.coords[loc2]['available roads'].remove(loc1)
         
-        # longest_road = self.longest_road_2(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
-        # if longest_road > self.longest_road_size:
-        #     self.longest_road_size = longest_road
+        longest_road = self.longest_road(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
+        if longest_road > self.longest_road_size:
+            self.longest_road_size = longest_road
             
-        #     if self.longest_road_player is not None:
-        #         self.longest_road_player.longest_road = 0
-        #     player.longest_road = 2
+            if self.longest_road_player is not None:
+                self.longest_road_player.longest_road = 0
+            player.longest_road = 2
     
     def longest_road(self, visited, current1, current2, player, length):
         '''
@@ -578,16 +578,16 @@ class Board():
         '''
         longest = length
         
-        for neighbour in coords[current1]['neighbours']:
-            if coords[neighbour]['player'] == player \
+        for neighbour in self.coords[current1]['neighbours']:
+            if self.coords[neighbour]['player'] == player \
             and (current1, neighbour) not in visited \
             and (neighbour, current1) not in visited:
                 new_visited = visited | set([(current1, neighbour)])
                 new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
                 longest = max(longest, new_longest)
         
-        for neighbour in coords[current2]['neighbours']:
-            if coords[neighbour]['player'] == player \
+        for neighbour in self.coords[current2]['neighbours']:
+            if self.coords[neighbour]['player'] == player \
             and (current2, neighbour) not in visited \
             and (neighbour, current2) not in visited:
                 new_visited = visited | set([(current2, neighbour)])

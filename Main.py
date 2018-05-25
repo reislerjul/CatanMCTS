@@ -9,6 +9,7 @@ import settings
 # This will contain the main method which will be the entry point into 
 # playing the Catan game.
 def main():
+    DEBUG = False
 
     # We will assume that the commandline arguments give the players in the 
     # order that they should play
@@ -33,8 +34,8 @@ def main():
 
     # Play the game
     print("Starting Game.")
-    game.place_spots()
-    winner = game.play_game()
+    game.place_spots(DEBUG)
+    winner = game.play_game(DEBUG)
     print("Game Over. Player " + str(winner) + " won.")
 
 

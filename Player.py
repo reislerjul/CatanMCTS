@@ -30,20 +30,20 @@ class Player():
     # readable way. 
     def printResources(self):
         print('Resources:', self.resources)
-        print("     w: " + str(self.resources['w']))
-        print("     l: " + str(self.resources['l']))
-        print("     b: " + str(self.resources['b']))
-        print("     o: " + str(self.resources['o']))
-        print("     g: " + str(self.resources['g']))
+        # print("     w: " + str(self.resources['w']))
+        # print("     l: " + str(self.resources['l']))
+        # print("     b: " + str(self.resources['b']))
+        # print("     o: " + str(self.resources['o']))
+        # print("     g: " + str(self.resources['g']))
         print("Total: " + str(self.total_resources))
         print("\n")
 
-        print('Dev Cards:')
-        print("     Knights: " + str(self.self.dev_cards['Knights']))
-        print("     Victory Point: " + str(self.self.dev_cards['Victory Point']))
-        print("     Road Building: " + str(self.self.dev_cards['Road Building']))
-        print("     Monopoly: " + str(self.self.dev_cards['Monopoly']))
-        print("     Year of Plenty: " + str(self.self.dev_cards['Year of Plenty']))
+        print('Dev Cards:', self.dev_cards)
+        # print("     Knights: " + str(self.dev_cards['Knight']))
+        # print("     Victory Point: " + str(self.dev_cards['Victory Point']))
+        # print("     Road Building: " + str(self.dev_cards['Road Building']))
+        # print("     Monopoly: " + str(self.dev_cards['Monopoly']))
+        # print("     Year of Plenty: " + str(self.dev_cards['Year of Plenty']))
         print("Longest Road Points: " + str(self.longest_road))
         print("Largest Army Points: " + str(self.largest_army))
 
@@ -98,9 +98,9 @@ class Player():
         # Choose where to play a road
         while not legal_road:
 
-            if player_type == 0:
+            if self.player_type == 0:
                 move = self.build_road(board)
-            elif player_type == 1:
+            elif self.player_type == 1:
 
                 # Choose from set of roads coming from settlement; any should work
                 possible_sinks = state['available roads']
@@ -169,7 +169,7 @@ class Player():
             if self.resources['o'] >= 3 and self.resources['g'] >=2:
                 # Have a settlement at that spot
                 state = board.coords[move]
-                if state['player'] == self.player_name:
+                if state['player'] == self.player_num:
                     return True
 
         if move_type == 4:
