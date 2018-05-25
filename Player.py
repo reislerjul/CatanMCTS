@@ -1,7 +1,9 @@
+import random
+import settings
+
 # The player class. Each player should keep track of their roads, cities, 
 # settlements, dev cards, whether they're on a port, number of victory
 # points, and resource cards. 
-import random
 class Player():
 
 
@@ -34,14 +36,25 @@ class Player():
         len(self.settlements) + self.longest_road + self.largest_army
 
 
-    # TODO: implement a function that allows the players to choose their 
+    # A function that allows the players to choose their 
     # settlement and road placement at the beginning of the game
     def choose_spot(self, board, idx):
         legal_settlement = False
         legal_road = False
+
         while not legal_settlement:
-            loc = self.build_settlement(board)
+
+            # Pick a legal spot 
+            if self.player_type == 0:
+                loc = self.build_settlement(board)
+
+            # This may yield coordinates that are not valid
+            elif self.player_type == 1:
+                loc = (random.randint(0, 11), random.randint(0, 5))
+
             legal_settlement = self.can_build_settlement(loc, board)
+
+        # Add the settlement to the board and update player fields
         self.settlements.append(loc)
         state = board.coords[loc]
         if state['ports'] != '':
@@ -51,9 +64,21 @@ class Player():
         else:
             board.add_settlement(self, loc)
 
+        # Choose where to play a road
         while not legal_road:
-            move = self.build_road(board)
+
+            if player_type == 0:
+                move = self.build_road(board)
+            elif player_type == 1:
+
+                # Choose from set of roads coming from settlement; any should work
+                possible_sinks = state['available roads']
+                sink = possible_sinks[random.randint(0, len(possible_sinks) - 1)]
+                move = (loc, sink)
+
             legal_road = self.can_build_road(move, board)
+
+        # build the road
         self.roads[move[0]] = move[1]
         self.roads[move[1]] = move[0]
         board.build_road(move[0], move[1], self)
@@ -119,7 +144,7 @@ class Player():
         if move_type == 4:
             # Resources available to draw a dev card and enough dev cards in deck
             if self.resources['o'] >= 1 and self.resources['g'] >=1 \
-                and self.resources['w'] >=1:
+                and self.resources['w'] >=1 and deck.card_left > 0:
                 return True
 
         if move_type == 5:
@@ -485,7 +510,12 @@ class Player():
     # location 
     def can_build_settlement(self, coords, board):
 
+        # Check that the coordinates are valid
+        if coords not in board.coords:
+            return False
+
         state = board.coords[coords]
+
         # Does not overlap with already created settlement
         if state['player'] == 0:
             next_list = list(state['roads'].keys()) + state['available roads']
@@ -506,8 +536,10 @@ class Player():
     def can_build_road(self, move, board):
         if move[0] in board.coords.keys():
             state_o = board.coords[move[0]]
+
             # Does not overlap with already created road
             if move[1] in state_o['available roads']:
+
                 # Next to another road or settlement
                 if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) or \
                 (move[0] in self.settlements) or (move[1] in self.settlements):
@@ -584,7 +616,7 @@ class Player():
         move = (r, c)
         return move     # Tuple: one coordinate
 
-
+    # Returns 1 if the move is valid, -1 if the dev card stack is empty
     def drawDevCard(self, deck):
         move = deck.take_card(self)
         return move
