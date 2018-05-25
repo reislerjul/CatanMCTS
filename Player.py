@@ -220,7 +220,7 @@ class Player():
 
         # This is a legal move so if we're in debug mode, we should 
         # print the move out! 
-        if DEBUG:
+        if settings.DEBUG:
             print("Printing the move:")
             print("Move type: " + str(move_type))
             print("Move: " + str(move))

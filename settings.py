@@ -2,4 +2,4 @@
 # If DEBUG is 1, we are in debug mode
 def init():
     global DEBUG
-    DEBUG = 1
+    DEBUG = 0

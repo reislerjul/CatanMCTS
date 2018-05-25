@@ -533,7 +533,7 @@ class Board():
                         self.discard_random(player)
 
         # In debug mode, print the resources that each player now has
-        if DEBUG:
+        if settings.DEBUG:
             for player in self.players:
                 print("Player " + str(player.player_num) + " has resources:")
                 print("     w: " + str(player.resources['w']))
@@ -564,13 +564,13 @@ class Board():
         self.coords[loc1]['available roads'].remove(loc2)
         self.coords[loc2]['available roads'].remove(loc1)
         
-        # longest_road = self.longest_road_2(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
-        # if longest_road > self.longest_road_size:
-        #     self.longest_road_size = longest_road
+        longest_road = self.longest_road(frozenset([(loc1, loc2)]), loc1, loc2, player, 1)
+        if longest_road > self.longest_road_size:
+            self.longest_road_size = longest_road
             
-        #     if self.longest_road_player is not None:
-        #         self.longest_road_player.longest_road = 0
-        #     player.longest_road = 2
+            if self.longest_road_player is not None:
+                self.longest_road_player.longest_road = 0
+            player.longest_road = 2
     
     def longest_road(self, visited, current1, current2, player, length):
         '''
