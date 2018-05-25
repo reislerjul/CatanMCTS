@@ -39,7 +39,7 @@ class Game():
             self.board.allocate_resources(dice1 + dice2)
             
             # If the player has won, the game is over.
-            if player.make_turn(self.board):
+            if player.make_turn(self.board, self.deck):
                 self.won = player
                 return 1
 

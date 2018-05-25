@@ -12,7 +12,6 @@ class Player():
         self.player_name = ''
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
         self.total_resources = 0
-        self.vp_dev_cards = 0
         self.player_type = player_type
         self.dev_cards = {'Knight': 0, 'Victory Point': 0,\
             'Road Building':0, 'Monopoly': 0, 'Year of Plenty': 0} #{type: #cards}
@@ -31,7 +30,7 @@ class Player():
 
     # Allows the game to access the number of victory points that a player has
     def calculate_vp(self):
-        return self.vp_dev_cards + len(self.cities.items()) + \
+        return self.dev_cards['Victory Point'] + len(self.cities.items()) + \
         len(self.settlements.items()) + self.longest_road + self.largest_army
 
 
@@ -146,6 +145,10 @@ class Player():
     # -1 if the move is not legal
     def make_move(self, move_type, board, deck, move):
 
+        # Play corresponds to the information that the board may 
+        # need when a dev card is played
+        play = None
+
         if not self.check_legal_move(move, move_type, board):
             if self.player_type == 0:
                 print("Illegal move!")
@@ -189,28 +192,33 @@ class Player():
         # Play a dev card 
         elif move_type == 5:
             self.dev_cards[move] -= 1
-            dev_card_handler(move, board)
+            play = dev_card_handler(move, board)
+
+            # If the dev card is road building, we've covered this in 
+            # the dev card handler, so we can just return
+            if move == 'Road Building':
+                return 1
 
         # Trade with bank
-        # TODO: fix this to subtract correct amount
         elif move_type == 6:
             self.trade_resources(move[0], move[1])
 
         # Move robber
-        # TODO: edit this
         if move_type == 7:
-            self.moveRobber(board, move)
+            play = self.moveRobber(board, move)
+
+        # Apply the changes to the board
+        board.update_board(self, move_type, move, play)
 
         return 1
 
 
     # A helper function to move the robber and steal from 
     # a player 
-    def moveRobber(self, board, move):
+    def choose_victim(self, board, move):
         # Move the robber, determine players adjacent, 
         # and steal a resource
-        board.move_robber(move[0], knight=move[1], player=self) 
-        possible_players = board.players_adjacent_to_hex(move[0])
+        possible_players = board.players_adjacent_to_hex(move)
         if self in possible_players:
             possible_players.remove(self)
 
@@ -219,7 +227,7 @@ class Player():
                 victim = possible_players[int(input("Who do you want to steal from?"))]
             else:
                 victim = possible_players[random.randint(0, len(possible_players) - 1)]
-            board.steal_from(victim, self)
+        return victim
 
 
     # TODO: add dev cards other than knights
@@ -237,8 +245,66 @@ class Player():
                 (0, 0), (2, 2), (0, 1)]
                 spots.remove(board.robber)
                 spot = spots[random.randint(0, len(spots) - 1)]
-            self.make_move(7, board, None, (spot, True))
+            victim = self.choose_victim(board, spot)
+            return (spot, victim)
 
+        # Handle road builder; give the player resources for 2 roads then call
+        # make_move for building roads until they place 2 valid roads
+        if card_type == "Road Building":
+            self.resources['l'] += 2
+            self.resources['b'] += 2
+            self.total_resources += 4
+            roads_played = 0
+            while roads_played < 2:
+                if self.player_type == 0:
+                    move = self.build_road(board)
+                elif self.player_type == 1:
+                    move = self.choose_road(board)
+                if self.make_move(1, board, None, move) == 1:
+                    roads_played += 1
+            return None
+
+        # year of plenty; choose 2 cards to receive
+        possible_cards = ['w', 'l', 'g', 'b', 'o']
+        if card_type == "Year of Plenty":
+            if self.player_type == 0:
+                card1 = input("Choose first card")
+                card2 = input("Choose second card")
+            elif self.player_type == 1:
+                card1 = possible_cards[random.randint(0, len(possible_cards))]
+                card2 = possible_cards[random.randint(0, len(possible_cards))]
+            self.resources[card1] += 1
+            self.resources[card2] += 1
+            self.total_resources += 2
+            return None
+
+        # monopoly: choose a card and steal it from all other players
+        if card_type == "Monopoly":
+            if self.player_type == 0:
+                card_choice = input("Choose card to monopoly!")
+            else:
+                card_choice = possible_cards[random.randint(0, len(possible_cards))]
+            return card_choice
+
+
+
+
+    # A helper function for the random AI to randomly decide on an available 
+    # road to play. 
+    def choose_road(self, board):
+        possible_roads = {}
+
+        for road_source in self.roads.keys():
+            possible_sinks = \
+            board.coords[road_source]['available roads']
+
+            for sink in possible_sinks:
+                if (road_source, sink) not in possible_roads and \
+                (sink, road_source) not in possible_roads:
+                    possible_roads[(sink, road_source)] = True
+
+        options = possible_roads.keys()
+        return options[random.randint(0, len(options) - 1)]
 
 
     # A helper function to decrement the resources correctly if the trade 
@@ -246,10 +312,13 @@ class Player():
     def trade_resources(self, oldRes, newRes):
         if '2 ' + oldRes in self.ports:
             self.resources[oldRes] -= 2
+            self.total_resources -= 1
         elif '3' in self.ports:
             self.resources[oldRes] -= 3
+            self.total_resources -= 2
         else:
             self.resources[oldRes] -= 4
+            self.total_resources -= 3
         self.resources[newRes] += 1
         return
     
@@ -259,53 +328,51 @@ class Player():
     # human, or MCTS AI
     def decide_move(self, dev_played, board):
         if self.player_type == 0:
-            legal_move = False
-            while not legal_move:
-                print('Moves available:')
-                print('Enter 0 for ending/passing your turn')
-                print('Enter 1 to build a road ')
-                print('Enter 2 to build a settlement ')
-                print('Enter 3 to build a city ')
-                print('Enter 4 to draw a dev card ')
-                print('Enter 5 to play a dev card ')
-                print('Enter 6 to make a trade ')
-                move_type = int(input('Select move: '))
-                if not (move_type == 5 and dev_played > 0):
-                    legal_move = True
 
-                    # Let's decide on the specific places to move in this 
-                    # function so that we can abstract make_move to work for
-                    # both AI and human players
-                    if move_type == 0:
-                        return (0)
+            print('Moves available:')
+            print('Enter 0 for ending/passing your turn')
+            print('Enter 1 to build a road ')
+            print('Enter 2 to build a settlement ')
+            print('Enter 3 to build a city ')
+            print('Enter 4 to draw a dev card ')
+            print('Enter 5 to play a dev card ')
+            print('Enter 6 to make a trade ')
+            move_type = int(input('Select move: '))
+            if not (move_type == 5 and dev_played > 0):
 
-                    elif move_type == 1:
-                        move = self.build_road(board)
-                        return (1, move)
+                # Let's decide on the specific places to move in this 
+                # function so that we can abstract make_move to work for
+                # both AI and human players
+                if move_type == 0:
+                    return (0)
 
-                    elif move_type == 2:
-                        move = self.build_settlement(board)
-                        return (2, move)
+                elif move_type == 1:
+                    move = self.build_road(board)
+                    return (1, move)
 
-                    elif move_type == 3:
-                        move = self.build_city(board)
-                        return (3, move)
+                elif move_type == 2:
+                    move = self.build_settlement(board)
+                    return (2, move)
 
-                    elif move_type == 4:
-                        return (4)
+                elif move_type == 3:
+                    move = self.build_city(board)
+                    return (3, move)
 
-                    elif move_type == 5:
-                        move = self.playDevCard(board, deck)
-                        return (5, move)
+                elif move_type == 4:
+                    return (4)
 
-                    elif move_type == 6:
-                        move = self.trade(board)
-                        return (6, move)
+                elif move_type == 5:
+                    move = self.playDevCard(board, deck)
+                    return (5, move)
+
+                elif move_type == 6:
+                    move = self.trade(board)
+                    return (6, move)
 
 
-                    return move_type
-                else:
-                    print("You have already played a dev card in this round")
+                return move_type
+            else:
+                print("You have already played a dev card in this round")
 
         # Case of random AI player. Here, we should create a list of 
         # possible moves and choose a move from the list with a 
@@ -459,9 +526,6 @@ class Player():
 
         while True:
 
-            # TODO: in case for human player, we will need to decrement
-            # dev_played later on if they chose to play a dev card 
-            # but then it wasn't a valid move
             move = self.decide_move(dev_played, board)
             # move is tuple
 

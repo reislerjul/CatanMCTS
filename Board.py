@@ -549,17 +549,17 @@ class Board():
         longest = length
         
         for neighbour in coords[current1]['neighbours']:
-            if coords[neighbour]['player'] == player
-                    and (current1, neighbour) not in visited
-                    and (neighbour, current1) not in visited:
+            if coords[neighbour]['player'] == player \
+            and (current1, neighbour) not in visited \
+            and (neighbour, current1) not in visited:
                 new_visited = visited | set([(current1, neighbour)])
                 new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
                 longest = max(longest, new_longest)
         
         for neighbour in coords[current2]['neighbours']:
-            if coords[neighbour]['player'] == player
-                    and (current2, neighbour) not in visited
-                    and (neighbour, current2) not in visited:
+            if coords[neighbour]['player'] == player \
+            and (current2, neighbour) not in visited \
+            and (neighbour, current2) not in visited:
                 new_visited = visited | set([(current2, neighbour)])
                 new_longest = self.longest_road(new_visited, current1, neighbour, player, length + 1)
                 longest = max(longest, new_longest)
@@ -625,7 +625,7 @@ class Board():
                                                                      location 1 and location 2
                                                                      to build road between
                   move_type 5, move 'Monopoly' - string - resource to steal
-                  move_type 6 - string - player to steal from
+                  move_type 7 - string - player to steal from
         '''
         # End turn
         if move_type == 0:
@@ -653,7 +653,7 @@ class Board():
                 self.move_robber(additional[0], knight=True, player=player)
                 self.steal_from(additional[1], player)
             elif move == 'Road Building':
-                self.build_road(additional[0], additional[1] player)
+                self.build_road(additional[0], additional[1], player)
             elif move == 'Monopoly':
                 total = 0
                 for p in self.players:
