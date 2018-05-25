@@ -16,7 +16,7 @@ class Game():
 
     # This function represents the start of the game in which
     # each player chooses their spots. 
-    def place_spots(self, DEBUG = False):
+    def place_spots(self):
 
         # Place first settlement/road
         for player in self.players:
@@ -34,16 +34,12 @@ class Game():
 
     # This function represents a round in which each player 
     # has one turn.
-    def round(self, DEBUG):
+    def round(self):
 
         # print the board state at the beginning of the round
-<<<<<<< HEAD
-        if DEBUG:
-            self.board.print_board_state()
-=======
+
         if settings.DEBUG:
             board.print_board_state()
->>>>>>> 5a7dbc89da6310174c5958f22f1f16e9ac08d4e0
 
         for player in self.players:
             # TODO: allow player to play dev card before rolling 
@@ -66,7 +62,7 @@ class Game():
                 return 1
 
             # Player's state after their turn
-            if setttings.DEBUG:
+            if settings.DEBUG:
                 print("State of player after turn:")
                 player.printResources()
 
@@ -82,10 +78,10 @@ class Game():
     # This function is called from the main method and is used to 
     # play the game. The function calls the round function until 
     # a player has won. 
-    def play_game(self, DEBUG = False):
+    def play_game(self):
 
         while True:
-            if self.round(DEBUG):
+            if self.round():
                 return self.won
 
 

@@ -29,6 +29,7 @@ class Player():
     # When in debug mode, use this function to print out the player's fields in a 
     # readable way. 
     def printResources(self):
+        print("\nPlayer", self.player_num)
         print('Resources:', self.resources)
         # print("     w: " + str(self.resources['w']))
         # print("     l: " + str(self.resources['l']))
@@ -36,7 +37,6 @@ class Player():
         # print("     o: " + str(self.resources['o']))
         # print("     g: " + str(self.resources['g']))
         print("Total: " + str(self.total_resources))
-        print("\n")
 
         print('Dev Cards:', self.dev_cards)
         # print("     Knights: " + str(self.dev_cards['Knight']))

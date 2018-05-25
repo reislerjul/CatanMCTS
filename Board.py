@@ -514,7 +514,7 @@ class Board():
                     self.largest_army_player.largest_army = 0
                 player.largest_army = 2
     
-    def allocate_resources(self, die_roll, players, DEBUG = False):
+    def allocate_resources(self, die_roll, players):
         '''
         given a die roll, gives the resources to the appropriate players
         if the die roll is 7, instead, all players with more than 7 resources will discard half of their
