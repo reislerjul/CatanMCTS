@@ -20,13 +20,13 @@ class Game():
 
         # Place first settlement/road
         for player in self.players:
-            if DEBUG:
+            if settings.DEBUG:
                 print("Choose first settlement for player " + str(player.player_num))
             player.choose_spot(self.board, 1)
 
         # Place second settlement/road
         for player in self.players[::-1]:
-            if DEBUG:
+            if settings.DEBUG:
                 print("Choose second settlement for player " + str(player.player_num))
             player.choose_spot(self.board, 2)
 
@@ -37,8 +37,13 @@ class Game():
     def round(self, DEBUG):
 
         # print the board state at the beginning of the round
+<<<<<<< HEAD
         if DEBUG:
             self.board.print_board_state()
+=======
+        if settings.DEBUG:
+            board.print_board_state()
+>>>>>>> 5a7dbc89da6310174c5958f22f1f16e9ac08d4e0
 
         for player in self.players:
             # TODO: allow player to play dev card before rolling 
@@ -47,7 +52,7 @@ class Game():
             dice2 = random.randint(1, 6)
 
             # Player's state before their turn
-            if DEBUG:
+            if settings.DEBUG:
                 print("Player " + str(player.player_num) + "\'s turn.")
                 print("State of player before turn:")
                 player.printResources()
@@ -61,13 +66,13 @@ class Game():
                 return 1
 
             # Player's state after their turn
-            if DEBUG:
+            if setttings.DEBUG:
                 print("State of player after turn:")
                 player.printResources()
 
 
         # print the board state at the end of the round
-        if DEBUG:
+        if settings.DEBUG:
             board.print_board_state()
 
         self.num_rounds += 1

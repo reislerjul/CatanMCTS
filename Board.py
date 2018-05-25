@@ -533,7 +533,7 @@ class Board():
                         self.discard_random(player)
 
         # In debug mode, print the resources that each player now has
-        if DEBUG:
+        if settings.DEBUG:
             for player in self.players:
                 print("Player " + str(player.player_num) + " has resources:")
                 print("     w: " + str(player.resources['w']))
