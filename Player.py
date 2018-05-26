@@ -169,13 +169,11 @@ class Player():
                                 return False
                         return True
             
-        if move_type == 3 and move in board.coords.keys():
+        # Have a settlement at that spot
+        if move_type == 3 and move in self.settlements:
             # Resources available to make a city
             if self.resources['o'] >= 3 and self.resources['g'] >=2:
-                # Have a settlement at that spot
-                state = board.coords[move]
-                if state['player'] == self.player_num:
-                    return True
+                return True
 
         if move_type == 4:
             # Resources available to draw a dev card and enough dev cards in deck
@@ -257,6 +255,7 @@ class Player():
             self.resources['o'] -= 3
             self.resources['g'] -= 2
             self.cities.append(move)
+            self.settlement.remove(move)
 
         # Draw a dev card
         elif move_type == 4:
