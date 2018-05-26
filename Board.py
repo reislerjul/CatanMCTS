@@ -34,8 +34,7 @@ class Board():
                          'ports': '3', 
                          'neighbours': [(1,0), (1,1)],
                          'roads' : {(1,0) : 0, (1,1) : 0},
-                         'available roads': [(1,0), (1,1)], 
-                         'building type': 0
+                         'available roads': [(1,0), (1,1)]
                          }
         coords[(0,1)] = {'player': 0,
                          'settlement': True,
@@ -562,8 +561,8 @@ class Board():
         '''
         builds a road from loc1 to loc2 (assuming they are adjacent)
         '''
-        self.coords[loc1][loc2] = player
-        self.coords[loc2][loc1] = player
+        self.coords[loc1]['roads'][loc2] = player
+        self.coords[loc2]['roads'][loc1] = player
         self.coords[loc1]['available roads'].remove(loc2)
         self.coords[loc2]['available roads'].remove(loc1)
         
@@ -582,7 +581,7 @@ class Board():
         longest = length
         
         for neighbour in self.coords[current1]['neighbours']:
-            if self.coords[neighbour]['player'] == player \
+            if self.coords[current1]['roads'][neighbour] == player \
             and (current1, neighbour) not in visited \
             and (neighbour, current1) not in visited:
                 new_visited = visited | set([(current1, neighbour)])
@@ -590,7 +589,7 @@ class Board():
                 longest = max(longest, new_longest)
         
         for neighbour in self.coords[current2]['neighbours']:
-            if self.coords[neighbour]['player'] == player \
+            if self.coords[current2]['roads'][neighbour] == player \
             and (current2, neighbour) not in visited \
             and (neighbour, current2) not in visited:
                 new_visited = visited | set([(current2, neighbour)])
