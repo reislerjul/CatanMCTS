@@ -13,7 +13,6 @@ class Player():
     def __init__(self, player_type, player_num):
         self.player_num = player_num
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
-        self.total_resources = 0
         self.player_type = player_type
         self.dev_cards = {'Knight': 0, 'Victory Point': 0,\
             'Road Building':0, 'Monopoly': 0, 'Year of Plenty': 0} #{type: #cards}
@@ -36,7 +35,6 @@ class Player():
         # print("     b: " + str(self.resources['b']))
         # print("     o: " + str(self.resources['o']))
         # print("     g: " + str(self.resources['g']))
-        print("Total: " + str(self.total_resources))
 
         print('Dev Cards:', self.dev_cards)
         # print("     Knights: " + str(self.dev_cards['Knight']))
@@ -233,7 +231,6 @@ class Player():
         elif move_type == 1:
             self.resources['b'] -= 1
             self.resources['l'] -= 1
-            self.total_resources -= 2
             self.roads[move[0]] = move[1]
             self.roads[move[1]] = move[0]
 
@@ -243,7 +240,6 @@ class Player():
             self.resources['l'] -= 1
             self.resources['g'] -= 1
             self.resources['w'] -= 1
-            self.total_resources -= 4
             self.settlements.append(move)
             state = board.coords[move]
             if state.ports != '':
@@ -253,7 +249,6 @@ class Player():
         elif move_type == 3:
             self.resources['o'] -= 3
             self.resources['g'] -= 2
-            self.total_resources -= 5
             self.cities.append(move)
 
         # Draw a dev card
@@ -369,7 +364,6 @@ class Player():
         if card_type == "Road Building":
             self.resources['l'] += 2
             self.resources['b'] += 2
-            self.total_resources += 4
             roads_played = 0
             while roads_played < 2:
                 if self.player_type == 0:
@@ -391,7 +385,6 @@ class Player():
                 card2 = possible_cards[random.randint(0, len(possible_cards))]
             self.resources[card1] += 1
             self.resources[card2] += 1
-            self.total_resources += 2
             return None
 
         # monopoly: choose a card and steal it from all other players
@@ -428,13 +421,10 @@ class Player():
     def trade_resources(self, oldRes, newRes):
         if '2 ' + oldRes[1] in self.ports:
             self.resources[oldRes[1]] -= 2
-            self.total_resources -= 1
         elif '3' in self.ports:
             self.resources[oldRes[1]] -= 3
-            self.total_resources -= 2
         else:
             self.resources[oldRes[1]] -= 4
-            self.total_resources -= 3
         self.resources[newRes] += 1
         return
     

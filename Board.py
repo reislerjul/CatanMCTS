@@ -19,6 +19,7 @@ class Board():
         self.largest_army_player = None
         self.longest_road_size = 4
         self.longest_road_player = None
+        self.resource_list = ['w', 'b', 'l', 'g', 'o']
         
     def init_board(self, debug = False):
         '''creates the coordinate system and inits the board 
@@ -467,14 +468,15 @@ class Board():
         '''
         removes a random resource from the given player and returns it
         '''
-        resource_list = ['w', 'b', 'l', 'g', 'o']
+        total_resources = 0
+        for resource in self.resource_list:
+            total_resources += player.resources[resource]
         
-        if player.total_resources > 0:
-            r = random.randint(1, player.total_resources)
-            for resource in resource_list:
+        if total_resources > 0:
+            r = random.randint(1, total_resources)
+            for resource in self.resource_list:
                 if r <= player.resources[resource]:
                     player.resources[resource] -= 1
-                    player.total_resources -= 1
                     return resource
                 else:
                     r -= player.resources[resource]
@@ -529,8 +531,13 @@ class Board():
                     self.give_resource(resource, player)
         if die_roll == 7:
             for player in players:
-                if player.total_resources >= 8:
-                    discard = player.total_resources // 2
+                total_resources = 0
+                
+                for resource in self.resource_list:
+                    total_resources += player.resources[resource]
+            
+                if total_resources >= 8:
+                    discard = total_resources // 2
                     for _ in range(discard):
                         self.discard_random(player)
 
@@ -555,7 +562,6 @@ class Board():
             player.resources[resource] += 1
         else:
             player.resources[resource] = 1
-        player.total_resources += 1
     
     def build_road(self, loc1, loc2, player):
         '''
@@ -691,10 +697,8 @@ class Board():
                 for p in self.players:
                     count = p.resources[additional]
                     total += count
-                    p.total_resources -= count
                     p.resources[additional] = 0
                 player.resources[additional] = total
-                player.total_resources += total
             elif move == 'Year of Plenty':
                 pass
             
