@@ -247,8 +247,8 @@ class Player():
             self.resources['w'] -= 1
             self.settlements.append(move)
             state = board.coords[move]
-            if state.ports != '':
-                self.ports.append(state.ports)
+            if state['ports'] != '':
+                self.ports.append(state['ports'])
 
         # Build a city
         elif move_type == 3:
