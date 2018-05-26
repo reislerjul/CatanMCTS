@@ -37,8 +37,9 @@ class Player():
 
         total_resources = 0
         
-        for resource in self.resource_list:
-            total_resources += player.resources[resource]
+        for resource in self.resources.values():
+            total_resources += 1
+            
 
         print("Total Resources: " + str(total_resources))
 
