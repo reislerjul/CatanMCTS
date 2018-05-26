@@ -19,6 +19,7 @@ class Board():
         self.largest_army_player = None
         self.longest_road_size = 4
         self.longest_road_player = None
+        self.resource_list = ['w', 'b', 'l', 'g', 'o']
         
     def init_board(self, debug = False):
         '''creates the coordinate system and inits the board 
@@ -467,12 +468,13 @@ class Board():
         '''
         removes a random resource from the given player and returns it
         '''
-        resource_list = ['w', 'b', 'l', 'g', 'o']
+        total_resources = 0
+        for resource in self.resource_list:
+            total_resources += player.resources[resource]
         
-        total_resources = player.total_resources()
         if total_resources > 0:
             r = random.randint(1, total_resources)
-            for resource in resource_list:
+            for resource in self.resource_list:
                 if r <= player.resources[resource]:
                     player.resources[resource] -= 1
                     return resource
@@ -529,7 +531,12 @@ class Board():
                     self.give_resource(resource, player)
         if die_roll == 7:
             for player in players:
-                total_resources = player.total_resources()
+
+                total_resources = 0
+                
+                for resource in self.resource_list:
+                    total_resources += player.resources[resource]
+            
                 if total_resources >= 8:
                     discard = total_resources // 2
                     for _ in range(discard):

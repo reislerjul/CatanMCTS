@@ -24,31 +24,30 @@ class Player():
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}     # {(0,0):(1,1), (1,1):(0,0)...}
 
-
-    # A helper function to calculate the total resources
-    def total_resources(self):
-        total = self.resources['w'] + self.resources['b'] + self.resources['l'] + \
-        self.resources['g'] + self.resources['o']
-        return total 
-
     # When in debug mode, use this function to print out the player's fields in a 
     # readable way. 
     def printResources(self):
         print("\nPlayer", self.player_num)
         print('Resources:', self.resources)
-        # print("     w: " + str(self.resources['w']))
-        # print("     l: " + str(self.resources['l']))
-        # print("     b: " + str(self.resources['b']))
-        # print("     o: " + str(self.resources['o']))
-        # print("     g: " + str(self.resources['g']))
-        print("Total: " + str(self.total_resources()))
+        print("     w: " + str(self.resources['w']))
+        print("     l: " + str(self.resources['l']))
+        print("     b: " + str(self.resources['b']))
+        print("     o: " + str(self.resources['o']))
+        print("     g: " + str(self.resources['g']))
+
+        total_resources = 0
+        
+        for resource in self.resource_list:
+            total_resources += player.resources[resource]
+
+        print("Total Resources: " + str(total_resources))
 
         print('Dev Cards:', self.dev_cards)
-        # print("     Knights: " + str(self.dev_cards['Knight']))
-        # print("     Victory Point: " + str(self.dev_cards['Victory Point']))
-        # print("     Road Building: " + str(self.dev_cards['Road Building']))
-        # print("     Monopoly: " + str(self.dev_cards['Monopoly']))
-        # print("     Year of Plenty: " + str(self.dev_cards['Year of Plenty']))
+        print("     Knights: " + str(self.dev_cards['Knight']))
+        print("     Victory Point: " + str(self.dev_cards['Victory Point']))
+        print("     Road Building: " + str(self.dev_cards['Road Building']))
+        print("     Monopoly: " + str(self.dev_cards['Monopoly']))
+        print("     Year of Plenty: " + str(self.dev_cards['Year of Plenty']))
         print("Longest Road Points: " + str(self.longest_road))
         print("Largest Army Points: " + str(self.largest_army))
 
