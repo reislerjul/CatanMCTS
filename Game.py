@@ -39,7 +39,7 @@ class Game():
         # print the board state at the beginning of the round
 
         if settings.DEBUG:
-            board.print_board_state()
+            self.board.print_board_state()
 
         for player in self.players:
             # TODO: allow player to play dev card before rolling 
@@ -55,6 +55,11 @@ class Game():
                 print("Dice Roll: " + str(dice1 + dice2))
 
             self.board.allocate_resources(dice1 + dice2, self.players)
+
+            # If the roll is 7, the player should move the robber and steal
+            if dice1 + dice2 == 7:
+                player.moveRobber(self.board)
+
             
             # If the player has won, the game is over.
             if player.make_turn(self.board, self.deck):
@@ -69,7 +74,7 @@ class Game():
 
         # print the board state at the end of the round
         if settings.DEBUG:
-            board.print_board_state()
+            self.board.print_board_state()
 
         self.num_rounds += 1
         return 0

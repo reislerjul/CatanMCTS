@@ -488,7 +488,10 @@ class Board():
         # There is a case where robber is moved and nobody is stolen from
         if victim_player != None:
             resource = self.discard_random(victim_player)
-            self.give_resource(resource, thief_player)
+
+            # If the player doesn't have a resource, nothing should happen
+            if resource != None:
+                self.give_resource(resource, thief_player)
     
     def players_adjacent_to_hex(self, loc):
         '''
@@ -618,7 +621,7 @@ class Board():
                 self.adjacent[hex_loc] = [player]
             if initial_boost:
                 self.give_resource(ret_resource, player)
-    
+
     def upgrade_settlement(self, player, loc):
         '''
         upgrades a settlement to a city

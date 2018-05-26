@@ -175,7 +175,7 @@ class Player():
         if move_type == 4:
             # Resources available to draw a dev card and enough dev cards in deck
             if self.resources['o'] >= 1 and self.resources['g'] >=1 \
-                and self.resources['w'] >=1 and deck.card_left > 0:
+                and self.resources['w'] >=1 and deck.cards_left > 0:
                 return True
 
         if move_type == 5:
@@ -195,7 +195,7 @@ class Player():
                 and ((oldRes[0]+ ' ' + oldRes[1]) in self.ports):
                 return True
 
-        if move_type == 7 and move in board.coords.keys():
+        if move_type == 7 and move[0] in board.coords.keys():
             return True
 
         if move_type == 0:
@@ -266,25 +266,44 @@ class Player():
         # Play a dev card 
         elif move_type == 5:
             self.dev_cards[move] -= 1
-            play = dev_card_handler(move, board)
+            play = self.dev_card_handler(move, board)
 
             # If the dev card is road building, we've covered this in 
             # the dev card handler, so we can just return
             if move == 'Road Building':
-                return 1
+                return 1                
 
         # Trade with bank
         elif move_type == 6:
             self.trade_resources(move[0], move[1])
 
-        # Move robber
+        # Move robber.
         if move_type == 7:
-            play = self.moveRobber(board, move)
+            play = move[1]
+            move = move[0]
 
         # Apply the changes to the board
         board.update_board(self, move_type, move, play)
 
         return 1
+
+
+    # A helper function for moving the robber in the case of rolling a 7 
+    def moveRobber(self, board):
+        while True:
+            if self.player_type == 0:
+                r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
+                spot = (r, c)
+            elif self.player_type == 1:
+                spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
+                (0, 0), (2, 2), (0, 1)]
+                spots.remove(self.board.robber)
+                spot = spots[random.randint(0, len(spots) - 1)]
+            victim = self.choose_victim(board, spot)
+            invalid = self.make_move(7, board, None, (spot, victim))
+            if invalid == 1:
+                return
 
 
     # A helper function to move the robber and steal from 
@@ -334,12 +353,13 @@ class Player():
         if card_type == 'Knight':
             self.num_knights_played += 1
             if self.player_type == 0:
-                spot = input("Where are you moving the robber?")
+                r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
+                spot = (r, c)
             elif self.player_type == 1:
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
-                spots.remove(board.robber)
+                spots.remove(self.board.robber)
                 spot = spots[random.randint(0, len(spots) - 1)]
             victim = self.choose_victim(board, spot)
             return (spot, victim)
@@ -459,7 +479,7 @@ class Player():
                     return [4]
 
                 elif move_type == 5:
-                    move = self.playDevCard(board, deck)
+                    move = self.playDevCard(board)
                     return [5, move]
 
                 elif move_type == 6:
@@ -682,7 +702,7 @@ class Player():
         return move
 
     ##################################### WRITE DEV CARD CODE #####################################
-    def playDevCard(self, board, deck):
+    def playDevCard(self, board):
         move = input("Which dev card do you want to play (Choose from form: Knight, Road Building, Monopoly, Year of Plenty): ")
         print('Playing dev card ...')
         return move
