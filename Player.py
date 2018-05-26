@@ -664,7 +664,7 @@ class Player():
                     dev_played += 1
 
                 # Did the move cause us to win?
-                if self.calculate_vp() >= 10:
+                if self.calculate_vp() >= settings.POINTS_TO_WIN:
                     return 1
 
             if move_made == 0:
