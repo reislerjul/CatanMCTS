@@ -255,7 +255,7 @@ class Player():
             self.resources['o'] -= 3
             self.resources['g'] -= 2
             self.cities.append(move)
-            self.settlement.remove(move)
+            self.settlements.remove(move)
 
         # Draw a dev card
         elif move_type == 4:
