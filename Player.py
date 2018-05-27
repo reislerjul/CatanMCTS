@@ -70,7 +70,7 @@ class Player():
 
     # Allows the game to access the number of victory points that a player has
     def calculate_vp(self):
-        return self.dev_cards['Victory Point'] + len(self.cities) + \
+        return self.dev_cards['Victory Point'] + 2 * len(self.cities) + \
         len(self.settlements) + self.longest_road + self.largest_army
 
 
@@ -218,11 +218,6 @@ class Player():
     # -1 if the move is not legal
     def make_move(self, move_type, board, deck, move):
 
-        print("Printing the move:")
-        print("Player " + str(self.player_num))
-        print("Move type: " + str(move_type))
-        print("Move: " + str(move))
-
         # Play corresponds to the information that the board may 
         # need when a dev card is played
         play = None
@@ -230,7 +225,6 @@ class Player():
         if not self.check_legal_move(move, move_type, board, deck):
             if self.player_type == 0:
                 print("Illegal move!")
-            print("Illegal move!")
             return -1
 
         # This is a legal move so if we're in debug mode, we should 

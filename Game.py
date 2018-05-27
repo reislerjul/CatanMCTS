@@ -77,6 +77,7 @@ class Game():
             self.board.print_board_state()
 
         self.num_rounds += 1
+
         return 0
 
 
@@ -88,6 +89,20 @@ class Game():
         while True:
             if self.round():
                 return self.won
+
+            # The other win condition will occur when 500 turns are played. 
+            # Take the player with the highest number of points.
+            if self.num_rounds == 500:
+                self.won = self.players[0]
+                max_points = self.players[0].calculate_vp()
+                for player in self.players[1:]:
+                    curr_vp = player.calculate_vp()
+                    if curr_vp > max_points:
+                        max_points = curr_vp
+                        self.won = player
+                return self.won
+
+
 
 
 

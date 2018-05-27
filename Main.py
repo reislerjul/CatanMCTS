@@ -35,6 +35,7 @@ def main():
     print("Starting Game.")
     game.place_spots()
     winner = game.play_game()
+    print("Total Rounds: " + str(game.num_rounds))
     print("Game Over. Player " + str(winner) + " won.")
 
 
