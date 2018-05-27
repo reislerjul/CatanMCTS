@@ -115,8 +115,8 @@ class Player():
             legal_road = self.can_build_road(move, board)
 
         # build the road
-        self.roads[move[0]] = move[1]
-        self.roads[move[1]] = move[0]
+        self.roads[move[0]] = [move[1]]
+        self.roads[move[1]] = [move[0]]
         board.build_road(move[0], move[1], self)
 
 
@@ -198,8 +198,12 @@ class Player():
                 and ((oldRes[0]+ ' ' + oldRes[1]) in self.ports):
                 return True
 
-        if move_type == 7 and move[0] in board.coords.keys():
-            return True
+        if move_type == 7:
+            spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
+                (0, 0), (2, 2), (0, 1)]
+            if move[0] in spots:
+                return True
 
         if move_type == 0:
             return True
@@ -236,8 +240,16 @@ class Player():
         elif move_type == 1:
             self.resources['b'] -= 1
             self.resources['l'] -= 1
-            self.roads[move[0]] = move[1]
-            self.roads[move[1]] = move[0]
+            if move[0] in list(self.roads.keys()):
+                self.roads[move[0]].append(move[1])
+            else:
+                self.roads[move[0]] = [move[1]]
+            if move[1] in list(self.roads.keys()):
+                self.roads[move[1]].append(move[0])
+            else:
+                self.roads[move[1]] = [move[0]]
+            # self.roads[move[0]] = move[1]
+            # self.roads[move[1]] = move[0]
 
         # Build a settlement
         elif move_type == 2:
@@ -299,7 +311,8 @@ class Player():
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
-                spots.remove(self.board.robber)
+                if board.robber != (2,0):
+                    spots.remove(board.robber)
                 spot = spots[random.randint(0, len(spots) - 1)]
             victim = self.choose_victim(board, spot)
             invalid = self.make_move(7, board, None, (spot, victim))
@@ -360,7 +373,7 @@ class Player():
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
-                spots.remove(self.board.robber)
+                spots.remove(board.robber)
                 spot = spots[random.randint(0, len(spots) - 1)]
             victim = self.choose_victim(board, spot)
             return (spot, victim)
@@ -387,8 +400,8 @@ class Player():
                 card1 = input("Choose first card")
                 card2 = input("Choose second card")
             elif self.player_type == 1:
-                card1 = possible_cards[random.randint(0, len(possible_cards))]
-                card2 = possible_cards[random.randint(0, len(possible_cards))]
+                card1 = possible_cards[random.randint(0, len(possible_cards)-1)]
+                card2 = possible_cards[random.randint(0, len(possible_cards)-1)]
             self.resources[card1] += 1
             self.resources[card2] += 1
             return None
@@ -398,7 +411,7 @@ class Player():
             if self.player_type == 0:
                 card_choice = input("Choose card to monopoly!")
             else:
-                card_choice = possible_cards[random.randint(0, len(possible_cards))]
+                card_choice = possible_cards[random.randint(0, len(possible_cards)-1)]
             return card_choice
 
 
@@ -409,7 +422,7 @@ class Player():
     def choose_road(self, board):
         possible_roads = {}
 
-        for road_source in self.roads.keys():
+        for road_source in list(self.roads.keys()):
             possible_sinks = \
             board.coords[road_source]['available roads']
 
@@ -418,7 +431,7 @@ class Player():
                 (sink, road_source) not in possible_roads:
                     possible_roads[(sink, road_source)] = True
 
-        options = possible_roads.keys()
+        options = list(possible_roads.keys())
         return options[random.randint(0, len(options) - 1)]
 
 
@@ -495,12 +508,12 @@ class Player():
         elif self.player_type == 1:
 
             # We can always end our turn
-            possible_moves = [(0)]
+            possible_moves = [(0,)]
 
             # Can we buy dev card?
             if self.resources['g'] > 0 and self.resources['w'] > 0 \
             and self.resources['o'] > 0:
-                possible_moves.append((4))
+                possible_moves.append((4,))
 
             # Can we play a dev card?
             if dev_played == 0:
@@ -519,7 +532,7 @@ class Player():
                 # Get the set of possible places we can build a road 
                 possible_roads = {}
 
-                for road_source in self.roads.keys():
+                for road_source in list(self.roads.keys()):
                     possible_sinks = \
                     board.coords[road_source]['available roads']
 
@@ -537,45 +550,75 @@ class Player():
             self.resources['b'] > 0 and self.resources['g'] > 0:
 
                 # Check the possible places for us to build a settlement
-                for source in self.roads.keys():
-                    if (can_build_settlement(source, board)):
+                for source in list(self.roads.keys()):
+                    if (self.can_build_settlement(source, board)):
                         possible_moves.append((2, source))
 
             # Should we trade in resources? Try cases for the 5 different resources
             if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
             (self.resources['w'] >= 3 and '3' in self.ports) or (self.resources['w'] >= 4):
-                possible_moves.append((6, ('w', 'o')))
-                possible_moves.append((6, ('w', 'l')))
-                possible_moves.append((6, ('w', 'g')))
-                possible_moves.append((6, ('w', 'b')))
+                if (self.resources['w'] >= 2 and '2 w' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['w'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'w'), 'o')))
+                possible_moves.append((6, ((numTrade, 'w'), 'l')))
+                possible_moves.append((6, ((numTrade, 'w'), 'g')))
+                possible_moves.append((6, ((numTrade, 'w'), 'b')))
 
             if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
             (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
-                possible_moves.append((6, ('o', 'w')))
-                possible_moves.append((6, ('o', 'l')))
-                possible_moves.append((6, ('o', 'g')))
-                possible_moves.append((6, ('o', 'b')))
+                if (self.resources['o'] >= 2 and '2 o' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['o'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'o'), 'w')))
+                possible_moves.append((6, ((numTrade, 'o'), 'l')))
+                possible_moves.append((6, ((numTrade, 'o'), 'g')))
+                possible_moves.append((6, ((numTrade, 'o'), 'b')))
 
             if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
             (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
-                possible_moves.append((6, ('l', 'o')))
-                possible_moves.append((6, ('l', 'w')))
-                possible_moves.append((6, ('l', 'g')))
-                possible_moves.append((6, ('l', 'b')))
+                if (self.resources['l'] >= 2 and '2 l' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['l'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'l'), 'o')))
+                possible_moves.append((6, ((numTrade, 'l'), 'w')))
+                possible_moves.append((6, ((numTrade, 'l'), 'g')))
+                possible_moves.append((6, ((numTrade, 'l'), 'b')))
 
             if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
             (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
-                possible_moves.append((6, ('b', 'l')))
-                possible_moves.append((6, ('b', 'o')))
-                possible_moves.append((6, ('b', 'w')))
-                possible_moves.append((6, ('b', 'g')))
+                if (self.resources['b'] >= 2 and '2 b' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['b'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'b'), 'l')))
+                possible_moves.append((6, ((numTrade, 'b'), 'o')))
+                possible_moves.append((6, ((numTrade, 'b'), 'w')))
+                possible_moves.append((6, ((numTrade, 'b'), 'g')))
 
             if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
             (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
-                possible_moves.append((6, ('g', 'l')))
-                possible_moves.append((6, ('g', 'o')))
-                possible_moves.append((6, ('g', 'w')))
-                possible_moves.append((6, ('g', 'b')))
+                if (self.resources['g'] >= 2 and '2 g' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['g'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'g'), 'l')))
+                possible_moves.append((6, ((numTrade, 'g'), 'o')))
+                possible_moves.append((6, ((numTrade, 'g'), 'w')))
+                possible_moves.append((6, ((numTrade, 'g'), 'b')))
 
             # Choose a move randomly from the set of possible moves! 
             return list(possible_moves[random.randint(0, len(possible_moves) - 1)])

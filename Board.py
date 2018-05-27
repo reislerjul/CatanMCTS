@@ -470,6 +470,7 @@ class Board():
         '''
         total_resources = 0
         for resource in self.resource_list:
+            #if player.resources[resource] > 0:
             total_resources += player.resources[resource]
         
         if total_resources > 0:
@@ -588,20 +589,22 @@ class Board():
         longest = length
         
         for neighbour in self.coords[current1]['neighbours']:
-            if self.coords[current1]['roads'][neighbour] == player \
-            and (current1, neighbour) not in visited \
-            and (neighbour, current1) not in visited:
-                new_visited = visited | set([(current1, neighbour)])
-                new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
-                longest = max(longest, new_longest)
+            if neighbour in list(self.coords[current1]['roads'].keys()):
+                if self.coords[current1]['roads'][neighbour] == player \
+                and (current1, neighbour) not in visited \
+                and (neighbour, current1) not in visited:
+                    new_visited = visited | set([(current1, neighbour)])
+                    new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
+                    longest = max(longest, new_longest)
         
         for neighbour in self.coords[current2]['neighbours']:
-            if self.coords[current2]['roads'][neighbour] == player \
-            and (current2, neighbour) not in visited \
-            and (neighbour, current2) not in visited:
-                new_visited = visited | set([(current2, neighbour)])
-                new_longest = self.longest_road(new_visited, current1, neighbour, player, length + 1)
-                longest = max(longest, new_longest)
+            if neighbour in list(self.coords[current2]['roads'].keys()):
+                if self.coords[current2]['roads'][neighbour] == player \
+                and (current2, neighbour) not in visited \
+                and (neighbour, current2) not in visited:
+                    new_visited = visited | set([(current2, neighbour)])
+                    new_longest = self.longest_road(new_visited, current1, neighbour, player, length + 1)
+                    longest = max(longest, new_longest)
         
         return longest
     
