@@ -517,6 +517,7 @@ class Board():
                 # move largest army card
                 if self.largest_army_player is not None:
                     self.largest_army_player.largest_army = 0
+                self.largest_army_player = player
                 player.largest_army = 2
     
     def allocate_resources(self, die_roll, players):
@@ -580,6 +581,7 @@ class Board():
             
             if self.longest_road_player is not None:
                 self.longest_road_player.longest_road = 0
+            self.longest_road_player = player
             player.longest_road = 2
     
     def longest_road(self, visited, current1, current2, player, length):
