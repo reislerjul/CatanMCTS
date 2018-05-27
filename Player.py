@@ -154,7 +154,7 @@ class Player():
                     (move[0] in self.settlements) or (move[1] in self.settlements):
                             return True
 
-        if move_type == 2 and move in board.coords.keys():
+        if move_type == 2 and move in board.coords.keys() and len(self.settlements) < 5:
             # Resources available to make a settlement
             if self.resources['b'] >= 1 and self.resources['l'] >=1 and \
                self.resources['g'] >= 1 and self.resources['w'] >=1:
@@ -172,7 +172,7 @@ class Player():
                         return True
             
         # Have a settlement at that spot
-        if move_type == 3 and move in self.settlements:
+        if move_type == 3 and move in self.settlements and len(self.cities) < 4:
             # Resources available to make a city
             if self.resources['o'] >= 3 and self.resources['g'] >=2:
                 return True
@@ -551,7 +551,8 @@ class Player():
 
             # Can we build a settlement?
             if self.resources['w'] > 0 and self.resources['l'] > 0 and \
-            self.resources['b'] > 0 and self.resources['g'] > 0:
+            self.resources['b'] > 0 and self.resources['g'] > 0 and \
+            len(self.settlements) < 5:
 
                 # Check the possible places for us to build a settlement
                 for source in list(self.roads.keys()):
