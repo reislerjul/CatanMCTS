@@ -218,6 +218,11 @@ class Player():
     # -1 if the move is not legal
     def make_move(self, move_type, board, deck, move):
 
+        print("Printing the move:")
+        print("Player " + str(self.player_num))
+        print("Move type: " + str(move_type))
+        print("Move: " + str(move))
+
         # Play corresponds to the information that the board may 
         # need when a dev card is played
         play = None
@@ -225,6 +230,7 @@ class Player():
         if not self.check_legal_move(move, move_type, board, deck):
             if self.player_type == 0:
                 print("Illegal move!")
+            print("Illegal move!")
             return -1
 
         # This is a legal move so if we're in debug mode, we should 
@@ -362,7 +368,28 @@ class Player():
         return victim
 
 
-    # TODO: add dev cards other than knights
+    # A helper function to make sure that possible roads exist for the player. If 
+    # they don't, we have to pass from road building
+    def possible_roads_build(self, board):
+        # Get the set of possible places we can build a road 
+        possible_roads = {}
+
+        for road_source in list(self.roads.keys()):
+            possible_sinks = \
+            board.coords[road_source]['available roads']
+
+            for sink in possible_sinks:
+                if (road_source, sink) not in possible_roads and \
+                (sink, road_source) not in possible_roads:
+                    possible_roads[(sink, road_source)] = True
+
+        if len(possible_roads.keys()) > 0:
+            return True
+        else:
+            return False
+
+
+
     # A helper function to handle playing dev cards
     def dev_card_handler(self, card_type, board):
 
@@ -385,17 +412,38 @@ class Player():
         # Handle road builder; give the player resources for 2 roads then call
         # make_move for building roads until they place 2 valid roads
         if card_type == "Road Building":
-            self.resources['l'] += 2
-            self.resources['b'] += 2
-            roads_played = 0
-            while roads_played < 2:
-                if self.player_type == 0:
-                    move = self.build_road(board)
-                elif self.player_type == 1:
-                    move = self.choose_road(board)
-                if self.make_move(1, board, None, move) == 1:
-                    roads_played += 1
-            return None
+
+            # Take care of cases where too many roads are already built
+            if self.total_roads == 15:
+                return None
+            elif self.total_roads == 14:
+                if not self.possible_roads_build(board):
+                    return None
+                self.resources['l'] += 1
+                self.resources['b'] += 1
+                roads_played = 0
+                while roads_played < 1:
+                    if self.player_type == 0:
+                        move = self.build_road(board)
+                    elif self.player_type == 1:
+                        move = self.choose_road(board)
+                    if self.make_move(1, board, None, move) == 1:
+                        roads_played += 1
+                return None
+            else:
+                roads_played = 0
+                while roads_played < 2:
+                    if not self.possible_roads_build(board):
+                        return None
+                    self.resources['l'] += 1
+                    self.resources['b'] += 1
+                    if self.player_type == 0:
+                        move = self.build_road(board)
+                    elif self.player_type == 1:
+                        move = self.choose_road(board)
+                    if self.make_move(1, board, None, move) == 1:
+                        roads_played += 1
+                return None
 
         # year of plenty; choose 2 cards to receive
         possible_cards = ['w', 'l', 'g', 'b', 'o']
@@ -455,7 +503,7 @@ class Player():
     # TODO: this function will be used to choose the move. it should 
     # be different depending on whether the player is a random AI, 
     # human, or MCTS AI
-    def decide_move(self, dev_played, board):
+    def decide_move(self, dev_played, board, deck):
         if self.player_type == 0:
 
             self.printResources()
@@ -516,13 +564,13 @@ class Player():
 
             # Can we buy dev card?
             if self.resources['g'] > 0 and self.resources['w'] > 0 \
-            and self.resources['o'] > 0:
+            and self.resources['o'] > 0 and deck.cards_left > 0:
                 possible_moves.append((4,))
 
             # Can we play a dev card?
             if dev_played == 0:
                 for card in self.dev_cards.keys():
-                    if card != 'Victory Point':
+                    if card != 'Victory Point' and self.dev_cards[card] > 0:
                         possible_moves.append((5, card))
 
             # Can we build a city?
@@ -694,7 +742,7 @@ class Player():
 
         while True:
 
-            move = self.decide_move(dev_played, board)
+            move = self.decide_move(dev_played, board, deck)
             # move is list
 
             move_type = move[0]
