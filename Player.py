@@ -23,6 +23,7 @@ class Player():
         self.cities = []    # [(0,0), (1,1)...]
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}     # {(0,0):(1,1), (1,1):(0,0)...}
+        self.total_roads = 0
 
     # When in debug mode, use this function to print out the player's fields in a 
     # readable way. 
@@ -43,6 +44,7 @@ class Player():
 
         print("Total Resources: " + str(total_resources))
 
+        print("Total Roads: " + str(self.total_roads))
         print('Dev Cards:', self.dev_cards)
         print("     Knights: " + str(self.dev_cards['Knight']))
         print("     Victory Point: " + str(self.dev_cards['Victory Point']))
@@ -141,7 +143,7 @@ class Player():
     # General: Make sure the player can only play the move if they have the 
     # required resources
     def check_legal_move(self, move, move_type, board, deck):
-        if move_type == 1 and move[0] in board.coords.keys():
+        if move_type == 1 and move[0] in board.coords.keys() and self.total_roads < 15:
             # Resources available to make a road
             if self.resources['b'] >= 1 and self.resources['l'] >=1:
                 state_o = board.coords[move[0]]
@@ -238,6 +240,7 @@ class Player():
 
         # Build a road
         elif move_type == 1:
+            self.total_roads += 1
             self.resources['b'] -= 1
             self.resources['l'] -= 1
             if move[0] in list(self.roads.keys()):
@@ -529,7 +532,7 @@ class Player():
                     possible_moves.append((3, settlement))
 
             # Can we build a road?
-            if self.resources['b'] > 0 and self.resources['l'] > 0:
+            if self.resources['b'] > 0 and self.resources['l'] > 0 and self.total_roads < 15:
                 # Get the set of possible places we can build a road 
                 possible_roads = {}
 
