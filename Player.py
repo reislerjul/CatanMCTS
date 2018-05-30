@@ -63,6 +63,129 @@ class Player():
         return 0
 
 
+    # A helper function used to get a list of all the legal moves. 
+    def get_legal_moves(self, board, deck, dev_played):
+
+            # Determine moves we can play and add them to the list.
+
+            # We can always end our turn
+            possible_moves = [(0,)]
+
+            # Can we buy dev card?
+            if self.resources['g'] > 0 and self.resources['w'] > 0 \
+            and self.resources['o'] > 0 and deck.cards_left > 0:
+                possible_moves.append((4,))
+
+            # Can we play a dev card?
+            if dev_played == 0:
+                for card in self.dev_cards.keys():
+                    if card != 'Victory Point' and self.dev_cards[card] > 0:
+                        possible_moves.append((5, card))
+
+            # Can we build a city?
+            if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
+            len(self.cities) < 4:
+                for settlement in self.settlements:
+                    possible_moves.append((3, settlement))
+
+            # Can we build a road?
+            if self.resources['b'] > 0 and self.resources['l'] > 0 and self.total_roads < 15:
+                # Get the set of possible places we can build a road 
+                possible_roads = {}
+
+                for road_source in list(self.roads.keys()):
+                    possible_sinks = \
+                    board.coords[road_source]['available roads']
+
+                    for sink in possible_sinks:
+                        if (road_source, sink) not in possible_roads and \
+                        (sink, road_source) not in possible_roads:
+                            possible_roads[(sink, road_source)] = True
+
+                # We now have the possible roads, so lets add those moves!
+                for road in possible_roads:
+                    possible_moves.append((1, road))
+
+            # Can we build a settlement?
+            if self.resources['w'] > 0 and self.resources['l'] > 0 and \
+            self.resources['b'] > 0 and self.resources['g'] > 0 and \
+            len(self.settlements) < 5:
+
+                # Check the possible places for us to build a settlement
+                for source in list(self.roads.keys()):
+                    if (self.can_build_settlement(source, board)):
+                        possible_moves.append((2, source))
+
+            # Should we trade in resources? Try cases for the 5 different resources
+            if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
+            (self.resources['w'] >= 3 and '3' in self.ports) or (self.resources['w'] >= 4):
+                if (self.resources['w'] >= 2 and '2 w' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['w'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'w'), 'o')))
+                possible_moves.append((6, ((numTrade, 'w'), 'l')))
+                possible_moves.append((6, ((numTrade, 'w'), 'g')))
+                possible_moves.append((6, ((numTrade, 'w'), 'b')))
+
+            if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
+            (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
+                if (self.resources['o'] >= 2 and '2 o' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['o'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'o'), 'w')))
+                possible_moves.append((6, ((numTrade, 'o'), 'l')))
+                possible_moves.append((6, ((numTrade, 'o'), 'g')))
+                possible_moves.append((6, ((numTrade, 'o'), 'b')))
+
+            if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
+            (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
+                if (self.resources['l'] >= 2 and '2 l' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['l'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'l'), 'o')))
+                possible_moves.append((6, ((numTrade, 'l'), 'w')))
+                possible_moves.append((6, ((numTrade, 'l'), 'g')))
+                possible_moves.append((6, ((numTrade, 'l'), 'b')))
+
+            if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
+            (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
+                if (self.resources['b'] >= 2 and '2 b' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['b'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'b'), 'l')))
+                possible_moves.append((6, ((numTrade, 'b'), 'o')))
+                possible_moves.append((6, ((numTrade, 'b'), 'w')))
+                possible_moves.append((6, ((numTrade, 'b'), 'g')))
+
+            if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
+            (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
+                if (self.resources['g'] >= 2 and '2 g' in self.ports):
+                    numTrade = '2'
+                elif (self.resources['g'] >= 3 and '3' in self.ports):
+                    numTrade = '3'
+                else:
+                    numTrade = '4'
+                possible_moves.append((6, ((numTrade, 'g'), 'l')))
+                possible_moves.append((6, ((numTrade, 'g'), 'o')))
+                possible_moves.append((6, ((numTrade, 'g'), 'w')))
+                possible_moves.append((6, ((numTrade, 'g'), 'b')))
+
+            return possible_moves
+
+
+
 
     # A getter function to return the player's hand of dev cards
     def get_dev_cards(self):
@@ -72,7 +195,6 @@ class Player():
     def calculate_vp(self):
         return self.dev_cards['Victory Point'] + 2 * len(self.cities) + \
         len(self.settlements) + self.longest_road + self.largest_army
-
 
     # A function that allows the players to choose their 
     # settlement and road placement at the beginning of the game
