@@ -21,6 +21,7 @@ class Board():
         self.longest_road_player = None
         self.resource_list = ['w', 'b', 'l', 'g', 'o']
         
+
     def init_board(self, debug = False):
         '''creates the coordinate system and inits the board 
         the coordinate system for settlements and road is defined as
