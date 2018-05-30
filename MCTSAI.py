@@ -12,6 +12,7 @@ class MCSTAI():
 		self.wins = {}
 		self.plays = {}
 		self.player = player
+		self.players = players
 		self.board = board
 		self.deck = deck
 		self.states = []
@@ -33,7 +34,7 @@ class MCSTAI():
 			return legal[0]
 
 		games = 0
-			start = datetime.datetime.utcnow()
+		start = datetime.datetime.utcnow()
 		while datetime.datetime.utcnow() - start < self.timer:
 		    self.run_simulation()
 		    games += 1
@@ -58,12 +59,15 @@ class MCSTAI():
 		return move
 	
 	def run_simulation(self):
+		players = self.players
+		nplayers = len(self.players)
 		plays, wins = self.plays, self.wins
 		visited_states = set()
 		states_copy = self.states[:]
 		state = states_copy[-1]	
-		# this is a place holder, really should be a way to access whose turn it is or which player it is
-		player = self.player
+		curr_player_num =0 
+		# this is a place holder, really should be a way to access whose turn it is or which player it is I think it starts with initial player
+		player = self.players[curr_player_num]
 		expand = True
 		for t in xrange(self.max_moves):
 			legal = self.player.get_legal_moves(states_copy)
@@ -88,7 +92,13 @@ class MCSTAI():
 					if t > self.max_depth:
 						self.max_depth = t
 			visited_states.add((player, state))
-			player = self.player
+			#change it to the next player.
+			if curr_player_num == nplayers - 1:
+				curr_player_num =0
+				player = players[0]
+			else:
+				curr_player_num +=1
+				player = players[cur_player_num]
 			if player.calculate_vp() >= settings.POINTS_TO_WIN:
 				winner = player.player_num			
 			if winner:
