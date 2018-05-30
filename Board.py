@@ -553,9 +553,6 @@ class Board():
                 print("     b: " + str(player.resources['b']))
                 print("     o: " + str(player.resources['o']))
                 print("     g: " + str(player.resources['g']))
-
-
-                
             
     def give_resource(self, resource, player):
         '''
@@ -716,4 +713,59 @@ class Board():
         if move_type == 7:
             self.move_robber(move)
             self.steal_from(additional, player)
-    
+
+
+    def getCost(self, player):
+        '''this function calculates the cost for the given state and player.
+        The cost is higher for a "better" state. Points given for building:
+        1. Road: 2
+        2. Settlement: 5
+        3. Cities: 10 
+        4. Ports: 3
+        Points for player dev cards / resources:
+        1. Dev Cards: 3
+        2. Resources: 0.5 (numCards <= 7), -0.5 (numCards > 7)'''
+
+        cost = 0.0
+        dieRoll_probs = {2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1}
+        for coord in self.coords:
+            if coord['player'] == player:
+                # If player has settlement
+                if coord['settlement']:
+                    cost += 5
+                else:
+                # If player has city
+                    cost += 10
+                # Add probability of getting resources, provided there is no robber
+                for loc in coord['resources locs']:
+                        die_val = self.resources[loc][1]
+                        isRobber = self.resources[loc][2]
+                        cost += (dieRoll_probs[die_val]*isRobber/12)
+                # If the player has a settlement/city at a port
+                if coord['ports'] != '':
+                    cost += 3
+        # If player has a road
+        cost += (2*player.total_roads)
+
+        # Cost for resources
+        numRes = 0
+        for resource in list(player.resources.keys()):
+            numRes = numRes + player.resources[resource]
+            if numRes <= 7:
+                cost += (0.5*player.resources[resource])
+            else:
+                cost = cost - (0.5*player.resources[resource])
+
+        # If player has longest road
+        cost = cost + (self.longest_road * 5)
+        # If player has largest army
+        cost = cost + (self.largest_army * 5)
+        
+        for card in list(player.dev_cards.keys()):
+            cost = cost + (3*player.dev_cards[cards])
+
+        return cost
+
+
+
+        
