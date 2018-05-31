@@ -847,5 +847,17 @@ class Player():
         move = (oldRes, newRes)
         return move     # Tuple of tuple: Trade of multiple cards for one card
 
-    
+    def hashable_player(self):
+
+        hash_res = tuple([(k, v) for k, v in self.resources.iteritems()])
+        hash_dev_cards = tuple([(k, v) for k, v in self.dev_cards.iteritems()])
+        hash_cities = tuple([(k, v) for k, v in self.cities.iteritems()])
+        player_tuple = (self.player_num, hash_res, hash_dev_cards, hashtuple(self.ports), \
+            self.num_knights_played, self.longest_road, self.largest_army, \
+            self.player_type, tuple(self.ports), tuple(self.cities), tuple(self.settlements), \
+            hash_cities, self.total_roads)
+        return player_tuple
+
+
+
 
