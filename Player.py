@@ -13,13 +13,12 @@ class Player():
     def __init__(self, player_type, player_num):
         self.player_num = player_num
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
-        self.player_type = player_type
-        
         self.dev_cards = {'Knight': 0, 'Victory Point': 0,\
             'Road Building':0, 'Monopoly': 0, 'Year of Plenty': 0} #{type: #cards}
         self.num_knights_played = 0
         self.longest_road = 0
         self.largest_army = 0
+        self.player_type = player_type
         self.ports = []    # {} 
         self.cities = []    # [(0,0), (1,1)...]
         self.settlements = []   #[(0,0), (1,1)...]
@@ -444,7 +443,7 @@ class Player():
         if move_type == 7:
             play = move[1]
             move = move[0]
-            board.update_board(self, move_type, move, play, additional = additional)
+            board.update_board(self, move_type, move, play)
         else:
             # Apply the changes to the board
             board.update_board(self, move_type, move, play)
@@ -848,5 +847,5 @@ class Player():
         move = (oldRes, newRes)
         return move     # Tuple of tuple: Trade of multiple cards for one card
 
-            
+    
 

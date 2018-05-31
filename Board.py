@@ -712,6 +712,7 @@ class Board():
 
         # Move robber
         if move_type == 7:
+            print(additional, player)
             self.move_robber(move)
             self.steal_from(additional, player)
 

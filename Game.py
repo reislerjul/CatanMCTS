@@ -13,7 +13,6 @@ class Game():
         self.players = players
         self.num_rounds = 0
 
-
     # This function represents the start of the game in which
     # each player chooses their spots. 
     def place_spots(self):
@@ -85,7 +84,7 @@ class Game():
     # play the game. The function calls the round function until 
     # a player has won. 
     def play_game(self):
-
+        
         while True:
             if self.round():
                 return self.won
