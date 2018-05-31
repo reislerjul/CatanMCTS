@@ -1,6 +1,6 @@
 import random
 import settings
-
+from MCTSAI import MCTSAI
 # The player class. Each player should keep track of their roads, cities, 
 # settlements, dev cards, whether they're on a port, number of victory
 # points, and resource cards. 
@@ -14,6 +14,7 @@ class Player():
         self.player_num = player_num
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
         self.player_type = player_type
+        
         self.dev_cards = {'Knight': 0, 'Victory Point': 0,\
             'Road Building':0, 'Monopoly': 0, 'Year of Plenty': 0} #{type: #cards}
         self.num_knights_played = 0
@@ -64,7 +65,7 @@ class Player():
 
 
     # A helper function used to get a list of all the legal moves. 
-    def get_legal_moves(self, board, deck, dev_played):
+    def get_legal_moves(self, board, deck, dev_played, robber):
 
             # Determine moves we can play and add them to the list.
 
@@ -181,7 +182,29 @@ class Player():
                 possible_moves.append((6, ((numTrade, 'g'), 'o')))
                 possible_moves.append((6, ((numTrade, 'g'), 'w')))
                 possible_moves.append((6, ((numTrade, 'g'), 'b')))
-
+            if robber:
+                possible_moves = []
+                spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                               (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
+                               (0, 0), (2, 2), (0, 1)]
+                for spot in spots:
+                    possible_players = board.players_adjacent_to_hex(spot)
+                    
+                    # Get a list of the player numbers
+                    player_nums = []
+                    for player in possible_players:
+                        player_nums.append(player.player_num)
+                    
+                    # We can't steal from ourself! 
+                    if self in possible_players:
+                        possible_players.remove(self)
+                        player_nums.remove(self.player_num)
+                    
+                    if len(player_nums) > 0:
+                        for p in player_nums:
+                            possible_moves.append((7,(spot), p))
+                    else:
+                        possible_moves.append((7, (spot), 0))
             return possible_moves
 
 
@@ -209,7 +232,7 @@ class Player():
                 loc = self.build_settlement(board)
 
             # This may yield coordinates that are not valid
-            elif self.player_type == 1:
+            elif self.player_type == 1 or self.player_type == 2:
                 loc = (random.randint(0, 11), random.randint(0, 5))
 
             legal_settlement = self.can_build_settlement(loc, board)
@@ -229,8 +252,9 @@ class Player():
 
             if self.player_type == 0:
                 move = self.build_road(board)
-            elif self.player_type == 1:
-
+            # do it randomly for now for the MCTSAI
+            elif self.player_type == 1 or self.player_type == 2:
+                
                 # Choose from set of roads coming from settlement; any should work
                 possible_sinks = state['available roads']
                 sink = possible_sinks[random.randint(0, len(possible_sinks) - 1)]
@@ -323,10 +347,11 @@ class Player():
                 return True
 
         if move_type == 7:
+            
             spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
-            if move[0] in spots:
+            if move in spots:
                 return True
 
         if move_type == 0:
@@ -419,27 +444,24 @@ class Player():
         if move_type == 7:
             play = move[1]
             move = move[0]
-
-        # Apply the changes to the board
-        board.update_board(self, move_type, move, play)
+            board.update_board(self, move_type, move, play, additional = additional)
+        else:
+            # Apply the changes to the board
+            board.update_board(self, move_type, move, play)
 
         return 1
 
 
     # A helper function for moving the robber in the case of rolling a 7 
-    def moveRobber(self, board):
+    def move_robber(self, board, spot, victim):
         while True:
-            if self.player_type == 0:
-                r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
-                spot = (r, c)
-            elif self.player_type == 1:
-                spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
-                (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
-                (0, 0), (2, 2), (0, 1)]
+                
+            #mctsai should not be picking random here
+            if self.player_type == 1 or self.player_type == 2:
+               
                 if board.robber != (2,0):
                     spots.remove(board.robber)
                 spot = spots[random.randint(0, len(spots) - 1)]
-            victim = self.choose_victim(board, spot)
             invalid = self.make_move(7, board, None, (spot, victim))
             if invalid == 1:
                 return
@@ -619,9 +641,9 @@ class Player():
     # TODO: this function will be used to choose the move. it should 
     # be different depending on whether the player is a random AI, 
     # human, or MCTS AI
-    def decide_move(self, dev_played, board, deck):
+    def decide_move(self, dev_played, board, deck, players, robber):
+            
         if self.player_type == 0:
-
             self.printResources()
             print('Moves available:')
             print('Enter 0 for ending/passing your turn')
@@ -631,6 +653,11 @@ class Player():
             print('Enter 4 to draw a dev card ')
             print('Enter 5 to play a dev card ')
             print('Enter 6 to make a trade ')
+            if robber:
+                r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
+                spot = (r, c)
+                victim = self.choose_victim(board, spot)
+                self.move_robber(board, spot, victim)
             move_type = int(input('Select move: '))
             if not (move_type == 5 and dev_played > 0):
 
@@ -674,124 +701,15 @@ class Player():
         # moving the robber to a specific spot
 
         elif self.player_type == 1:
-
-            # We can always end our turn
-            possible_moves = [(0,)]
-
-            # Can we buy dev card?
-            if self.resources['g'] > 0 and self.resources['w'] > 0 \
-            and self.resources['o'] > 0 and deck.cards_left > 0:
-                possible_moves.append((4,))
-
-            # Can we play a dev card?
-            if dev_played == 0:
-                for card in self.dev_cards.keys():
-                    if card != 'Victory Point' and self.dev_cards[card] > 0:
-                        possible_moves.append((5, card))
-
-            # Can we build a city?
-            if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
-            len(self.cities) < 4:
-                for settlement in self.settlements:
-                    possible_moves.append((3, settlement))
-
-            # Can we build a road?
-            if self.resources['b'] > 0 and self.resources['l'] > 0 and self.total_roads < 15:
-                # Get the set of possible places we can build a road 
-                possible_roads = {}
-
-                for road_source in list(self.roads.keys()):
-                    possible_sinks = \
-                    board.coords[road_source]['available roads']
-
-                    for sink in possible_sinks:
-                        if (road_source, sink) not in possible_roads and \
-                        (sink, road_source) not in possible_roads:
-                            possible_roads[(sink, road_source)] = True
-
-                # We now have the possible roads, so lets add those moves!
-                for road in possible_roads:
-                    possible_moves.append((1, road))
-
-            # Can we build a settlement?
-            if self.resources['w'] > 0 and self.resources['l'] > 0 and \
-            self.resources['b'] > 0 and self.resources['g'] > 0 and \
-            len(self.settlements) < 5:
-
-                # Check the possible places for us to build a settlement
-                for source in list(self.roads.keys()):
-                    if (self.can_build_settlement(source, board)):
-                        possible_moves.append((2, source))
-
-            # Should we trade in resources? Try cases for the 5 different resources
-            if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
-            (self.resources['w'] >= 3 and '3' in self.ports) or (self.resources['w'] >= 4):
-                if (self.resources['w'] >= 2 and '2 w' in self.ports):
-                    numTrade = '2'
-                elif (self.resources['w'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
-                else:
-                    numTrade = '4'
-                possible_moves.append((6, ((numTrade, 'w'), 'o')))
-                possible_moves.append((6, ((numTrade, 'w'), 'l')))
-                possible_moves.append((6, ((numTrade, 'w'), 'g')))
-                possible_moves.append((6, ((numTrade, 'w'), 'b')))
-
-            if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
-            (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
-                if (self.resources['o'] >= 2 and '2 o' in self.ports):
-                    numTrade = '2'
-                elif (self.resources['o'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
-                else:
-                    numTrade = '4'
-                possible_moves.append((6, ((numTrade, 'o'), 'w')))
-                possible_moves.append((6, ((numTrade, 'o'), 'l')))
-                possible_moves.append((6, ((numTrade, 'o'), 'g')))
-                possible_moves.append((6, ((numTrade, 'o'), 'b')))
-
-            if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
-            (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
-                if (self.resources['l'] >= 2 and '2 l' in self.ports):
-                    numTrade = '2'
-                elif (self.resources['l'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
-                else:
-                    numTrade = '4'
-                possible_moves.append((6, ((numTrade, 'l'), 'o')))
-                possible_moves.append((6, ((numTrade, 'l'), 'w')))
-                possible_moves.append((6, ((numTrade, 'l'), 'g')))
-                possible_moves.append((6, ((numTrade, 'l'), 'b')))
-
-            if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
-            (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
-                if (self.resources['b'] >= 2 and '2 b' in self.ports):
-                    numTrade = '2'
-                elif (self.resources['b'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
-                else:
-                    numTrade = '4'
-                possible_moves.append((6, ((numTrade, 'b'), 'l')))
-                possible_moves.append((6, ((numTrade, 'b'), 'o')))
-                possible_moves.append((6, ((numTrade, 'b'), 'w')))
-                possible_moves.append((6, ((numTrade, 'b'), 'g')))
-
-            if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
-            (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
-                if (self.resources['g'] >= 2 and '2 g' in self.ports):
-                    numTrade = '2'
-                elif (self.resources['g'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
-                else:
-                    numTrade = '4'
-                possible_moves.append((6, ((numTrade, 'g'), 'l')))
-                possible_moves.append((6, ((numTrade, 'g'), 'o')))
-                possible_moves.append((6, ((numTrade, 'g'), 'w')))
-                possible_moves.append((6, ((numTrade, 'g'), 'b')))
-
+            
+            
+            possible_moves = self.get_legal_moves(board, deck, dev_played, robber)
             # Choose a move randomly from the set of possible moves! 
-            return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
 
+            return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
+        elif self.player_type == 2:
+            AI = MCTSAI(board, 10, 500, players, deck, self.player_num, robber)
+            return AI.get_play()
 
 
     # A helper function to check if we can build a settlement at a specific
@@ -850,7 +768,9 @@ class Player():
     # victory points to be greater than or equal to 10, the function should 
     # immediately return 1. Otherwise, return 0 when the turn is over. 
     # Don't update dev cards till end of turn
-    def make_turn(self, board, deck):
+    # note i added players here because the MCTSAI needs info to make decisions
+    # for what the other players might have.
+    def make_turn(self, board, deck, players, robber):
 
         # This should indicate whether a dev card has already been 
         # played during this turn. If so, we can't play another one. 
@@ -858,14 +778,17 @@ class Player():
 
         while True:
 
-            move = self.decide_move(dev_played, board, deck)
+            move = self.decide_move(dev_played, board, deck, players, robber)
             # move is list
-
             move_type = move[0]
+            #robber should only be the first move
+            robber = 0
             move_instructs = None
-            if len(move) > 1:
+            if move_type == 7:
+                move_instructs = (move[1], move[2])
+            elif len(move) > 1:
                 move_instructs = move[1]
-
+                
             move_made = self.make_move(move_type, board, deck, move_instructs)
             if move_made == 1:
                 if move == 5:

@@ -43,7 +43,7 @@ class Game():
 
         for player in self.players:
             # TODO: allow player to play dev card before rolling 
-
+            robber = 0
             dice1 = random.randint(1, 6)
             dice2 = random.randint(1, 6)
 
@@ -58,11 +58,11 @@ class Game():
 
             # If the roll is 7, the player should move the robber and steal
             if dice1 + dice2 == 7:
-                player.moveRobber(self.board)
+                robber = 1
 
             
             # If the player has won, the game is over.
-            if player.make_turn(self.board, self.deck):
+            if player.make_turn(self.board, self.deck, self.players, robber):
                 self.won = player.player_num
                 return 1
 
@@ -101,6 +101,7 @@ class Game():
                         max_points = curr_vp
                         self.won = player
                 return self.won
+        
 
 
 
