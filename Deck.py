@@ -45,3 +45,9 @@ class Deck():
             player.dev_cards[self.get_card_name(card)] += 1
             return 1
         return -1
+    def hashable_deck(self):
+        s = ''
+        for card in self.stack:
+            s += str(card) + ' '
+        return s
+        

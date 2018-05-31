@@ -367,7 +367,6 @@ class Player():
         # Play corresponds to the information that the board may 
         # need when a dev card is played
         play = None
-
         if not self.check_legal_move(move, move_type, board, deck):
             if self.player_type == 0:
                 print("Illegal move!")
@@ -379,7 +378,7 @@ class Player():
             print("Printing the move:")
             print("Move type: " + str(move_type))
             print("Move: " + str(move))
-
+        
         # End turn
         if move_type == 0:
             return 0
@@ -707,8 +706,10 @@ class Player():
 
             return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
         elif self.player_type == 2:
-            AI = MCTSAI(board, 10, 500, players, deck, self.player_num, robber)
-            return AI.get_play()
+            AI = MCTSAI(board, 1, 5, players, deck, self.player_num, robber)
+            move = AI.get_play()
+            
+            return move
 
 
     # A helper function to check if we can build a settlement at a specific
@@ -851,8 +852,8 @@ class Player():
 
         hash_res = tuple([(k, v) for k, v in self.resources.iteritems()])
         hash_dev_cards = tuple([(k, v) for k, v in self.dev_cards.iteritems()])
-        hash_cities = tuple([(k, v) for k, v in self.cities.iteritems()])
-        player_tuple = (self.player_num, hash_res, hash_dev_cards, hashtuple(self.ports), \
+        hash_cities = tuple([(k, v) for k, v in self.cities])
+        player_tuple = (self.player_num, hash_res, hash_dev_cards, tuple(self.ports), \
             self.num_knights_played, self.longest_road, self.largest_army, \
             self.player_type, tuple(self.ports), tuple(self.cities), tuple(self.settlements), \
             hash_cities, self.total_roads)
