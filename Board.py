@@ -768,6 +768,33 @@ class Board():
 
         return cost
 
+    # This is a helper function for making the value dictionaries of coords hashable
+    def hashable_values(self, value):
+        hash_tuple = (0, 0, 0, 0, 0, 0, 0)
+        hash_tuple[0] = ('player', value['player'])
+        hash_tuple[1] = ('settlement', value['settlement'])
+        hash_tuple[2] = ('resources locs', tuple(sorted(value['resources locs'])))
+        hash_tuple[3] = ('ports', value['ports'])
+        hash_tuple[4] = ('neighbours', tuple(sorted(value['neighbours'])))
+        hash_tuple[5] = ('roads', tuple(sorted(value['roads'].items())))
+        hash_tuple[6] = ('available roads', tuple(sorted(value['available roads'])))
+        return hash_tuple
+
+
+    # Create a helper function that will return the current board state in a way that 
+    # is hashable
+    def hashable_board(self):
+        board_tuple = ()
+
+        # Add elements from the coords dictionary to the hashable state
+        key_sort = sorted(coords.keys())
+        for element in key_sort:
+            entry = ((element, self.hashable_values(coords[element])))
+            board_tuple = board_tuple + entry
+
+        # Add the location of the robber to the hashable state
+        board_tuple = board_tuple + (('robber', self.robber))
+        return board_tuple        
 
 
         
