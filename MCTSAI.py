@@ -14,7 +14,7 @@ class MCTSAI():
 		self.max_moves = max_moves
 		self.wins = {}
 		self.plays = {}
-		self.player = players[player_num]
+		self.player = players[player_num - 1]
 		self.player_num = player_num
 		self.states = [(players, board, deck, 0, robber)]
 		#factor to see how much to explore and expand we should test
@@ -56,7 +56,6 @@ class MCTSAI():
 		     p)
 		    for p, S in move_states
 		)
-		
 		return move
 	
 	def run_simulation(self):
@@ -66,7 +65,7 @@ class MCTSAI():
 		visited_states = set()
 		states_copy = self.states[:]
 		state = states_copy[-1]	
-		players, board, deck, dev_played, robber = state
+		players, board, deck, dev_played, robber = state #self.copy_state(state[0], state[1], state[2], state[3], state[4])
 		#the current player in the beggining of our simulation step is
 		# always ourselves i believe.
 		nplayers = len(players)
@@ -147,19 +146,21 @@ class MCTSAI():
 			        p[2].hashable_player(),  
 			        board, deck, dev_played, robber)
 		
-	
-	def get_next_state(self, move, players, board, deck, player_num):
-		#helper function that given a legal move gets the next state
+	def copy_state(self,  players, board, deck, dev_played, robber):
 		copy_players = copy.deepcopy(players)
 		copy_board = copy.deepcopy(board)
 		copy_deck = copy.deepcopy(deck)
-		copy_player = copy_players[player_num]
+		return (copy_players, copy_board, copy_deck, dev_played, robber)
+		
+	def get_next_state(self, move, players, board, deck, player_num):
+		#helper function that given a legal move gets the next state
+		player = players[player_num]
 		
 		if move[0] == 7:
-			copy_player.make_move(move[0], copy_board, copy_deck, (move[1], move[2]))
+			player.make_move(move[0], board, deck, (move[1], move[2]))
 		elif len(move) > 1:
-			copy_player.make_move(move[0], copy_board, copy_deck, move[1])
+			player.make_move(move[0], board, deck, move[1])
 		if move[0] == 5:
-			return (move, (copy_players, copy_board, copy_deck, 1,0))
-		return (move, (copy_players, copy_board, copy_deck, 0,0))
+			return (move, (players, board, deck, 1,0))
+		return (move, (players, board, deck, 0,0))
 	

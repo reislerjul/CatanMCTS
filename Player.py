@@ -1,6 +1,7 @@
 import random
 import settings
 from MCTSAI import MCTSAI
+import copy
 # The player class. Each player should keep track of their roads, cities, 
 # settlements, dev cards, whether they're on a port, number of victory
 # points, and resource cards. 
@@ -327,7 +328,6 @@ class Player():
             if self.resources['o'] >= 1 and self.resources['g'] >=1 \
                 and self.resources['w'] >=1 and deck.cards_left > 0:
                 return True
-
         if move_type == 5:
             # Dev card available and not a victory point card
             if move in self.dev_cards.keys() and self.dev_cards[move] > 0 and move != 'Victory Point':
@@ -374,11 +374,11 @@ class Player():
 
         # This is a legal move so if we're in debug mode, we should 
         # print the move out! 
-        if settings.DEBUG:
+        '''if settings.DEBUG:
             print("Printing the move:")
             print("Move type: " + str(move_type))
             print("Move: " + str(move))
-        
+        '''
         # End turn
         if move_type == 0:
             return 0
@@ -535,7 +535,7 @@ class Player():
             if self.player_type == 0:
                 r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
                 spot = (r, c)
-            elif self.player_type == 1:
+            elif self.player_type == 1 or self.player_type == 2:
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
@@ -575,7 +575,7 @@ class Player():
                     self.resources['b'] += 1
                     if self.player_type == 0:
                         move = self.build_road(board)
-                    elif self.player_type == 1:
+                    elif self.player_type == 1 or self.player_type == 2:
                         move = self.choose_road(board)
                     if self.make_move(1, board, None, move) == 1:
                         roads_played += 1
@@ -707,8 +707,8 @@ class Player():
             return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
         elif self.player_type == 2:
             AI = MCTSAI(board, 1, 5, players, deck, self.player_num, robber)
+            board1= copy.deepcopy(board)
             move = AI.get_play()
-            
             return move
 
 
