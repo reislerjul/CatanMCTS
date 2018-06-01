@@ -153,10 +153,19 @@ class MCTSAI():
                 return new_node
 
     def run_simulation(self, node):
-        pass
-        
+        state_copy = copy.deepcopy(node.state)
+        new_game = game(state_copy.board, state_copy.deck, state_copy.players)
+        winner = game.play_game().won
+        return winner
     def run_backpropogation(self, node, winner):
-        pass
+        node.plays += 1
+        if winner == node.prev_player:
+            node.wins += 1
+        if node.parent_id == 1:
+            return
+        else:
+            new_node = self.nodes[node.parent_id]
+            run_backpropogation(new_node, winner)
      
 
     def get_next_state(self, move, players, board, deck, player_num):
