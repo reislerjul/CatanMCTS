@@ -15,11 +15,12 @@ class State():
         self.deck = deck
         self.dev_played = dev_played
         self.robber = robber
+        self.winner = 0
 
 class Node():
     def __init__(self, _id, parent_id, player_num, prev_player, state, depth):
         self.wins = 1
-        self.plays = len(state.players)
+        self.plays = 2
         self.id = _id
         self.parent_id = parent_id
         self.children = {}
@@ -99,14 +100,19 @@ class MCTSAI():
     
     def run_cycle(self):
         node, move = self.run_selection()
-        new_node = self.run_expansion(node, move)
-        winner = self.run_simulation(new_node)
-        self.run_backpropogation(new_node, winner)
+        if move == 0:
+            # winner has already been found
+            winner = node.state.winner
+            self.run_backpropogation(node, winner)
+        else:
+            new_node = self.run_expansion(node, move)
+            winner = self.run_simulation(new_node)
+            self.run_backpropogation(new_node, winner)
     
     def run_selection(self):
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
-        while move in current_node.children:
+        while current_node.state.winner == 0 and move in current_node.children:
             current_node = self.nodes[current_node.children[move]]
             if current_node.active_player > 0:
                 move = self.thompson_sample(current_node)
@@ -120,7 +126,10 @@ class MCTSAI():
                 random.shuffle(current_node.state.deck.stack)
                 card = current_node.state.deck.stack[0]
                 move = (card, current_node.prev_player)
-        return current_node, move
+        if current_node.state.winner == 0:
+            return current_node, move
+        else:
+            return current_node, 0
     
     def run_expansion(self, node, move):
         state_copy = copy.deepcopy(node.state)
@@ -137,6 +146,8 @@ class MCTSAI():
             new_node = Node(len(self.nodes), node.id, move[1], node.active_player, state_copy, node.depth+1)
             self.nodes.append(new_node)
             node.children[move] = new_node.id
+            if node.state.players[node.active_player - 1].calculate_vp() >= settings.POINTS_TO_WIN:
+                node.state.winner = node.active_player
             return new_node
         else:
             player = state_copy.players[node.active_player-1]
@@ -151,6 +162,8 @@ class MCTSAI():
                 new_node = Node(len(self.nodes), node.id, node.active_player, node.active_player, state_copy, node.depth+1)
                 self.nodes.append(new_node)
                 node.children[move] = new_node.id
+                if node.state.players[node.active_player - 1].calculate_vp() >= settings.POINTS_TO_WIN:
+                    node.state.winner = node.active_player
                 return new_node
             if move[0] == 0:
                 new_node = Node(len(self.nodes), node.id, -1, node.active_player, state_copy, node.depth+1)
