@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # 1 means random AI, 2 means MCTS AI.
     args = sys.argv[2:]
     results = []
-    with open('output.txt', 'w') as f:
+    with open('output.txt', 'w', 1) as f:
         for i in range(int(n_games)):
             # have the game do a random permutation of the order of players
             random.shuffle(args)

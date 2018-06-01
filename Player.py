@@ -251,7 +251,8 @@ class Player():
                 loc = self.build_settlement(board)
 
             # This may yield coordinates that are not valid
-            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
+            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3 or\
+                 self.player_type == 4 or self.player_type == 5:
                 loc = (random.randint(0, 11), random.randint(0, 5))
 
             legal_settlement = self.can_build_settlement(loc, board)
@@ -272,7 +273,8 @@ class Player():
             if self.player_type == 0:
                 move = self.build_road(board)
             # do it randomly for now for the MCTSAI
-            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
+            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3 or\
+                 self.player_type == 4 or self.player_type == 5:
                 
                 # Choose from set of roads coming from settlement; any should work
                 possible_sinks = state['available roads']
@@ -474,7 +476,8 @@ class Player():
         while True:
                 
             #mctsai should not be picking random here
-            if self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
+            if self.player_type == 1 or self.player_type == 2 or self.player_type == 3 or\
+               self.player_type == 4 or self.player_type == 5:
                
                 if board.robber != (2,0):
                     spots.remove(board.robber)
@@ -554,7 +557,8 @@ class Player():
             if self.player_type == 0:
                 r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
                 spot = (r, c)
-            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
+            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3 or\
+                 self.player_type == 4 or self.player_type == 5:
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
@@ -594,7 +598,8 @@ class Player():
                     self.resources['b'] += 1
                     if self.player_type == 0:
                         move = self.build_road(board)
-                    elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
+                    elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3 or\
+                         self.player_type == 4 or self.player_type == 5:
                         move = self.choose_road(board)
                     if self.make_move(1, board, None, move) == 1:
                         roads_played += 1
@@ -726,13 +731,25 @@ class Player():
             return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
 
         elif self.player_type == 2:
-            AI = MCTSAI(board, 10, 100, players, deck, self.player_num, robber, 0)
+            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 0, False)
             board1 = copy.deepcopy(board)
             move = AI.get_play()
             return move
 
         elif self.player_type == 3:
-            AI = MCTSAI(board, 10, 100, players, deck, self.player_num, robber, 1)
+            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 1, False)
+            board1= copy.deepcopy(board)
+            move = AI.get_play()
+            return move
+
+        elif self.player_type == 4:
+            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 0, True)
+            board1= copy.deepcopy(board)
+            move = AI.get_play()
+            return move
+
+        elif self.player_type == 5:
+            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 1, True)
             board1= copy.deepcopy(board)
             move = AI.get_play()
             return move
