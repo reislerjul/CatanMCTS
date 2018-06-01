@@ -8,21 +8,7 @@ import settings
 
 # This will contain the main method which will be the entry point into 
 # playing the Catan game.
-def main():
-
-    # We will assume that the commandline arguments give the players in the 
-    # order that they should play
-    player_list = []
-
-    # Process the commandline arguments. There should be 3 or 4 commandline
-    # line arguments corresponding to each player. 0 means human player, 
-    # 1 means random AI, 2 means MCTS AI.
-    args = sys.argv[1:]
-    assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
-
-    for idx, arg in enumerate(args):
-    	player_list.append(Player(int(arg), int(idx + 1)))
-
+def run_game(player_list):
     # Create the game, board, deck, and settings
     settings.init()
     deck = Deck()
@@ -37,10 +23,24 @@ def main():
     winner = game.play_game()
     print("Total Rounds: " + str(game.num_rounds))
     print("Game Over. Player " + str(winner) + " won.")
-    
+    vp_lst = []
+    for player in player_list:
+        vp_lst.append(player.calculate_vp())
+    return(winner, game.num_rounds, vp_lst)
 
 
 
 
 if __name__ == '__main__':
-    main()
+    # We will assume that the commandline arguments give the players in the 
+    # order that they should play
+    player_list = []
+
+    # Process the commandline arguments. There should be 3 or 4 commandline
+    # line arguments corresponding to each player. 0 means human player, 
+    # 1 means random AI, 2 means MCTS AI.
+    args = sys.argv[1:]
+    assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
+    for idx, arg in enumerate(args):
+        player_list.append(Player(int(arg), int(idx + 1)))    
+    run_game(player_list)
