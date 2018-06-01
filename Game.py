@@ -35,6 +35,7 @@ class Game():
     # has one turn.
     def round(self):
         # print the board state at the beginning of the round
+        print(self.num_rounds)
 
         if settings.DEBUG:
             self.board.print_board_state()

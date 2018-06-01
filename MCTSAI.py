@@ -8,7 +8,7 @@ from math import log
 
 class MCTSAI():
 
-	def __init__(self, board, time, max_moves, players, deck, player_num, robber):
+	def __init__(self, board, time, max_moves, players, deck, player_num, robber, weighted):
 		 # class that initialize a MCTSAI, works to figure 
 		self.timer = datetime.timedelta(seconds=time)
 		self.max_moves = max_moves
@@ -17,9 +17,12 @@ class MCTSAI():
 		self.player = players[player_num - 1]
 		self.player_num = player_num
 		self.states = [(players, board, deck, 0, robber)]
+		self.weighted = weighted
 		#factor to see how much to explore and expand we should test
 		#values of this parameter.
 		self.C = 1.0
+
+		
 	def update(self, state):
 		self.states.append(state)
 
@@ -32,7 +35,7 @@ class MCTSAI():
 		state = self.states[-1]
 		players, board, deck, dev_played, robber = state
 		# TODO: we need a way to represent whether a dev card has been played this turn
-		legal = self.player.get_legal_moves(board, deck, dev_played, robber)
+		legal = self.player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
 		
 		if len(legal) == 1:
 			return legal[0]
@@ -78,7 +81,7 @@ class MCTSAI():
 			player_h = player.hashable_player()
 			move_type = -1
 			while move_type != 0:
-				legal = self.player.get_legal_moves(board, deck, dev_played, robber)
+				legal = self.player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
 				
 				move_states = [self.get_next_state(p, players, board, 
 				                                   deck, curr_player_num) for p in legal]
@@ -156,7 +159,7 @@ class MCTSAI():
 		copy_deck = copy.deepcopy(deck)
 		return (copy_players, copy_board, copy_deck, dev_played, robber)
 		
-		
+
 	def get_next_state(self, move, players, board, deck, player_num):
 		#helper function that given a legal move gets the next state
 		player = players[player_num]

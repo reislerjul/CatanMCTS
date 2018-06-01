@@ -10,7 +10,7 @@ class Player():
 
     # TODO: Complete this constructor. player_type should be 0 if the player is
     # human, 1 if the player is the random AI, and 2 if the player is the 
-    # MCTS AI
+    # MCTS AI with random choice of moves and 3 is MCTS AI with weighted choice
     def __init__(self, player_type, player_num):
         self.player_num = player_num
         self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
@@ -64,8 +64,9 @@ class Player():
         return 0
 
 
-    # A helper function used to get a list of all the legal moves. 
-    def get_legal_moves(self, board, deck, dev_played, robber):
+    # A helper function used to get a list of all the legal moves. If weighted, we 
+    # weight better moves so we have a higher chance of choosing them. 
+    def get_legal_moves(self, board, deck, dev_played, robber, weighted):
 
             # Determine moves we can play and add them to the list.
 
@@ -75,19 +76,32 @@ class Player():
             # Can we buy dev card?
             if self.resources['g'] > 0 and self.resources['w'] > 0 \
             and self.resources['o'] > 0 and deck.cards_left > 0:
-                possible_moves.append((4,))
+                if weighted:
+                    for i in range(10):
+                        possible_moves.append((4,))
+                else:
+                    possible_moves.append((4,))
 
             # Can we play a dev card?
             if dev_played == 0:
                 for card in self.dev_cards.keys():
                     if card != 'Victory Point' and self.dev_cards[card] > 0:
-                        possible_moves.append((5, card))
+                        if weighted:
+                            for i in range(10):
+                                possible_moves.append((5, card))
+                        else:
+                            possible_moves.append((5, card))
 
             # Can we build a city?
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
             len(self.cities) < 4:
                 for settlement in self.settlements:
-                    possible_moves.append((3, settlement))
+
+                    if weighted:
+                        for i in range(1000):
+                            possible_moves.append((3, settlement))
+                    else:
+                        possible_moves.append((3, settlement))
 
             # Can we build a road?
             if self.resources['b'] > 0 and self.resources['l'] > 0 and self.total_roads < 15:
@@ -115,7 +129,12 @@ class Player():
                 # Check the possible places for us to build a settlement
                 for source in list(self.roads.keys()):
                     if (self.can_build_settlement(source, board)):
-                        possible_moves.append((2, source))
+
+                        if weighted:
+                            for i in range(1000):
+                                possible_moves.append((2, source))
+                        else:
+                            possible_moves.append((2, source))
 
             # Should we trade in resources? Try cases for the 5 different resources
             if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
@@ -232,7 +251,7 @@ class Player():
                 loc = self.build_settlement(board)
 
             # This may yield coordinates that are not valid
-            elif self.player_type == 1 or self.player_type == 2:
+            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
                 loc = (random.randint(0, 11), random.randint(0, 5))
 
             legal_settlement = self.can_build_settlement(loc, board)
@@ -253,7 +272,7 @@ class Player():
             if self.player_type == 0:
                 move = self.build_road(board)
             # do it randomly for now for the MCTSAI
-            elif self.player_type == 1 or self.player_type == 2:
+            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
                 
                 # Choose from set of roads coming from settlement; any should work
                 possible_sinks = state['available roads']
@@ -455,7 +474,7 @@ class Player():
         while True:
                 
             #mctsai should not be picking random here
-            if self.player_type == 1 or self.player_type == 2:
+            if self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
                
                 if board.robber != (2,0):
                     spots.remove(board.robber)
@@ -498,7 +517,7 @@ class Player():
                     else:
                         print("Invalid victim. Please enter a valid player to steal from.")
 
-                elif self.player_type == 1:
+                else:
                     victim = possible_players[random.randint(0, len(possible_players) - 1)]
                     break
         return victim
@@ -535,7 +554,7 @@ class Player():
             if self.player_type == 0:
                 r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
                 spot = (r, c)
-            elif self.player_type == 1 or self.player_type == 2:
+            elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
                 (0, 0), (2, 2), (0, 1)]
@@ -575,7 +594,7 @@ class Player():
                     self.resources['b'] += 1
                     if self.player_type == 0:
                         move = self.build_road(board)
-                    elif self.player_type == 1 or self.player_type == 2:
+                    elif self.player_type == 1 or self.player_type == 2 or self.player_type == 3:
                         move = self.choose_road(board)
                     if self.make_move(1, board, None, move) == 1:
                         roads_played += 1
@@ -701,12 +720,19 @@ class Player():
         elif self.player_type == 1:
             
             
-            possible_moves = self.get_legal_moves(board, deck, dev_played, robber)
+            possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0)
             # Choose a move randomly from the set of possible moves! 
 
             return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
+
         elif self.player_type == 2:
-            AI = MCTSAI(board, 1, 5, players, deck, self.player_num, robber)
+            AI = MCTSAI(board, 10, 100, players, deck, self.player_num, robber, 0)
+            board1 = copy.deepcopy(board)
+            move = AI.get_play()
+            return move
+
+        elif self.player_type == 3:
+            AI = MCTSAI(board, 10, 100, players, deck, self.player_num, robber, 1)
             board1= copy.deepcopy(board)
             move = AI.get_play()
             return move
