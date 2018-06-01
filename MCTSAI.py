@@ -58,6 +58,7 @@ class MCTSAI():
 		)
 		return move
 	
+
 	def run_simulation(self):
 		
 		winner = -1
@@ -73,7 +74,7 @@ class MCTSAI():
 		curr_player_num = self.player_num - 1
 		player = players[curr_player_num]
 		expand = True
-		for t in xrange(self.max_moves):
+		for t in range(self.max_moves):
 			player_h = player.hashable_player()
 			move_type = -1
 			while move_type != 0:
@@ -128,7 +129,9 @@ class MCTSAI():
 				continue
 			plays[(player, state)] += 1
 			if player_num == winner:
-				wins[(player, state)] += 1		
+				wins[(player, state)] += 1	
+
+
 	def h(self,s):
 		''' takes in a state as input and hashes it'''
 		p = s[0]
@@ -146,11 +149,13 @@ class MCTSAI():
 			        p[2].hashable_player(),  
 			        board, deck, dev_played, robber)
 		
+
 	def copy_state(self,  players, board, deck, dev_played, robber):
 		copy_players = copy.deepcopy(players)
 		copy_board = copy.deepcopy(board)
 		copy_deck = copy.deepcopy(deck)
 		return (copy_players, copy_board, copy_deck, dev_played, robber)
+		
 		
 	def get_next_state(self, move, players, board, deck, player_num):
 		#helper function that given a legal move gets the next state

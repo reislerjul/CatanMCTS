@@ -34,7 +34,6 @@ class Game():
     # This function represents a round in which each player 
     # has one turn.
     def round(self):
-        print(self.num_rounds)
         # print the board state at the beginning of the round
 
         if settings.DEBUG:

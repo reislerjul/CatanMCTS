@@ -587,7 +587,7 @@ class Player():
             if self.player_type == 0:
                 card1 = input("Choose first card")
                 card2 = input("Choose second card")
-            elif self.player_type == 1:
+            else:
                 card1 = possible_cards[random.randint(0, len(possible_cards)-1)]
                 card2 = possible_cards[random.randint(0, len(possible_cards)-1)]
             self.resources[card1] += 1
@@ -850,12 +850,15 @@ class Player():
 
     def hashable_player(self):
 
-        hash_res = tuple([(k, v) for k, v in self.resources.iteritems()])
-        hash_dev_cards = tuple([(k, v) for k, v in self.dev_cards.iteritems()])
-        hash_cities = tuple([(k, v) for k, v in self.cities])
-        player_tuple = (self.player_num, hash_res, hash_dev_cards, tuple(self.ports), \
+
+        res = sorted(self.resources.items())
+        dev = sorted(self.dev_cards.items())
+        hash_res = tuple([(k, v) for k, v in res])
+        hash_dev_cards = tuple([(k, v) for k, v in dev])
+        hash_cities = tuple([(k, v) for k, v in sorted(self.cities)])
+        player_tuple = (self.player_num, hash_res, hash_dev_cards, tuple(sorted(self.ports)), \
             self.num_knights_played, self.longest_road, self.largest_army, \
-            self.player_type, tuple(self.ports), tuple(self.cities), tuple(self.settlements), \
+            self.player_type, tuple(sorted(self.ports)), tuple(sorted(self.cities)), tuple(sorted(self.settlements)), \
             hash_cities, self.total_roads)
         return player_tuple
 
