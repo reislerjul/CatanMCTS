@@ -5,17 +5,13 @@ import settings
 # This class takes care of the game state of the Catan game 
 class Game():
 
-    def __init__(self, board, deck, players, rand_seed=True, seed=-1):
+    def __init__(self, board, deck, players):
         self.board = board
         self.deck = deck
         self.num_players = len(players)
         self.won = None
         self.players = players
         self.num_rounds = 0
-        if rand_seed:
-            self.random = random.Random()
-        else:
-            self.random = random.Random(seed)
 
     # This function represents the start of the game in which
     # each player chooses their spots. 
@@ -47,8 +43,8 @@ class Game():
         for player in self.players:
             # TODO: allow player to play dev card before rolling 
             robber = 0
-            dice1 = self.random.randint(1, 6)
-            dice2 = self.random.randint(1, 6)
+            dice1 = random.randint(1, 6)
+            dice2 = random.randint(1, 6)
 
             # Player's state before their turn
             if settings.DEBUG:
