@@ -731,25 +731,25 @@ class Player():
             return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
 
         elif self.player_type == 2:
-            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 0, False)
+            AI = MCTSAI(board, 5, 20, players, deck, dev_played, self.player_num, robber, 0, False)
             board1 = copy.deepcopy(board)
             move = AI.get_play()
             return move
 
         elif self.player_type == 3:
-            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 1, False)
+            AI = MCTSAI(board, 5, 20, players, deck, dev_played, self.player_num, robber, 1, False)
             board1= copy.deepcopy(board)
             move = AI.get_play()
             return move
 
         elif self.player_type == 4:
-            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 0, True)
+            AI = MCTSAI(board, 5, 20, players, deck, dev_played, self.player_num, robber, 0, True)
             board1= copy.deepcopy(board)
             move = AI.get_play()
             return move
 
         elif self.player_type == 5:
-            AI = MCTSAI(board, 5, 20, players, deck, self.player_num, robber, 1, True)
+            AI = MCTSAI(board, 5, 20, players, deck, dev_played, self.player_num, robber, 1, True)
             board1= copy.deepcopy(board)
             move = AI.get_play()
             return move

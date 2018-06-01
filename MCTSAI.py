@@ -6,196 +6,120 @@ import settings
 from math import log
 # A class to represent the Monte Carlo Tree Search AI
 
+class State():
+    def __init__(self, players, board, deck, dev_played, robber):
+        self.players = players
+        self.board = board
+        self.deck = deck
+        self.dev_played = dev_played
+        self.robber = robber
+
+class Node():
+    def __init__(self, players, player_num, prev_player, state, depth):
+        self.wins = 1
+        self.plays = len(players)
+        self.children = {}
+        self.active_player = player_num
+        self.prev_player = prev_player
+        self.state = state
+        self.depth = depth
 
 class MCTSAI():
 
-    def __init__(self, board, time, max_moves, players, deck, player_num, robber, weighted, thompson):
+    def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson):
         # class that initialize a MCTSAI, works to figure 
         self.timer = datetime.timedelta(seconds=time)
         self.max_moves = max_moves
-        self.wins = {}
-        self.plays = {}
-        self.player = players[player_num - 1]
-        self.player_num = player_num
-        self.states = [(players, board, deck, 0, robber)]
+        self.nodes = [Node(players, player_num, -1, State(players, board, deck, dev_played, robber), 0)]
+        self.max_depth = 0
+        self.max_id = 0
         self.weighted = weighted
         self.thompson = thompson
         #factor to see how much to explore and expand we should test
         #values of this parameter.
         self.C = 1.0
 
-        
-    def update(self, state):
-        self.states.append(state)
-
-
-
     # TODO: wins and plays dictionaries need to be updated
    
+    def thompson_sample(self, node):
+        # Pick a move with thompson sampling
+        max_sample = 0
+        for move_made in legal:
+            if move_made in node.children:
+                games_won = node.children[move_made].wins
+                games_played = node.children[move_made].plays
+            else:
+                games_won = 1
+                games_played = len(players)
+            sample = np.random.beta(games_won, games_played - games_won)
+            if sample > max_sample:
+                max_sample = sample
+                move = move_made
+        return move
+   
     def get_play(self):
-        self.max_depth = 0
-        state = self.states[-1]
-        players, board, deck, dev_played, robber = state
+        state = self.nodes[0].state
+        players = state.players
+        board = state.board
+        deck = state.deck
+        dev_plaeyd = state.dev_played
+        robber = state.robber
         # TODO: we need a way to represent whether a dev card has been played this turn
         legal = self.player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
         
         if len(legal) == 1:
             return legal[0]
 
-        games = 0
         start = datetime.datetime.utcnow()
         while datetime.datetime.utcnow() - start < self.timer:
-            self.run_simulation()
-            games += 1
+            self.run_cycle()
         
-        move_states = []
-        for move in legal:
-            state_val = self.get_next_state(move, players, board, deck, self.player_num -1)
-            move_states.append((state_val[0], self.h(state_val[1])))
-        
-        player_h = players[self.player_num -1].hashable_player()
+        root = self.nodes[0]
         if self.thompson:
-            # Pick the move with Thompson sampling
-            max_sample = 0
-            for p, S in move_states:
-                games_won = self.wins.get((player_h, S), 0) + 1
-                games_played = self.plays.get((player_h, S), 0) + 2
-                sample = np.random.beta(games_won, games_played - games_won)
-                if sample > max_sample:
-                    max_sample = sample
-                    move = p
+            move = self.thompson_sample(root)
         else:
             # Pick the move with the highest percentage of wins.
-            percent_wins, move = max(
-                (self.wins.get((player_h, S), 0) /
-                 self.plays.get((player_h, S), 1),
-                 p)
-                for p, S in move_states
-            )
+            max_winrate = -1
+            for move_made in legal:
+                if move_made in root.children:
+                    games_won = root.children[move_made].wins
+                    games_played = root.children[move_made].plays
+                else:
+                    games_won = 1
+                    games_played = len(players)
+                winrate = float(games_won) / games_played
+                if winrate > max_winrate:
+                    max_winrate = winrate
+                    move = move_made
         return move
     
-
-    def run_simulation(self):
-        winner = -1
-        plays, wins = self.plays, self.wins
-        visited_states = set()
-        states_copy = self.states[:]
-        state = states_copy[-1]	
-        players, board, deck, dev_played, robber = copy.deepcopy(state) #self.copy_state(state[0], state[1], state[2], state[3], state[4])
-        #the current player in the beggining of our simulation step is
-        # always ourselves i believe.
-        nplayers = len(players)
-        player_num = self.player_num - 1
-        curr_player_num = self.player_num - 1
-        player = players[curr_player_num]
-        expand = True
-        for t in range(self.max_moves):
-            robber = 0
-            dice1 = random.randint(1, 6)
-            dice2 = random.randint(1, 6)	
-            board.allocate_resources(dice1 + dice2, players)
-            
-            # If the roll is 7, the player should move the robber and steal
-            if dice1 + dice2 == 7:
-                robber = 1
-            player_h = player.hashable_player()
-            move_type = -1
-            while move_type != 0:
-                legal = player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
-                
-                move_states = [self.get_next_state(p, players, board, 
-                                                   deck, curr_player_num) for p in legal]
-                
-                
-                hashed_states = [(p, self.h(D)) for p, D in move_states]
-                if all((p,S) in plays for p, S in hashed_states):
-                    if self.thompson:
-                        # select move with thompson sampling
-                        max_sample = 0
-                        for p, S in hashed_states:
-                            games_won = wins[player_h, S] + 1
-                            games_played = plays[player_h, S] + 2
-                            sample = np.random.beta(games_won, games_played - games_won)
-                            if sample > max_sample:
-                                max_sample = sample
-                                move = p
-                                state = S
-                    else:
-                        #if we know whether moves are good or not use it
-                        log_total = log(sum(plays[(player_h, S)] for p, S in
-                                        hashed_states))
-                        value, move, state = max(
-                            ((wins[(player_h, S)] / plays[(player_h, S)]) +
-                             self.C * sqrt(log_total / plays[(player_h, S)]), p, S)
-                            for p, S in hashed_states
-                        )
-                else:
-                    move = choice(legal)
-                    state = self.get_next_state(move, players, board, deck, curr_player_num)
-                states_copy.append(state)
-                h_state = self.h(state[1])
-                move_type = move[0]
-                if robber:
-                    robber = 0
-                if expand and (player_h, h_state) not in self.plays:
-                        expand = False
-                        plays[(player_h, h_state)] = 0
-                        wins[(player_h, h_state)] = 0
-                        if t > self.max_depth:
-                            self.max_depth = t
-                visited_states.add((player_h, h_state))
-            #change it to the next player as the turn is now over.
-            if curr_player_num == nplayers - 1:
-                curr_player_num =0
-                player = players[0]
-            else:
-                curr_player_num +=1
-                player = players[curr_player_num]
-            if player.calculate_vp() >= settings.POINTS_TO_WIN:
-                winner = player.player_num - 1
-                
-                if winner > -1:
-                    break	
+    def run_cycle(self):
+        node, move = self.run_selection()
+        new_node = self.run_expansion(node, move)
+        winner = self.run_simulation(new_node)
+        self.run_backpropogation(new_node, winner)
+    
+    def run_selection(self):
+        current_node = self.nodes[0]
+        move = self.thompson_sample(current_node)
+        while move in current_node.children:
+            current_node = current_node.children[move]
+        return current_node, move
         
-        if winner == -1:
-            vps = [player.calculate_vp() for player in players]
-            winner = vps.index(max(vps))
-        for player, state in visited_states:
-            if (player, state) not in plays:
-                continue
-            plays[(player, state)] += 1
-            if player_num == winner:
-                wins[(player, state)] += 1	
-
-
-    def h(self,s):
-        ''' takes in a state as input and hashes it'''
-        p = s[0]
-        board = s[1].hashable_board()
-        deck = s[2].hashable_deck()
-        dev_played = s[3]
+    
+    def run_expansion(self, node, move):
+        pass
+    
+    def run_simulation(self, node):
+        pass
         
-        robber = s[4]
-        if len(p) == 4:
-            return (p[0].hashable_player(), p[1].hashable_player(), 
-                    p[2].hashable_player(), p[3].hashable_player(), 
-                    board, deck, dev_played, robber)
-        elif len(p) == 3:
-            return (p[0].hashable_player(), p[1].hashable_player(), 
-                    p[2].hashable_player(),  
-                    board, deck, dev_played, robber)
-        
-
-    def copy_state(self,  players, board, deck, dev_played, robber):
-        copy_players = copy.deepcopy(players)
-        copy_board = copy.deepcopy(board)
-        copy_deck = copy.deepcopy(deck)
-        return (copy_players, copy_board, copy_deck, dev_played, robber)
-        
+    def run_backpropogation(self, node, winner):
+        pass
+     
 
     def get_next_state(self, move, players, board, deck, player_num):
         #helper function that given a legal move gets the next state
-        player = players[player_num]
+        player = players[player_num - 1]
         
         if move[0] == 7:
             player.make_move(move[0], board, deck, (move[1], move[2]))
