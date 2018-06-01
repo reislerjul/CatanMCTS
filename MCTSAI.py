@@ -15,9 +15,11 @@ class State():
         self.robber = robber
 
 class Node():
-    def __init__(self, player_num, prev_player, state, depth):
+    def __init__(self, id, parent_id, player_num, prev_player, state, depth):
         self.wins = 1
         self.plays = len(state.players)
+        self.id = id
+        self.parent_id = parent_id
         self.children = {}
         self.active_player = player_num
         self.prev_player = prev_player
@@ -30,7 +32,7 @@ class MCTSAI():
         # class that initialize a MCTSAI, works to figure 
         self.timer = datetime.timedelta(seconds=time)
         self.max_moves = max_moves
-        self.nodes = [Node(players, player_num, -1, State(players, board, deck, dev_played, robber), 0)]
+        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber), 0)]
         self.max_depth = 0
         self.max_id = 0
         self.weighted = weighted
@@ -113,24 +115,42 @@ class MCTSAI():
         state_copy = copy.deepcopy(node.state)
         if node.active_player == -1:
             state_copy.board.allocate_resources(move[0], state_copy.players)
-            return Node(move[1], node.active_player, state_copy, node.depth+1)
+            self.max_id += 1
+            new_node = Node(node.max_id, node.id, move[1], node.active_player, state_copy, node.depth+1)
+            self.nodes.append(new_node)
+            return new_node
         elif node.active_player == -2:
             dev_card = {0:'Knight', 1:'Victory Point'\
                 2:'Road Building', 3:'Monopoly', 4:'Year of Plenty'}
             state_copy.players[move[1]-1].dev_cards[dev_card[move[0]]] += 1
-            return Node(move[1], node.active_player, state_copy, node.depth+1)
+            self.max_id += 1
+            new_node = Node(self.max_id, node.id, move[1], node.active_player, state_copy, node.depth+1)
+            self.nodes.append(new_node)
+            return new_node
         else:
             player = state_copy.players[node.active_player-1]
             if move[0] == 7:
                 player.make_move(move[0], state_copy.board, state_copy.deck, (move[1], move[2]))
-                return Node(node.active_player, node.active_player, state_copy, node.depth+1)
+                self.max_id += 1
+                new_node = Node(self.max_id, node.id, node.active_player, node.active_player, state_copy, node.depth+1)
+                self.nodes.append(new_node)
+                return new_node
             elif len(move) > 1:
                 player.make_move(move[0], state_copy.board, state_copy.deck, move[1])
-                return Node(node.active_player, node.active_player, state_copy, node.depth+1)
+                self.max_id += 1
+                new_node = Node(self.max_id, node.id, node.active_player, node.active_player, state_copy, node.depth+1)
+                self.nodes.append(new_node)
+                return new_node
             if move[0] == 0:
-                return Node(-1, node.active_player, state_copy, node.depth+1)
+                self.max_id += 1
+                new_node = Node(self.max_id, node.id, -1, node.active_player, state_copy, node.depth+1)
+                self.nodes.append(new_node)
+                return new_node
             if move[0] == 5:
-                return Node(-2, node.active_player, state_copy, node.depth+1)
+                self.max_id += 1
+                new_node = Node(self.max_id, node.id, -2, node.active_player, state_copy, node.depth+1)
+                self.nodes.append(new_nodes)
+                return new_node
 
     def run_simulation(self, node):
         pass
