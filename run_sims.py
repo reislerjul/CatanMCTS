@@ -2,6 +2,7 @@ from Main import run_game
 import json
 import random
 import sys
+import copy
 from Player import Player
 '''i think that with each game, we should record which player won, the types of each player, the victory points of each player, and the total rounds per game'''
 
@@ -15,16 +16,15 @@ if __name__ == "__main__":
     # 1 means random AI, 2 means MCTS AI.
     args = sys.argv[2:]
     results = []
-    
-    for i in range(int(n_games)):
-        # have the game do a random permutation of the order of players
-        random.shuffle(args)
-        player_list = []
-        for idx, arg in enumerate(args):
-            player_list.append(Player(int(arg), int(idx + 1)))
-        winner, rounds, vps = run_game(player_list)
-        results.append((winner, rounds, args, vps))
-    
-    with open('output.json', 'w') as f:
-        f.write(json.dumps(results))
+    with open('output2.txt', 'w') as f:
+        for i in range(int(n_games)):
+            # have the game do a random permutation of the order of players
+            random.shuffle(args)
+            vals = copy.deepcopy(args)
+            player_list = []
+            for idx, arg in enumerate(args):
+                player_list.append(Player(int(arg), int(idx + 1)))
+            winner, rounds, vps = run_game(player_list)
+            result = (winner, rounds, vals, vps)
+            f.write(json.dumps(result) + '\n')
     
