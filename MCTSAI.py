@@ -108,8 +108,19 @@ class MCTSAI():
         move = self.thompson_sample(current_node)
         while move in current_node.children:
             current_node = current_node.children[move]
+            if current_node.active_player > 0:
+                move = self.thompson_sample(current_node)
+            elif current_node.active_player == -1:
+                roll = random.randint(1, 6) + random.randint(1, 6)
+                next_player = current_node.prev_player
+                if next_player > len(current_node.state.players):
+                    next_player = 1
+                move = (roll, next_player)
+            else:
+                random.shuffle(current_node.state.deck.stack)
+                card = current_node.state.deck.stack[0]
+                move = (card, current_node.prev_player)
         return current_node, move
-        
     
     def run_expansion(self, node, move):
         state_copy = copy.deepcopy(node.state)
@@ -123,6 +134,7 @@ class MCTSAI():
             dev_card = {0:'Knight', 1:'Victory Point'\
                 2:'Road Building', 3:'Monopoly', 4:'Year of Plenty'}
             state_copy.players[move[1]-1].dev_cards[dev_card[move[0]]] += 1
+            state_copy.deck.remove_card_type(move[0])
             self.max_id += 1
             new_node = Node(self.max_id, node.id, move[1], node.active_player, state_copy, node.depth+1)
             self.nodes.append(new_node)

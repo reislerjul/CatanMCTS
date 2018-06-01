@@ -45,6 +45,16 @@ class Deck():
             player.dev_cards[self.get_card_name(card)] += 1
             return 1
         return -1
+    
+    def remove_card_type(self, card_type):
+        '''
+        removes a card of the given type
+        '''
+        index = self.stack.index(card_type)
+        cards_left -= 1
+        self.stack[index] = self.stack[cards_left]
+        random.shuffle(self.stack)
+    
     def hashable_deck(self):
         s = ''
         for card in self.stack:
