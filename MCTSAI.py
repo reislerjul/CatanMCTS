@@ -15,9 +15,9 @@ class State():
         self.robber = robber
 
 class Node():
-    def __init__(self, players, player_num, prev_player, state, depth):
+    def __init__(self, player_num, prev_player, state, depth):
         self.wins = 1
-        self.plays = len(players)
+        self.plays = len(state.players)
         self.children = {}
         self.active_player = player_num
         self.prev_player = prev_player
@@ -42,6 +42,8 @@ class MCTSAI():
     # TODO: wins and plays dictionaries need to be updated
    
     def thompson_sample(self, node):
+        active_player = node.players[node.active_player - 1]
+        legal = active_player.get_legal_moves(node.state.board, node.state.deck, node.state.dev_played, node.state.robber, self.weighted)
         # Pick a move with thompson sampling
         max_sample = 0
         for move_made in legal:
