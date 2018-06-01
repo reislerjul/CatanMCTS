@@ -1,6 +1,7 @@
 import datetime
 from random import choice
 import copy
+import random
 import settings
 from math import log
 # A class to represent the Monte Carlo Tree Search AI
@@ -63,13 +64,12 @@ class MCTSAI():
 	
 
 	def run_simulation(self):
-		
 		winner = -1
 		plays, wins = self.plays, self.wins
 		visited_states = set()
 		states_copy = self.states[:]
 		state = states_copy[-1]	
-		players, board, deck, dev_played, robber = state #self.copy_state(state[0], state[1], state[2], state[3], state[4])
+		players, board, deck, dev_played, robber = copy.deepcopy(state) #self.copy_state(state[0], state[1], state[2], state[3], state[4])
 		#the current player in the beggining of our simulation step is
 		# always ourselves i believe.
 		nplayers = len(players)
@@ -78,10 +78,18 @@ class MCTSAI():
 		player = players[curr_player_num]
 		expand = True
 		for t in range(self.max_moves):
+			robber = 0
+			dice1 = random.randint(1, 6)
+			dice2 = random.randint(1, 6)	
+			board.allocate_resources(dice1 + dice2, players)
+			
+			# If the roll is 7, the player should move the robber and steal
+			if dice1 + dice2 == 7:
+			    robber = 1
 			player_h = player.hashable_player()
 			move_type = -1
 			while move_type != 0:
-				legal = self.player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
+				legal = player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
 				
 				move_states = [self.get_next_state(p, players, board, 
 				                                   deck, curr_player_num) for p in legal]
@@ -120,7 +128,8 @@ class MCTSAI():
 				curr_player_num +=1
 				player = players[curr_player_num]
 			if player.calculate_vp() >= settings.POINTS_TO_WIN:
-				winner = player.player_num			
+				winner = player.player_num
+				
 				if winner:
 					break	
 		
