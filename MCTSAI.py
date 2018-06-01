@@ -110,8 +110,28 @@ class MCTSAI():
         
     
     def run_expansion(self, node, move):
-        pass
-    
+        state_copy = copy.deepcopy(node.state)
+        if node.active_player == -1:
+            state_copy.board.allocate_resources(move[0], state_copy.players)
+            return Node(move[1], node.active_player, state_copy, node.depth+1)
+        elif node.active_player == -2:
+            dev_card = {0:'Knight', 1:'Victory Point'\
+                2:'Road Building', 3:'Monopoly', 4:'Year of Plenty'}
+            state_copy.players[move[1]-1].dev_cards[dev_card[move[0]]] += 1
+            return Node(move[1], node.active_player, state_copy, node.depth+1)
+        else:
+            player = state_copy.players[node.active_player-1]
+            if move[0] == 7:
+                player.make_move(move[0], state_copy.board, state_copy.deck, (move[1], move[2]))
+                return Node(node.active_player, node.active_player, state_copy, node.depth+1)
+            elif len(move) > 1:
+                player.make_move(move[0], state_copy.board, state_copy.deck, move[1])
+                return Node(node.active_player, node.active_player, state_copy, node.depth+1)
+            if move[0] == 0:
+                return Node(-1, node.active_player, state_copy, node.depth+1)
+            if move[0] == 5:
+                return Node(-2, node.active_player, state_copy, node.depth+1)
+
     def run_simulation(self, node):
         pass
         
