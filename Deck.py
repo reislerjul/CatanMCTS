@@ -51,8 +51,8 @@ class Deck():
         removes a card of the given type
         '''
         index = self.stack.index(card_type)
-        cards_left -= 1
-        self.stack[index] = self.stack[cards_left]
+        self.cards_left -= 1
+        self.stack[index] = self.stack[self.cards_left]
         random.shuffle(self.stack)
     
     def hashable_deck(self):

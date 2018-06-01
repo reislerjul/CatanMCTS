@@ -5,13 +5,14 @@ import settings
 # This class takes care of the game state of the Catan game 
 class Game():
 
-    def __init__(self, board, deck, players):
+    def __init__(self, board, deck, players, verbose=True):
         self.board = board
         self.deck = deck
         self.num_players = len(players)
         self.won = None
         self.players = players
         self.num_rounds = 0
+        self.verbose = verbose
 
     # This function represents the start of the game in which
     # each player chooses their spots. 
@@ -35,7 +36,8 @@ class Game():
     # has one turn.
     def round(self):
         # print the board state at the beginning of the round
-        print(self.num_rounds)
+        if self.verbose:
+            print(self.num_rounds)
 
         if settings.DEBUG:
             self.board.print_board_state()
