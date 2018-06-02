@@ -17,7 +17,7 @@ class Game():
     # This function represents the start of the game in which
     # each player chooses their spots. 
     def place_spots(self, mode = 'beginner'):
-        if beginner:
+        if mode == 'beginner':
             a = [0,1,2,3]
             random.shuffle(a)
             for i, player in enumerate(self.players):

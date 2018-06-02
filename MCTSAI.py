@@ -56,7 +56,7 @@ class MCTSAI():
                 games_played = self.nodes[node.children[move_made]].plays
             else:
                 games_won = 1
-                games_played = len(node.state.players)
+                games_played = 2# len(node.state.players)
             sample = np.random.beta(games_won, games_played - games_won)
             if sample > max_sample:
                 max_sample = sample
@@ -90,7 +90,7 @@ class MCTSAI():
                 games_played = self.nodes[root.children[move_made]].plays
             else:
                 games_won = 1
-                games_played = len(players)
+                games_played = 2 # len(players)
             winrate = float(games_won) / games_played
             print(games_won, games_played)
             if winrate > max_winrate:
@@ -185,12 +185,8 @@ class MCTSAI():
         return winner
     
     def run_backpropogation(self, node, winner):
-    
         while node.id > 0:
             self.nodes[node.id].plays += 1
             if winner == node.prev_player:
                 self.nodes[node.id].wins += 1
-            if node.parent_id == 0:
-                break
-            else:
-                node = self.nodes[node.parent_id]
+            node = self.nodes[node.parent_id]
