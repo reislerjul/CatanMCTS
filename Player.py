@@ -240,6 +240,31 @@ class Player():
 
     # A function that allows the players to choose their 
     # settlement and road placement at the beginning of the game
+    def choose_spot2(self, board, n_val):
+        p_settlements = [((3,1),(8,3)), ((10,2), (8,1)), ((5,4),(2,3)), ((4,2), (6,3)),]
+        p_roads = [([(3,1), (2,1)], [(8,3),(9,2)]), 
+                          ([(10,2),(11,1)], [(8,1),(7,1)]), 
+                          ([(5,4),(6,4)], [(2,3),(3,3)]), 
+                          ([(4,2),(3,2)], [(6,3),(5,3)])]
+        self.settlements.append(p_settlements[n_val][0])
+        self.settlements.append(p_settlements[n_val][1])
+        for i, spot in enumerate(self.settlements):
+            state= board.coords[spot]
+            if state['ports'] != '':
+                self.ports.append(state['ports'])
+            if i == 1:
+                board.add_settlement(self, spot, True)
+            if i == 0:
+                board.add_settlement(self, spot)
+        road1 = p_roads[n_val][0]
+        road2 = p_roads[n_val][1]
+        self.roads[road1[0]] = [road1[1]]
+        self.roads[road1[1]] = [road1[0]]
+        self.roads[road2[0]] = [road2[1]]
+        self.roads[road2[1]] = [road2[0]]
+        board.build_road(road1[0], road1[1], self)
+        board.build_road(road2[0], road2[1], self)
+        
     def choose_spot(self, board, idx):
         legal_settlement = False
         legal_road = False
@@ -286,6 +311,7 @@ class Player():
         # build the road
         self.roads[move[0]] = [move[1]]
         self.roads[move[1]] = [move[0]]
+        print(self.roads)
         board.build_road(move[0], move[1], self)
 
 
