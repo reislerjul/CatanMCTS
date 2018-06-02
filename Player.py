@@ -241,7 +241,7 @@ class Player():
     # A function that allows the players to choose their 
     # settlement and road placement at the beginning of the game
     def choose_spot2(self, board, n_val):
-        p_settlements = [((3,1),(8,3)), ((10,2), (8,1)), ((5,4),(2,3)), ((4,2), (6,3)),]
+        p_settlements = [((3,1),(8,3)), ((10,2), (8,1)), ((2,3),(5,4)), ((4,2), (6,3)),]
         p_roads = [([(3,1), (2,1)], [(8,3),(9,2)]), 
                           ([(10,2),(11,1)], [(8,1),(7,1)]), 
                           ([(5,4),(6,4)], [(2,3),(3,3)]), 
@@ -610,7 +610,7 @@ class Player():
                 while roads_played < 1:
                     if self.player_type == 0:
                         move = self.build_road(board)
-                    elif self.player_type == 1:
+                    else:
                         move = self.choose_road(board)
                     if self.make_move(1, board, None, move) == 1:
                         roads_played += 1
