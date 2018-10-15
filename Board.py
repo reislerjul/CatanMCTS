@@ -18,7 +18,7 @@ class Coord():
         self.ports = ports
         self.neighbours = neighbours
         self.roads = {n: 0 for n in neighbours}
-        self.neighbours[:]
+        self.available_roads = self.neighbours[:]
 
 
 # This represents the catan board. The board should essentially have a
@@ -385,7 +385,7 @@ class Board():
         builds a road from loc1 to loc2 (assuming they are adjacent)
         '''
         self.coords[loc1].roads[loc2] = player
-        self.coords[loc2].roard[loc1] = player
+        self.coords[loc2].roads[loc1] = player
         self.coords[loc1].available_roads.remove(loc2)
         self.coords[loc2].available_roads.remove(loc1)
 
@@ -426,7 +426,7 @@ class Board():
         '''
         adds a settlement at a given coordinate
         '''
-        assert(self.coords[loc].player == 0)
+        assert(self.coords[loc].player == None)
         self.coords[loc].player = player
         resources = self.coords[loc].resource_locs
         for hex_loc in resources:
@@ -451,9 +451,9 @@ class Board():
         '''
         upgrades a settlement to a city
         '''
-        assert(self.coords[loc].player == player)
+        assert(self.coords[loc].player.player_num == player.player_num)
         assert(self.coords[loc].settlement)
-        self.coords[loc].settlement = false
+        self.coords[loc].settlement = False
         resources = self.coords[loc].resource_locs
         for loc in resources:
             vals = self.resources[loc]
@@ -474,7 +474,7 @@ class Board():
 
         # Build a road
         elif move.move_type == Move.BUY_ROAD:
-            self.build_road(move[0], move[1], player)
+            self.build_road(move.road[0], move.road[1], player)
 
         # Build a settlement
         elif move.move_type == Move.BUY_SETTLEMENT:
@@ -482,7 +482,7 @@ class Board():
 
         # Build a city
         elif move.move_type == Move.BUY_CITY:
-            self.upgrade_settlement(player, move)
+            self.upgrade_settlement(player, move.coord)
 
         # Draw a dev card
         elif move.move_type == Move.BUY_DEV:
@@ -492,7 +492,8 @@ class Board():
         elif move.move_type == Move.PLAY_DEV:
             if move.card_type == Card.KNIGHT:
                 self.move_robber(move.coord, knight=True, player=player)
-                self.steal_from(move.player, player)
+                if hasattr(move, 'player'):
+                    self.steal_from(move.player, player)
             elif move.card_type == Card.ROAD_BUILDING:
                 self.build_road(move.road[0], move.road[1], player)
             elif move.card_type == Card.MONOPOLY:
@@ -512,7 +513,8 @@ class Board():
         # Move robber
         if move.move_type == Move.MOVE_ROBBER:
             self.move_robber(move.coord)
-            self.steal_from(move.player, player)
+            if hasattr(move, 'player'):
+                self.steal_from(move.player, player)
 
 
     def get_cost(self, player):

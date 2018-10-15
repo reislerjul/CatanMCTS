@@ -43,13 +43,13 @@ class Deck():
         '''
         takes a random card and gives it to the player
         '''
-        num_cards = len(self.stack)
+        num_cards = len(self.cards_left)
         if num_cards > 0:
             selected = random.randint(0, num_cards - 1)
             card = self.cards_left[selected]
             self.cards_left[selected] = self.cards_left[-1]
             del self.cards_left[-1]
-            player.dev_cards[self.get_card_name(card)] += 1
+            player.dev_cards[card] += 1
             return 1
         return -1
 

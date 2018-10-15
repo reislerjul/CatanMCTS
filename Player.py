@@ -25,20 +25,39 @@ class Move():
                  give_resource=None,\
                  resource=None):
         self.move_type = move_type
-        if card_type:
+        if card_type is not None:
             self.card_type = card_type
-        if road:
+        if road is not None:
             self.road = road
-        if coord:
+        if coord is not None:
             self.coord = coord
-        if player:
+        if player is not None:
             self.player = player
-        if num_trade:
+        if num_trade is not None:
             self.num_trade = num_trade
-        if give_resource:
+        if give_resource is not None:
             self.give_resource = give_resource
-        if resource:
+        if resource is not None:
             self.resource = resource
+
+    def __str__(self):
+        s = 'Move(move_type: {}'.format(self.move_type)
+        if hasattr(self, 'card_type'):
+            s += ', card_type: {}'.format(self.card_type)
+        if hasattr(self, 'road'):
+            s += ', road: {}'.format(self.road)
+        if hasattr(self, 'coord'):
+            s += ', coord: {}'.format(self.coord)
+        if hasattr(self, 'player'):
+            s += ', player: {}'.format(self.player)
+        if hasattr(self, 'num_trade'):
+            s += ', num_trade: {}'.format(self.num_trade)
+        if hasattr(self, 'give_resource'):
+            s += ', give_resource: {}'.format(self.give_resource)
+        if hasattr(self, 'resource'):
+            s += ', resource: {}'.format(self.resource)
+        s += ')'
+        return s
 
 # The player class. Each player should keep track of their roads, cities,
 # settlements, dev cards, whether they're on a port, number of victory
@@ -110,8 +129,10 @@ class Player():
             possible_moves = [Move(Move.END_TURN)]
 
             # Can we buy dev card?
-            if self.resources['g'] > 0 and self.resources['w'] > 0 \
-            and self.resources['o'] > 0 and deck.cards_left > 0:
+            if self.resources['g'] > 0 \
+                    and self.resources['w'] > 0 \
+                    and self.resources['o'] > 0 \
+                    and len(deck.cards_left) > 0:
                 if weighted:
                     for i in range(10):
                         possible_moves.append(Move(Move.BUY_DEV))
@@ -130,11 +151,8 @@ class Player():
                             for spot in spots:
                                 possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
 
-                                # Get a list of the player numbers
-                                player_nums = [player.player_num for player in possible_players]
-
-                                if len(player_nums) > 0:
-                                    for p in player_nums:
+                                if possible_players != []:
+                                    for p in possible_players:
                                         if weighted:
                                             for i in range(10):
                                                 possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p))
@@ -296,11 +314,8 @@ class Player():
                 for spot in spots:
                     possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
 
-                    # Get a list of the player numbers
-                    player_nums = [player.player_num for player in possible_players]
-
-                    if len(player_nums) > 0:
-                        for p in player_nums:
+                    if possible_players != []:
+                        for p in possible_players:
                             possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
                     else:
                         possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
@@ -412,21 +427,30 @@ class Player():
     # General: Make sure the player can only play the move if they have the
     # required resources
     def check_legal_move(self, move, board, deck):
-        if move.move_type == Move.BUY_ROAD and move.coord in board.coords.keys() and self.total_roads < 15:
+        if move.move_type == Move.BUY_ROAD \
+                and move.road[0] in board.coords \
+                and move.road[1] in board.coords \
+                and self.total_roads < 15:
             # Resources available to make a road
             if self.resources['b'] >= 1 and self.resources['l'] >=1:
-                state_o = board.coords[move[0]]
+                state_o = board.coords[move.road[0]]
                 # Does not overlap with already created road
-                if move[1] in state_o.available_roads:
+                if move.road[1] in state_o.available_roads:
                     # Next to another road or settlement
-                    if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) or \
-                    (move[0] in self.settlements) or (move[1] in self.settlements):
-                            return True
+                    if move.road[0] in self.roads.keys() \
+                            or move.road[1] in self.roads.keys() \
+                            or move.road[0] in self.settlements \
+                            or move.road[1] in self.settlements:
+                        return True
 
-        if move.move_type == Move.BUY_SETTLEMENT and move.coord in board.coords.keys() and len(self.settlements) < 5:
+        if move.move_type == Move.BUY_SETTLEMENT \
+                and move.coord in board.coords.keys() \
+                and len(self.settlements) < 5:
             # Resources available to make a settlement
-            if self.resources['b'] >= 1 and self.resources['l'] >=1 and \
-               self.resources['g'] >= 1 and self.resources['w'] >=1:
+            if self.resources['b'] >= 1 \
+                    and self.resources['l'] >=1 \
+                    and self.resources['g'] >= 1 \
+                    and self.resources['w'] >=1:
                state = board.coords[move]
                # Does not overlap with already created settlement
                if state.player == 0:
@@ -441,21 +465,26 @@ class Player():
                         return True
 
         # Have a settlement at that spot
-        if move.move_type == Move.BUY_CITY and move.coord in self.settlements and len(self.cities) < 4:
+        if move.move_type == Move.BUY_CITY \
+                and move.coord in self.settlements \
+                and len(self.cities) < 4:
             # Resources available to make a city
             if self.resources['o'] >= 3 and self.resources['g'] >=2:
                 return True
 
         if move.move_type == Move.BUY_DEV:
             # Resources available to draw a dev card and enough dev cards in deck
-            if self.resources['o'] >= 1 and self.resources['g'] >=1 \
-                and self.resources['w'] >=1 and deck.cards_left > 0:
+            if self.resources['o'] >= 1 \
+                    and self.resources['g'] >=1 \
+                    and self.resources['w'] >=1 \
+                    and len(deck.cards_left) > 0:
                 return True
 
         if move.move_type == Move.PLAY_DEV:
             # Dev card available and not a victory point card
 
-            if move.card_type in self.dev_cards.keys() and self.dev_cards[move.card_type] > 0:
+            if move.card_type in self.dev_cards.keys() \
+                    and self.dev_cards[move.card_type] > 0:
                 if move.card_type == Card.KNIGHT:
                     spots = {(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                              (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
@@ -557,8 +586,8 @@ class Player():
         elif move.move_type == Move.BUY_CITY:
             self.resources['o'] -= 3
             self.resources['g'] -= 2
-            self.cities.append(move)
-            self.settlements.remove(move)
+            self.cities.append(move.coord)
+            self.settlements.remove(move.coord)
 
         # Draw a dev card
         elif move.move_type == Move.BUY_DEV:
@@ -574,11 +603,11 @@ class Player():
 
             # If the dev card is road building, we've covered this in
             # the dev card handler, so we can just return
-            if move.card_type == Move.ROAD_BUILDING:
+            if move.card_type == Card.ROAD_BUILDING:
                 return 1
 
         # Trade with bank
-        elif move.move_type == Move.TRADE:
+        elif move.move_type == Move.TRADE_BANK:
             self.trade_resources(move.give_resource, move.resource)
 
         # Move robber.
@@ -835,7 +864,7 @@ class Player():
         elif self.player_type == Player.RANDOM_AI:
             possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0)
             # Choose a move randomly from the set of possible moves!
-            return list(possible_moves[random.randint(0, len(possible_moves) - 1)])
+            return possible_moves[random.randint(0, len(possible_moves) - 1)]
 
         elif self.player_type == 2:
             AI = MCTSAI(board, 5, 20, players, deck, dev_played, self.player_num, robber, 0, False)
@@ -873,13 +902,13 @@ class Player():
         state = board.coords[coords]
 
         # Does not overlap with already created settlement
-        if state['player'] == 0:
-            next_list = list(state['roads'].keys()) + state['available roads']
+        if state.player == None:
+            next_list = list(state.roads.keys()) + state.available_roads
 
             # Two spaces away from another settlement
             for next in next_list:
                 next_state = board.coords[next]
-                if next_state['player'] != 0:
+                if next_state.player != 0:
                     return False
             return True
         if self.player_type == Player.HUMAN:
@@ -929,19 +958,12 @@ class Player():
         while True:
 
             move = self.decide_move(dev_played, board, deck, players, robber)
-            # move is list
-            move_type = move[0]
             #robber should only be the first move
             robber = 0
-            move_instructs = None
-            if move_type == 7:
-                move_instructs = (move[1], move[2])
-            elif len(move) > 1:
-                move_instructs = move[1]
 
-            move_made = self.make_move(move_type, board, deck, move_instructs)
+            move_made = self.make_move(move, board, deck)
             if move_made == 1:
-                if move == 5:
+                if move.move_type == Move.PLAY_DEV:
                     dev_played += 1
 
                 # Did the move cause us to win?
