@@ -1,12 +1,11 @@
 import copy
-from enum import Enum
 import random
 import settings
 
 from MCTSAI import MCTSAI
 from Deck import Card
 
-class Move(Enum):
+class Move():
     END_TURN = 0
     BUY_ROAD = 1
     BUY_SETTLEMENT = 2
@@ -44,7 +43,7 @@ class Move(Enum):
 # The player class. Each player should keep track of their roads, cities,
 # settlements, dev cards, whether they're on a port, number of victory
 # points, and resource cards.
-class Player(Enum):
+class Player():
     HUMAN = 0
     RANDOM_AI = 1
 
@@ -170,9 +169,9 @@ class Player(Enum):
                             for r in board.resource_list:
                                 if weighted:
                                     for i in range(10):
-                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r)
+                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r))
                                 else:
-                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r)
+                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r))
                         elif card == Card.YEAR_OF_PLENTY:
                             if weighted:
                                 for i in range(10):
@@ -232,10 +231,10 @@ class Player(Enum):
                     numTrade = '3'
                 else:
                     numTrade = '4'
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='o')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='l')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='g')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='b')))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='o'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='l'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='g'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='b'))
 
             if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
             (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
@@ -245,10 +244,10 @@ class Player(Enum):
                     numTrade = '3'
                 else:
                     numTrade = '4'
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='w')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='l')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='g')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='b')))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='w'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='l'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='g'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='b'))
 
             if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
             (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
@@ -258,10 +257,10 @@ class Player(Enum):
                     numTrade = '3'
                 else:
                     numTrade = '4'
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='w')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='o')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='g')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='b')))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='w'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='o'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='g'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='b'))
 
             if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
             (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
@@ -271,10 +270,10 @@ class Player(Enum):
                     numTrade = '3'
                 else:
                     numTrade = '4'
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='w')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='o')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='g')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='l')))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='w'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='o'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='g'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='l'))
 
             if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
             (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
@@ -284,10 +283,10 @@ class Player(Enum):
                     numTrade = '3'
                 else:
                     numTrade = '4'
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='w')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='o')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='b')))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='l')))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='w'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='o'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='b'))
+                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='l'))
 
             if robber:
                 possible_moves = []
@@ -458,27 +457,44 @@ class Player(Enum):
 
             if move.card_type in self.dev_cards.keys() and self.dev_cards[move.card_type] > 0:
                 if move.card_type == Card.KNIGHT:
-                    spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
-                        (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
-                        (0, 0), (2, 2), (0, 1)]
+                    spots = {(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                             (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
+                             (3, 1), (0, 0), (2, 2), (0, 1)}
                     if move.coord in spots:
                         return True
+                elif move.card_type == Card.VICTORY_POINT:
+                    return False
+                elif move.card_type == Card.ROAD_BUILDING:
+                    state_o = board.coords[move.road[0]]
+                    # Does not overlap with already created road
+                    if move.road[1] in state_o.available_roads:
+                        # Next to another road or settlement
+                        if (move.road[0] in self.roads) \
+                                or (move.road[1] in self.roads) \
+                                or (move.road[0] in self.settlements) \
+                                or (move.road[1] in self.settlements):
+                            return True
+                elif move.card_type == Card.MONOPOLY:
+                    if move.resource in board.resource_list:
+                        return True
+                elif move.card_type == Card.YEAR_OF_PLENTY:
+                    return True
 
         if move.move_type == Move.TRADE_BANK:
             old_res = move.give_resource
-            if move.num_trade == 4 and self.resources[old_res] >=4:
+            if move.num_trade == 4 and self.resources[old_res] >= 4:
                 return True
-            elif move.num_trade == 3 and self.resources[old_res] >=3 \
-                and ('3' in self.ports):
+            elif move.num_trade == 3 and self.resources[old_res] >= 3 \
+                    and ('3' in self.ports):
                 return True
-            elif move.num_trade == 2 and self.resources[old_res] >=2 \
-                and ('2 {}'.format(old_res) in self.ports):
+            elif move.num_trade == 2 and self.resources[old_res] >= 2 \
+                    and ('2 {}'.format(old_res) in self.ports):
                 return True
 
         if move.move_type == Move.MOVE_ROBBER:
-            spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
-                (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
-                (0, 0), (2, 2), (0, 1)]
+            spots = {(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                     (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
+                     (3, 1), (0, 0), (2, 2), (0, 1)}
             if move.coord in spots:
                 return True
 
@@ -534,8 +550,8 @@ class Player(Enum):
             self.resources['w'] -= 1
             self.settlements.append(move.coord)
             state = board.coords[move.coord]
-            if state['ports'] != '':
-                self.ports.append(state['ports'])
+            for port in state.ports:
+                self.ports.append(port)
 
         # Build a city
         elif move.move_type == Move.BUY_CITY:
@@ -576,10 +592,12 @@ class Player(Enum):
     # A helper function for moving the robber in the case of rolling a 7
     def move_robber(self, board, spot, victim):
         while True:
-            #mctsai should not be picking random here
-            if self.player_type == Player.RANDOM_AI or self.player_type == 2 or self.player_type == 3 or\
-               self.player_type == 4 or self.player_type == 5:
-
+            # TODO mctsai should not be picking random here
+            if self.player_type == Player.RANDOM_AI \
+                    or self.player_type == 2 \
+                    or self.player_type == 3 \
+                    or self.player_type == 4 \
+                    or self.player_type == 5:
                 if board.robber != (2,0):
                     spots.remove(board.robber)
                 spot = spots[random.randint(0, len(spots) - 1)]
@@ -590,7 +608,7 @@ class Player(Enum):
 
     # A helper function to move the robber and steal from
     # a player
-    # TODO fix ai choice
+    # TODO mctsai should not be picking random here
     def choose_victim(self, board, move):
 
         victim = None

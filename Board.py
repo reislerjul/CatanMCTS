@@ -4,9 +4,6 @@ import settings
 from Deck import Card
 from Player import Move
 
-class Hex():
-    def __init__(self, player, settlement, resource_locs, ):
-
 class Coord():
     def __init__(self,\
                  location,\

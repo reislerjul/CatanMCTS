@@ -1,8 +1,7 @@
-import enum
 import random
 import settings
 
-class Card(Enum):
+class Card():
     '''
     Represents each of the card types
     '''
