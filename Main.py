@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import sys
 from Player import Player
 from Board import Board
@@ -6,7 +8,7 @@ from Game import Game
 import settings
 
 
-# This will contain the main method which will be the entry point into 
+# This will contain the main method which will be the entry point into
 # playing the Catan game.
 def run_game(player_list):
     # Create the game, board, deck, and settings
@@ -32,15 +34,15 @@ def run_game(player_list):
 
 
 if __name__ == '__main__':
-    # We will assume that the commandline arguments give the players in the 
+    # We will assume that the commandline arguments give the players in the
     # order that they should play
     player_list = []
 
     # Process the commandline arguments. There should be 3 or 4 commandline
-    # line arguments corresponding to each player. 0 means human player, 
+    # line arguments corresponding to each player. 0 means human player,
     # 1 means random AI, 2 means MCTS AI.
     args = sys.argv[1:]
     assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
     for idx, arg in enumerate(args):
-        player_list.append(Player(int(arg), int(idx + 1)))    
+        player_list.append(Player(int(arg), int(idx + 1)))
     run_game(player_list)

@@ -32,7 +32,7 @@ class Node():
 class MCTSAI():
 
     def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson):
-        # class that initialize a MCTSAI, works to figure 
+        # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
         self.max_moves = max_moves
         self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber), 0)]
@@ -44,7 +44,7 @@ class MCTSAI():
         self.C = 1.0
 
     # TODO: wins and plays dictionaries need to be updated
-   
+
     def thompson_sample(self, node):
         active_player = node.state.players[node.active_player - 1]
         legal = active_player.get_legal_moves(node.state.board, node.state.deck, node.state.dev_played, node.state.robber, self.weighted)
@@ -62,7 +62,7 @@ class MCTSAI():
                 max_sample = sample
                 move = move_made
         return move
-   
+
     def get_play(self):
         state = self.nodes[0].state
         players = state.players
@@ -73,14 +73,14 @@ class MCTSAI():
         # TODO: we need a way to represent whether a dev card has been played this turn
         active_player = self.nodes[0].state.players[self.nodes[0].active_player - 1]
         legal = active_player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
-        
+
         if len(legal) == 1:
             return legal[0]
 
         start = datetime.datetime.utcnow()
         while datetime.datetime.utcnow() - start < self.timer:
             self.run_cycle()
-        
+
         root = self.nodes[0]
         # Pick the move with the highest percentage of wins.
         max_winrate = -1
@@ -97,7 +97,7 @@ class MCTSAI():
                 max_winrate = winrate
                 move = move_made
         return move
-    
+
     def run_cycle(self):
         node, move = self.run_selection()
         if move == 0:
@@ -108,7 +108,7 @@ class MCTSAI():
             new_node = self.run_expansion(node, move)
             winner = self.run_simulation(new_node)
             self.run_backpropogation(new_node, winner)
-    
+
     def run_selection(self):
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
@@ -130,7 +130,7 @@ class MCTSAI():
             return current_node, move
         else:
             return current_node, 0
-    
+
     def run_expansion(self, node, move):
         state_copy = copy.deepcopy(node.state)
         if node.active_player == -1:
@@ -183,7 +183,7 @@ class MCTSAI():
         new_game = Game(state_copy.board, state_copy.deck, state_copy.players, verbose=False)
         winner = new_game.play_game()
         return winner
-    
+
     def run_backpropogation(self, node, winner):
         while node.id > 0:
             self.nodes[node.id].plays += 1

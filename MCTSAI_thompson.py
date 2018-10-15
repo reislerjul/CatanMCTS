@@ -10,7 +10,7 @@ import numpy as np
 class MCTSAI():
 
 	def __init__(self, board, time, max_moves, players, deck, player_num, robber, weighted):
-		 # class that initialize a MCTSAI, works to figure 
+		 # class that initialize a MCTSAI, works to figure
 		self.timer = datetime.timedelta(seconds=time)
 		self.max_moves = max_moves
 		self.wins = {}
@@ -23,21 +23,21 @@ class MCTSAI():
 		#values of this parameter.
 		self.C = 1.0
 
-		
+
 	def update(self, state):
 		self.states.append(state)
 
 
 
     # TODO: wins and plays dictionaries need to be updated
-   
+
 	def get_play(self):
 		self.max_depth = 0
 		state = self.states[-1]
 		players, board, deck, dev_played, robber = state
 		# TODO: we need a way to represent whether a dev card has been played this turn
 		legal = self.player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
-		
+
 		if len(legal) == 1:
 			return legal[0]
 
@@ -46,12 +46,12 @@ class MCTSAI():
 		while datetime.datetime.utcnow() - start < self.timer:
 		    self.run_simulation()
 		    games += 1
-		
+
 		move_states = []
 		for move in legal:
 			state_val = self.get_next_state(move, players, board, deck, self.player_num -1)
 			move_states.append((state_val[0], self.h(state_val[1])))
-	    
+
 		player_h = players[self.player_num -1].hashable_player()
 		'''
 		# Pick the move with the highest percentage of wins.
@@ -69,17 +69,17 @@ class MCTSAI():
 			plays = self.plays.get((player_h, S), 0) + 2
 			samples.append((np.random.beta(wins, plays - wins), p))
 		_, move = max(samples, key=lambda tuple: tuple[0])
-        
+
 		return move
-	
+
 
 	def run_simulation(self):
-		
+
 		winner = -1
 		plays, wins = self.plays, self.wins
 		visited_states = set()
 		states_copy = self.states[:]
-		state = states_copy[-1]	
+		state = states_copy[-1]
 		players, board, deck, dev_played, robber = state #self.copy_state(state[0], state[1], state[2], state[3], state[4])
 		#the current player in the beggining of our simulation step is
 		# always ourselves i believe.
@@ -93,11 +93,11 @@ class MCTSAI():
 			move_type = -1
 			while move_type != 0:
 				legal = self.player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
-				
-				move_states = [self.get_next_state(p, players, board, 
+
+				move_states = [self.get_next_state(p, players, board,
 				                                   deck, curr_player_num) for p in legal]
-				
-				
+
+
 				hashed_states = [(p, self.h(D)) for p, D in move_states]
 				if all((p,S) in plays for p, S in hashed_states):
 					#if we know whether moves are good or not use it
@@ -131,10 +131,10 @@ class MCTSAI():
 				curr_player_num +=1
 				player = players[curr_player_num]
 			if player.calculate_vp() >= settings.POINTS_TO_WIN:
-				winner = player.player_num			
+				winner = player.player_num
 				if winner:
-					break	
-		
+					break
+
 		if winner == -1:
 			vps = [player.calculate_vp() for player in players]
 			winner = vps.index(max(vps))
@@ -143,7 +143,7 @@ class MCTSAI():
 				continue
 			plays[(player, state)] += 1
 			if player_num == winner:
-				wins[(player, state)] += 1	
+				wins[(player, state)] += 1
 
 
 	def h(self,s):
@@ -152,29 +152,29 @@ class MCTSAI():
 		board = s[1].hashable_board()
 		deck = s[2].hashable_deck()
 		dev_played = s[3]
-		
+
 		robber = s[4]
 		if len(p) == 4:
-			return (p[0].hashable_player(), p[1].hashable_player(), 
-			        p[2].hashable_player(), p[3].hashable_player(), 
+			return (p[0].hashable_player(), p[1].hashable_player(),
+			        p[2].hashable_player(), p[3].hashable_player(),
 			        board, deck, dev_played, robber)
 		elif len(p) == 3:
-			return (p[0].hashable_player(), p[1].hashable_player(), 
-			        p[2].hashable_player(),  
+			return (p[0].hashable_player(), p[1].hashable_player(),
+			        p[2].hashable_player(),
 			        board, deck, dev_played, robber)
-		
+
 
 	def copy_state(self,  players, board, deck, dev_played, robber):
 		copy_players = copy.deepcopy(players)
 		copy_board = copy.deepcopy(board)
 		copy_deck = copy.deepcopy(deck)
 		return (copy_players, copy_board, copy_deck, dev_played, robber)
-		
+
 
 	def get_next_state(self, move, players, board, deck, player_num):
 		#helper function that given a legal move gets the next state
 		player = players[player_num]
-		
+
 		if move[0] == 7:
 			player.make_move(move[0], board, deck, (move[1], move[2]))
 		elif len(move) > 1:
@@ -182,4 +182,4 @@ class MCTSAI():
 		if move[0] == 5:
 			return (move, (players, board, deck, 1,0))
 		return (move, (players, board, deck, 0,0))
-	
+
