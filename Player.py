@@ -559,7 +559,7 @@ class Player():
         # need when a dev card is played
         play = None
         if not self.check_legal_move(move, board, deck):
-            if self.player_type == Player.HUMAN:
+            if self.print_invalid_move():
                 print("Illegal move!")
             return -1
 
@@ -745,7 +745,7 @@ class Player():
                 if next_state.player != 0:
                     return False
             return True
-        if self.player_type == Player.HUMAN:
+        if self.print_invalid_move:
             print('Cannot build settlement here...')
         return False
 
@@ -763,7 +763,7 @@ class Player():
                 if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) or \
                 (move[0] in self.settlements) or (move[1] in self.settlements):
                     return True
-        if self.player_type == Player.HUMAN:
+        if self.print_invalid_move():
             print('Cannot build road here...')
         return False
 
