@@ -43,6 +43,22 @@ if __name__ == '__main__':
     # 1 means random AI, 2 means MCTS AI.
     args = sys.argv[1:]
     assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
+
     for idx, arg in enumerate(args):
-        player_list.append(Player(int(arg), int(idx + 1)))
+
+        player_type = int(arg)
+
+        if player_type == Player.HUMAN:
+            player_list.append(Human(int(idx + 1)))
+
+        else if player_type == Player.Random_AI:
+            player_list.append(RandomPlayer(int(idx + 1)))
+
+        else if player_type == Player.MCTS_AI:
+            time = int(input("Time parameter for MCTS?"))
+            max_moves = int(input("Maximum moves parameter for MCTS?"))
+            weighted = int(input("Weighted parameter for MCTS? (0 or 1)"))
+            thompson = int(input("Thompson sampling for MCTS? (0 or 1)"))
+            player_list.append(MCTSPlayer(int(idx + 1), time, max_moves, weighted, thompson))
+
     run_game(player_list)

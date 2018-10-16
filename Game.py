@@ -2,7 +2,7 @@ import random
 import settings
 
 
-# This class takes care of the game state of the Catan game
+# This class takes care of the game state of the Catan game 
 class Game():
 
     def __init__(self, board, deck, players, verbose=True):
@@ -15,7 +15,7 @@ class Game():
         self.verbose = verbose
 
     # This function represents the start of the game in which
-    # each player chooses their spots.
+    # each player chooses their spots. 
     def place_spots(self, mode = 'beginner'):
         if mode == 'beginner':
             a = [0,1,2,3]
@@ -28,16 +28,16 @@ class Game():
                 if settings.DEBUG:
                     print("Choose first settlement for player " + str(player.player_num))
                 player.choose_spot(self.board, 1)
-
+    
             # Place second settlement/road
             for player in self.players[::-1]:
                 if settings.DEBUG:
                     print("Choose second settlement for player " + str(player.player_num))
                 player.choose_spot(self.board, 2)
+    
 
 
-
-    # This function represents a round in which each player
+    # This function represents a round in which each player 
     # has one turn.
     def round(self):
         # print the board state at the beginning of the round
@@ -48,7 +48,7 @@ class Game():
             self.board.print_board_state()
 
         for player in self.players:
-            # TODO: allow player to play dev card before rolling
+            # TODO: allow player to play dev card before rolling 
             robber = 0
             dice1 = random.randint(1, 6)
             dice2 = random.randint(1, 6)
@@ -66,7 +66,7 @@ class Game():
             if dice1 + dice2 == 7:
                 robber = 1
 
-
+            
             # If the player has won, the game is over.
             if player.make_turn(self.board, self.deck, self.players, robber):
                 self.won = player.player_num
@@ -87,16 +87,16 @@ class Game():
         return 0
 
 
-    # This function is called from the main method and is used to
-    # play the game. The function calls the round function until
-    # a player has won.
+    # This function is called from the main method and is used to 
+    # play the game. The function calls the round function until 
+    # a player has won. 
     def play_game(self):
-
+        
         while True:
             if self.round():
                 return self.won
 
-            # The other win condition will occur when 500 turns are played.
+            # The other win condition will occur when 500 turns are played. 
             # Take the player with the highest number of points.
             if self.num_rounds == 500:
                 self.won = self.players[0]
@@ -107,4 +107,11 @@ class Game():
                         max_points = curr_vp
                         self.won = player
                 return self.won
+        
+
+
+
+
+
+
 
