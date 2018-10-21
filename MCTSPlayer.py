@@ -1,6 +1,12 @@
+import copy
+import random
+import settings
+from MCTSAI import MCTSAI
+from Deck import Card
 from Player import Player
 
-class RandomPlayer(Player):
+
+class MCTSPlayer(Player):
 
 
     def __init__(self, player_num, time, max_moves, weighted, thompson):

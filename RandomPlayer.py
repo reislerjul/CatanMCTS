@@ -1,4 +1,9 @@
 from Player import Player
+import copy
+import random
+import settings
+from Deck import Card
+
 
 class RandomPlayer(Player):
 

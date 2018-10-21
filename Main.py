@@ -5,6 +5,9 @@ from Player import Player
 from Board import Board
 from Deck import Deck
 from Game import Game
+from RandomPlayer import RandomPlayer
+from MCTSPlayer import MCTSPlayer
+from Human import Human
 import settings
 
 
@@ -51,10 +54,10 @@ if __name__ == '__main__':
         if player_type == Player.HUMAN:
             player_list.append(Human(int(idx + 1)))
 
-        else if player_type == Player.Random_AI:
+        elif player_type == Player.RANDOM_AI:
             player_list.append(RandomPlayer(int(idx + 1)))
 
-        else if player_type == Player.MCTS_AI:
+        elif player_type == Player.MCTS_AI:
             time = int(input("Time parameter for MCTS?"))
             max_moves = int(input("Maximum moves parameter for MCTS?"))
             weighted = int(input("Weighted parameter for MCTS? (0 or 1)"))
