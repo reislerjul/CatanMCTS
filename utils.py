@@ -74,21 +74,21 @@ class Move():
                      self.roll))
 
     def __eq__(self, other):
-        return (self.move_type,
-                self.card_type,
-                self.road,
-                self.coord,
-                self.player,
-                self.num_trade,
-                self.give_resource,
-                self.resource,
-                self.roll) ==
-                (other.move_type,
-                other.card_type,
-                other.road,
-                other.coord,
-                other.player,
-                other.num_trade,
-                other.give_resource,
-                other.resource,
-                other.roll)
+        return ((self.move_type,
+                 self.card_type,
+                 self.road,
+                 self.coord,
+                 self.player,
+                 self.num_trade,
+                 self.give_resource,
+                 self.resource,
+                 self.roll) ==
+                 (other.move_type,
+                 other.card_type,
+                 other.road,
+                 other.coord,
+                 other.player,
+                 other.num_trade,
+                 other.give_resource,
+                 other.resource,
+                 other.roll))
