@@ -24,8 +24,10 @@ class Move():
     PLAY_DEV = 5
     TRADE_BANK = 6
     MOVE_ROBBER = 7
-    ROLL_DICE  = 8
-    DRAW_DEV = 9
+    ACCEPT_TRADE = 8
+    PROPOSE_TRADE = 9
+    ROLL_DICE  = 10
+    DRAW_DEV = 11
 
     def __init__(self,
                  move_type,
@@ -61,32 +63,32 @@ class Move():
         return s
 
     def __hash__(self):
-        return hash((self.move_type,\
-                     self.card_type,\
-                     self.road,\
-                     self.coord,\
-                     self.player,\
-                     self.num_trade,\
-                     self.give_resource,\
-                     self.resource,\
+        return hash((self.move_type,
+                     self.card_type,
+                     self.road,
+                     self.coord,
+                     self.player,
+                     self.num_trade,
+                     self.give_resource,
+                     self.resource,
                      self.roll))
-    
+
     def __eq__(self, other):
-        return (self.move_type,\
-                self.card_type,\
-                self.road,\
-                self.coord,\
-                self.player,\
-                self.num_trade,\
-                self.give_resource,\
-                self.resource,\
-                self.roll) ==\
-                (other.move_type,\
-                other.card_type,\
-                other.road,\
-                other.coord,\
-                other.player,\
-                other.num_trade,\
-                other.give_resource,\
-                other.resource,\
-                other.roll) 
+        return (self.move_type,
+                self.card_type,
+                self.road,
+                self.coord,
+                self.player,
+                self.num_trade,
+                self.give_resource,
+                self.resource,
+                self.roll) ==
+                (other.move_type,
+                other.card_type,
+                other.road,
+                other.coord,
+                other.player,
+                other.num_trade,
+                other.give_resource,
+                other.resource,
+                other.roll)

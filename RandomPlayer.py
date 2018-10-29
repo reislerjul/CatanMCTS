@@ -66,7 +66,8 @@ class RandomPlayer(Player):
         return victim
 
 
-    def choose_robber_position(self):
+    # Three arguments aren't used, but we have them here because they're used for MCTSPlayer
+    def choose_robber_position(self, board, players, deck):
         spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
         (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
         (0, 0), (2, 2), (0, 1)]
@@ -83,11 +84,12 @@ class RandomPlayer(Player):
     def decide_move(self, dev_played, board, deck, players, robber):
         possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0)
 
+        # We should 
         # Choose a move randomly from the set of possible moves!
         return possible_moves[random.randint(0, len(possible_moves) - 1)]
 
 
-    def choose_road(self, board):
+    def choose_road(self, board, deck, players):
         possible_roads = {}
 
         for road_source in list(self.roads.keys()):
@@ -101,3 +103,10 @@ class RandomPlayer(Player):
 
         options = list(possible_roads.keys())
         return options[random.randint(0, len(options) - 1)]
+
+
+    def should_accept_trade(self, receive, give, board, deck, players):
+        options = [0]
+        if self.can_accept_trade(give):
+            options.append(1)
+        return options[random.randint(0, len(options - 1))]

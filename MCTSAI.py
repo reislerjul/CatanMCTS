@@ -9,13 +9,14 @@ from utils import Move
 # A class to represent the Monte Carlo Tree Search AI
 
 class State():
-    def __init__(self, players, board, deck, dev_played, robber):
+    def __init__(self, players, board, deck, dev_played, robber, trades_tried):
         self.players = players
         self.board = board
         self.deck = deck
         self.dev_played = dev_played
         self.robber = robber
         self.winner = 0
+        self.trades_tried = trades_tried
 
 class Node():
     def __init__(self, _id, parent_id, player_num, prev_player, state, depth):
@@ -31,11 +32,12 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson):
-        # class that initialize a MCTSAI, works to figure 
+    def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson, \
+        trades_tried):
+        # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
         self.max_moves = max_moves
-        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber), 0)]
+        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber, trades_tried), 0)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -44,10 +46,15 @@ class MCTSAI():
         self.C = 1.0
 
     # TODO: wins and plays dictionaries need to be updated
-   
+
     def thompson_sample(self, node):
-        active_player = node.state.players[node.active_player_num - 1]
-        legal = active_player.get_legal_moves(node.state.board, node.state.deck, node.state.dev_played, node.state.robber, self.weighted)
+        active_player = node.state.players[node.active_player - 1]
+        legal = active_player.get_legal_moves(node.state.board,
+                                              node.state.deck,
+                                              node.state.dev_played,
+                                              node.state.robber,
+                                              self.weighted,
+                                              node.state.trades_tried)
         # Pick a move with thompson sampling
         '''
         max_sample = 0
@@ -69,25 +76,33 @@ class MCTSAI():
                     else (1, 2, move_made)
                     for move_made in legal],
                     key=lambda x: random.betavariate(x[0], x[1] - x[0]))[2]
-   
-    def get_play(self):
+
+    def get_play(self, receive=None, give=None):
         state = self.nodes[0].state
         players = state.players
         board = state.board
         deck = state.deck
         dev_played = state.dev_played
+        trades_tried = state.trades_tried
         robber = state.robber
         # TODO: we need a way to represent whether a dev card has been played this turn
-        active_player = self.nodes[0].state.players[self.nodes[0].active_player_num - 1]
-        legal = active_player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
-        
+        active_player = self.nodes[0].state.players[self.nodes[0].active_player - 1]
+        legal = active_player.get_legal_moves(board,
+                                              deck,
+                                              dev_played,
+                                              robber,
+                                              self.weighted,
+                                              trades_tried,
+                                              give,
+                                              receive)
+
         if len(legal) == 1:
             return legal[0]
 
         start = datetime.datetime.utcnow()
         while datetime.datetime.utcnow() - start < self.timer:
             self.run_cycle()
-        
+
         root = self.nodes[0]
         # Pick the move with the most wins.
         '''
@@ -111,7 +126,7 @@ class MCTSAI():
                     else (2, move_made)
                     for move_made in legal],
                    key=lambda x: x[0] + random.uniform(0, 1))[1]
-    
+
     def run_cycle(self):
         node, move = self.run_selection()
         if move.move_type == Move.END_TURN:
@@ -143,7 +158,7 @@ class MCTSAI():
             return current_node, move
         else:
             return current_node, None
-    
+
     def run_expansion(self, node, move):
         state_copy = copy.deepcopy(node.state)
         if node.active_player_num == -1:
@@ -186,7 +201,7 @@ class MCTSAI():
         new_game = Game(state_copy.board, state_copy.deck, state_copy.players, verbose=False)
         winner = new_game.play_game()
         return winner
-    
+
     def run_backpropogation(self, node, winner):
         while node.id > 0:
             self.nodes[node.id].plays += 1

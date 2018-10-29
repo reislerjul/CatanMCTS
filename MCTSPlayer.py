@@ -71,45 +71,46 @@ class MCTSPlayer(Player):
         return victim
 
 
-    def choose_robber_position(self):
-        spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
-        (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
-        (0, 0), (2, 2), (0, 1)]
-        if board.robber != (2,0):
-            spots.remove(board.robber)
-        return spots[random.randint(0, len(spots) - 1)]
+    # This is only called when we play a dev card and are choosing a robber position
+    # TODO: test that this works correctly
+    def choose_robber_position(self, board, players, deck):
+        move = decide_move(1, board, deck, players, 1)
+        return move
 
 
+    # TODO: think about how to change this so that for year of plenty and monopoly
+    # we can use MCTS
     def choose_card(self, string):
         possible_cards = ['w', 'l', 'g', 'b', 'o']
         return possible_cards[random.randint(0, len(possible_cards) - 1)]
 
 
-    def decide_move(self, dev_played, board, deck, players, robber):
+    def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, recieve=None):
         if self.random:
             possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0)
 
-            # Choose a move randomly from the set of possible moves!
+            # Choose a move randomly from the set of possible moves
             return possible_moves[random.randint(0, len(possible_moves) - 1)]
             
         AI = MCTSAI(board, self.time, self.max_moves, players, deck, dev_played, \
-            self.player_num, robber, self.weighted, self.thompson)
+            self.player_num, robber, self.weighted, self.thompson, trades_tried)
         board1 = copy.deepcopy(board)
-        move = AI.get_play()
+        if robber == 3:
+            move = AI.get_play(receive, give)
         return move
 
 
-    def choose_road(self, board):
-        possible_roads = {}
+    # This is only called during road builder
+    # TODO: test that this works
+    def choose_road(self, board, deck, players):
+        move = decide_move(1, board, deck, players, 2)
+        return move
 
-        for road_source in list(self.roads.keys()):
-            possible_sinks = \
-            board.coords[road_source]['available roads']
 
-            for sink in possible_sinks:
-                if (road_source, sink) not in possible_roads and \
-                (sink, road_source) not in possible_roads:
-                    possible_roads[(sink, road_source)] = True
-
-        options = list(possible_roads.keys())
-        return options[random.randint(0, len(options) - 1)]
+    def should_accept_trade(self, receive, give, board, deck, players):
+        if self.can_accept_trade(give):
+            move = decide_move(self, 0, board, deck, players, 3, give, receive)
+            if move.move_type == Move.END_TURN:
+                return 0
+            return 1
+        return 0
