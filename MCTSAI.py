@@ -9,13 +9,14 @@ from math import log
 # A class to represent the Monte Carlo Tree Search AI
 
 class State():
-    def __init__(self, players, board, deck, dev_played, robber):
+    def __init__(self, players, board, deck, dev_played, robber, trades_tried):
         self.players = players
         self.board = board
         self.deck = deck
         self.dev_played = dev_played
         self.robber = robber
         self.winner = 0
+        self.trades_tried = trades_tried
 
 class Node():
     def __init__(self, _id, parent_id, player_num, prev_player, state, depth):
@@ -31,11 +32,12 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson):
+    def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson, \
+        trades_tried):
         # class that initialize a MCTSAI, works to figure 
         self.timer = datetime.timedelta(seconds=time)
         self.max_moves = max_moves
-        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber), 0)]
+        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber, trades_tried), 0)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -47,7 +49,8 @@ class MCTSAI():
    
     def thompson_sample(self, node):
         active_player = node.state.players[node.active_player - 1]
-        legal = active_player.get_legal_moves(node.state.board, node.state.deck, node.state.dev_played, node.state.robber, self.weighted)
+        legal = active_player.get_legal_moves(node.state.board, node.state.deck, node.state.dev_played, node.state.robber, self.weighted, \
+            node.state.trades_tried)
         # Pick a move with thompson sampling
         max_sample = 0
         for move_made in legal:
@@ -63,16 +66,17 @@ class MCTSAI():
                 move = move_made
         return move
    
-    def get_play(self):
+    def get_play(self, receive=None, give=None):
         state = self.nodes[0].state
         players = state.players
         board = state.board
         deck = state.deck
         dev_played = state.dev_played
+        trades_tried = state.trades_tried
         robber = state.robber
         # TODO: we need a way to represent whether a dev card has been played this turn
         active_player = self.nodes[0].state.players[self.nodes[0].active_player - 1]
-        legal = active_player.get_legal_moves(board, deck, dev_played, robber, self.weighted)
+        legal = active_player.get_legal_moves(board, deck, dev_played, robber, self.weighted, trades_tried, give, receive)
         
         if len(legal) == 1:
             return legal[0]

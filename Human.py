@@ -4,6 +4,7 @@ import random
 import settings
 from MCTSAI import MCTSAI
 from Deck import Card
+from Player import Move
 
 
 class Human(Player):
@@ -73,7 +74,8 @@ class Human(Player):
         return victim
 
 
-    def choose_robber_position(self):
+    # Three arguments aren't used, but we have them here because they're used for MCTSPlayer
+    def choose_robber_position(self, board, players, deck):
         r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
         return (r, c)
 
@@ -83,7 +85,7 @@ class Human(Player):
         return input(full_string)
 
 
-    def decide_move(self, dev_played, board, deck, players, robber):
+    def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
         self.printResources()
         print('Moves available:')
         print('Enter 0 for ending/passing your turn')
@@ -92,14 +94,15 @@ class Human(Player):
         print('Enter 3 to build a city ')
         print('Enter 4 to draw a dev card ')
         print('Enter 5 to play a dev card ')
-        print('Enter 6 to make a trade ')
+        print('Enter 6 to make a trade with bank')
+        print('Enter 9 to propose a trade with other players')
         if robber:
             r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
             spot = (r, c)
             victim = self.choose_victim(board, spot)
             self.move_robber(board, spot, victim)
         move_type = int(input('Select move: '))
-        if not (move_type == 5 and dev_played > 0):
+        if not ((move_type == 5 and dev_played > 0) or (move_type == 9 and trades_tried > 1)):
 
             # Let's decide on the specific places to move in this
             # function so that we can abstract make_move to work for
@@ -130,13 +133,17 @@ class Human(Player):
                 move = self.trade(board)
                 return [6, move]
 
-
+            elif move_type == 9:
+                maps = self.trade_other_players()
+                move = Move(9, give_resource=maps[0], resource=maps[1])
+                return move
             return move_type
         else:
-            print("You have already played a dev card in this round")
+            print("You have already played a dev card in this round or have reached maximum allowed trades")
+ 
 
 
-    def choose_road(self, board):
+    def choose_road(self, board, deck, players):
         r0,c0 = map(int, input("Coordinate for road beginning/origin (Input form: row# col#): ").split())
         r1,c1 = map(int, input("Coordinate for road end (Input form: row# col#): ").split())
         print('Building road from (', r0, ', ', c0, ') to (', r1, ', ', c1, ') ...')
@@ -174,4 +181,31 @@ class Human(Player):
         newRes = input("Which resource would you like in exchange? (Input form: l, o, w, b, g)")
         move = (oldRes, newRes)
         return move     # Tuple of tuple: Trade of multiple cards for one card
+
+
+    def trade_other_players(self):
+        while True:
+            losses = input("What do you want to trade? (Input form: Num-Card Num-Card, ...) (Ex: 1-w 2-o)")
+            gains = input("What should others trade to you? (Input form: Num-Card Num-Card, ...) (Ex: 1-w 2-o)")
+            loss_map = {}
+            gain_map = {}
+            loss_array = losses.split()
+            for element in loss_array:
+                loss_map[element[2]] = element[0]
+            gain_array = gains.split()
+            for element in gain_array:
+                gain_map[element[2]] = element[0]
+            if self.can_accept_trade(loss_map):
+                return (loss_map, gain_map)
+            print("You don't have the resources for that trade! Try again.")
+
+
+    def should_accept_trade(self, receive, give, board, deck, players):
+        options = [0]
+        if self.can_accept_trade(give):
+            accept = input("Accept the following trade? \nYou'd receive: " + str(receive) + \
+                "\nYou'd give: " + str(give))
+            return int(accept)
+        return 0
+
 

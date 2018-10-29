@@ -1,9 +1,9 @@
 import copy
 import random
 import settings
-
 from MCTSAI import MCTSAI
 from Deck import Card
+
 
 class Move():
     END_TURN = 0
@@ -14,6 +14,9 @@ class Move():
     PLAY_DEV = 5
     TRADE_BANK = 6
     MOVE_ROBBER = 7
+    ACCEPT_TRADE = 8
+    PROPOSE_TRADE = 9
+
 
     def __init__(self,\
                  move_type,\
@@ -40,6 +43,7 @@ class Move():
         if resource is not None:
             self.resource = resource
 
+
     def __str__(self):
         s = 'Move(move_type: {}'.format(self.move_type)
         if hasattr(self, 'card_type'):
@@ -58,6 +62,7 @@ class Move():
             s += ', resource: {}'.format(self.resource)
         s += ')'
         return s
+
 
 # The player class. Each player should keep track of their roads, cities,
 # settlements, dev cards, whether they're on a port, number of victory
@@ -117,15 +122,15 @@ class Player():
         return 
 
 
-    def choose_road(self):
-        return 
-
-
     def choose_road(self, board):
         return 
 
 
-    def decide_move(self, dev_played, board, deck, players, robber):
+    def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, receive=None):
+        return 
+
+
+    def trade_other_players():
         return 
 
 
@@ -166,8 +171,18 @@ class Player():
 
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.
-    def get_legal_moves(self, board, deck, dev_played, robber, weighted):
+    # give_resource and get_resource should be None or maps of resources to their quanities
+    def get_legal_moves(self, board, deck, dev_played, robber, weighted, trades_tried, give_resource=None, get_resource=None):
             # Determine moves we can play and add them to the list.
+
+            # We are trying to decide whether to accept a trade. The two options are
+            # aceept a trade or don't accept a trade
+            if robber == 3:
+                if can_accept_trade(trade_resource):
+                    return [Move(Move.END_TURN), Move(Move.ACCEPT_TRADE, give_resource=trade_resource, \
+                        resource=get_resource)]
+                return [Move(Move.END_TURN)]
+
 
             # We can always end our turn
             possible_moves = [Move(Move.END_TURN)]
@@ -182,6 +197,24 @@ class Player():
                         possible_moves.append(Move(Move.BUY_DEV))
                 else:
                     possible_moves.append(Move(Move.BUY_DEV))
+
+
+            # Can we ask for a trade?
+            if trades_tried < 2:
+                # For MCTSPlayer and RandomPlayer, this should be a bit different than the real game. 
+                # we will assume that the trades they want to try are in the form of 1 type of resource
+                # for another type of resource instead of trading multiple types for 1 
+                resource_list = self.resources.items()
+                for resource in resource_list:
+                    trade_for = ['g', 'w', 'o', 'b', 'l']
+                    if resource[1] > 0:
+                        trade_for.remove(resource[0])
+                        loss = {}
+                        gain - {}
+                        loss[resource[0]] = random.randint(1, resource[1])
+                        gain[random.choice(trade_for)] = random.randint(1, 2)
+                        possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
+
 
             # Can we play a dev card?
             if dev_played == 0:
@@ -265,9 +298,17 @@ class Player():
                                 (sink, road_source) not in possible_roads:
                             possible_roads[(sink, road_source)] = True
 
+                # This means we are in MCTS and we are trying to find roads to build for road builder,
+                # So we only want to return the set of roads as possible moves
+                if robber == 2:
+                    return possible_roads.keys()
+
+
                 # We now have the possible roads, so lets add those moves!
                 for road in possible_roads:
                     possible_moves.append(Move(Move.BUY_ROAD, road=road))
+
+
 
             # Can we build a settlement?
             if self.resources['w'] > 0 and self.resources['l'] > 0 and \
@@ -544,7 +585,9 @@ class Player():
             if move.coord in spots:
                 return True
 
-        if move.move_type == Move.END_TURN:
+        # For propose and accept trade, we check elsewhere that these are legal moves
+        if move.move_type == Move.END_TURN or move.move_type == Move.ACCEPT_TRADE \
+            or move.move_type == Move.PROPOSE_TRADE:
             return True
 
         return False
@@ -553,10 +596,12 @@ class Player():
     # TODO: this should represent a single move within a turn. Return
     # 0 if we are passing our turn, 1 if the move is a valid move,
     # -1 if the move is not legal
-    def make_move(self, move, board, deck):
+    def make_move(self, move, board, deck, players):
 
         # Play corresponds to the information that the board may
         # need when a dev card is played
+
+        # TODO: add to self.check_legal_move for trading
         play = None
         if not self.check_legal_move(move, board, deck):
             if self.print_invalid_move():
@@ -573,6 +618,31 @@ class Player():
         # End turn
         if move.move_type == Move.END_TURN:
             return 0
+
+
+        elif move.move_type == Move.ACCEPT_TRADE:
+            loss = move.give_resource.items() 
+            for element in loss:
+                self.resources[element[0]] -= element[1]
+            gain = move.resources.items()
+            for element in gain:
+                self.resources[element[0]] += element[1]
+
+        # For now, all players should randomly choose the 
+        # player to trade with from the list of players
+        # that'll accept the trade
+        elif move.move_type == Move.PROPOSE_TRADE:
+            traders = []
+            for player in players:
+                if player.should_accept_trade(move.give_resource, move.resource, board, deck, players):
+                    traders.append(player)
+            if len(traders) > 0:
+                chosen = traders[random.randint(0, len(traders) - 1)]
+                chosen.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.resource, \
+                    resource=move.give_resource))
+                self.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.give_resource, \
+                    resource=move.resource))
+
 
         # Build a road
         elif move.move_type == Move.BUY_ROAD:
@@ -616,7 +686,9 @@ class Player():
         # Play a dev card
         elif move.move_type == Move.PLAY_DEV:
             self.dev_cards[move.card_type] -= 1
-            play = self.dev_card_handler(move.card_type, board)
+
+            play = self.dev_card_handler(move.card_type, board, deck, players)
+            move.card_type = play
 
             # If the dev card is road building, we've covered this in
             # the dev card handler, so we can just return
@@ -630,6 +702,7 @@ class Player():
         # Move robber.
         if move.move_type == Move.MOVE_ROBBER:
             board.update_board(self, move)
+
         else:
             # Apply the changes to the board
             board.update_board(self, move)
@@ -657,12 +730,12 @@ class Player():
 
 
     # A helper function to handle playing dev cards
-    def dev_card_handler(self, card_type, board):
+    def dev_card_handler(self, card_type, board, deck, players):
 
         # Handle the knight
         if card_type == 'Knight':
             self.num_knights_played += 1
-            spot = self.choose_robber_position()
+            spot = self.choose_robber_position(board, players, deck)
             victim = self.choose_victim(board, spot)
             return (spot, victim)
 
@@ -680,7 +753,7 @@ class Player():
                 self.resources['b'] += 1
                 roads_played = 0
                 while roads_played < 1:
-                    move = self.choose_road(board)
+                    move = self.choose_road(board, deck, players)
                     if self.make_move(1, board, None, move) == 1:
                         roads_played += 1
                 return None
@@ -789,16 +862,23 @@ class Player():
         # played during this turn. If so, we can't play another one.
         dev_played = 0
 
+        # This should indicate the number of trades proposed. We will limit 
+        # players to proposing 2 trades per turn
+        trades_tried = 0
+
         while True:
 
-            move = self.decide_move(dev_played, board, deck, players, robber)
+            move = self.decide_move(dev_played, board, deck, players, robber, trades_tried)
             #robber should only be the first move
             robber = 0
 
-            move_made = self.make_move(move, board, deck)
+            move_made = self.make_move(move, board, deck, players)
             if move_made == 1:
                 if move.move_type == Move.PLAY_DEV:
                     dev_played += 1
+
+                if move.move_type == Move.PROPOSE_TRADE:
+                    trades_tried += 1
 
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
@@ -812,6 +892,17 @@ class Player():
     def drawDevCard(self, deck):
         move = deck.take_card(self)
         return move
+
+
+
+    # Can the player accept the trade? trade_map is a map of the resources
+    # that another player is asking for from this player
+    def can_accept_trade(self, trade_map):
+        list_trade = trade_map.items()
+        for element in list_trade:
+            if self.resources[element[0]] < element[1]:
+                return False
+        return True
 
 
     def hashable_player(self):
