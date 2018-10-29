@@ -1,8 +1,7 @@
 import random
 import settings
 
-from Deck import Card
-from Player import Move
+from utils import Card, Move
 
 class Coord():
     def __init__(self,\

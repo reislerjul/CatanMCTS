@@ -1,9 +1,10 @@
-from Player import Player
 import copy
 import random
 import settings
+
 from MCTSAI import MCTSAI
-from Deck import Card
+from Player import Player
+from utils import Card
 
 
 class Human(Player):

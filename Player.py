@@ -3,61 +3,8 @@ import random
 import settings
 
 from MCTSAI import MCTSAI
-from Deck import Card
+from utils import Card, Move
 
-class Move():
-    END_TURN = 0
-    BUY_ROAD = 1
-    BUY_SETTLEMENT = 2
-    BUY_CITY = 3
-    BUY_DEV = 4
-    PLAY_DEV = 5
-    TRADE_BANK = 6
-    MOVE_ROBBER = 7
-
-    def __init__(self,\
-                 move_type,\
-                 card_type=None,\
-                 road=None,\
-                 coord=None,\
-                 player=None,\
-                 num_trade=None,\
-                 give_resource=None,\
-                 resource=None):
-        self.move_type = move_type
-        if card_type is not None:
-            self.card_type = card_type
-        if road is not None:
-            self.road = road
-        if coord is not None:
-            self.coord = coord
-        if player is not None:
-            self.player = player
-        if num_trade is not None:
-            self.num_trade = num_trade
-        if give_resource is not None:
-            self.give_resource = give_resource
-        if resource is not None:
-            self.resource = resource
-
-    def __str__(self):
-        s = 'Move(move_type: {}'.format(self.move_type)
-        if hasattr(self, 'card_type'):
-            s += ', card_type: {}'.format(self.card_type)
-        if hasattr(self, 'road'):
-            s += ', road: {}'.format(self.road)
-        if hasattr(self, 'coord'):
-            s += ', coord: {}'.format(self.coord)
-        if hasattr(self, 'player'):
-            s += ', player: {}'.format(self.player)
-        if hasattr(self, 'num_trade'):
-            s += ', num_trade: {}'.format(self.num_trade)
-        if hasattr(self, 'give_resource'):
-            s += ', give_resource: {}'.format(self.give_resource)
-        if hasattr(self, 'resource'):
-            s += ', resource: {}'.format(self.resource)
-        s += ')'
-        return s
 
 # The player class. Each player should keep track of their roads, cities,
 # settlements, dev cards, whether they're on a port, number of victory
@@ -87,6 +34,7 @@ class Player():
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}         # {(0,0):(1,1), (1,1):(0,0)...}
         self.total_roads = 0
+        self.random = False
 
 
     ############################## FUNCTIONS OVERRIDEN BY CHILD CLASSES ##############################
@@ -276,7 +224,7 @@ class Player():
 
                 # Check the possible places for us to build a settlement
                 for source in list(self.roads.keys()):
-                    if (self.can_build_settlement(source, board)):
+                    if self.can_build_settlement(source, board):
 
                         if weighted:
                             for i in range(1000):
@@ -745,7 +693,7 @@ class Player():
                 if next_state.player != 0:
                     return False
             return True
-        if self.print_invalid_move:
+        if self.print_invalid_move():
             print('Cannot build settlement here...')
         return False
 
