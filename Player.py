@@ -840,6 +840,8 @@ class Player():
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player
     def can_accept_trade(self, trade_map):
+        print(trade_map)
+        print(self.resources)
         if self.resources[trade_map[0]] < int(trade_map[1]):
             return False
         return True
