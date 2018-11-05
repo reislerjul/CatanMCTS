@@ -23,9 +23,9 @@ class Move():
     BUY_DEV = 4
     PLAY_DEV = 5
     TRADE_BANK = 6
-    MOVE_ROBBER = 7
-    ACCEPT_TRADE = 8
-    PROPOSE_TRADE = 9
+    PROPOSE_TRADE = 7
+    MOVE_ROBBER = 8
+    ACCEPT_TRADE = 9
     ROLL_DICE  = 10
     DRAW_DEV = 11
 

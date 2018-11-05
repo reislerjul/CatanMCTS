@@ -89,14 +89,14 @@ class Human(Player):
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
         self.printResources()
         print('Moves available:')
-        print('Enter 0 for ending/passing your turn')
-        print('Enter 1 to build a road ')
-        print('Enter 2 to build a settlement ')
-        print('Enter 3 to build a city ')
-        print('Enter 4 to draw a dev card ')
-        print('Enter 5 to play a dev card ')
-        print('Enter 6 to make a trade with bank')
-        print('Enter 9 to propose a trade with other players')
+        print('Enter {} for ending/passing your turn'.format(Move.END_TURN))
+        print('Enter {} to build a road'.format(Move.BUY_ROAD))
+        print('Enter {} to build a settlement'.format(Move.BUY_SETTLEMENT))
+        print('Enter {} to build a city'.format(Move.BUY_CITY))
+        print('Enter {} to draw a dev card'.format(Move.BUY_DEV))
+        print('Enter {} to play a dev card'.format(Move.PLAY_DEV))
+        print('Enter {} to make a trade with bank'.format(Move.TRADE_BANK))
+        print('Enter {} to propose a trade with other players'.format(Move.PROPOSE_TRADE))
         if robber:
             r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
             spot = (r, c)
@@ -108,33 +108,28 @@ class Human(Player):
             # Let's decide on the specific places to move in this
             # function so that we can abstract make_move to work for
             # both AI and human players
-            if move_type == 0:
-                return [0]
+            if move_type == Move.END_TURN:
+                return Move(Move.END_TURN)
 
-            elif move_type == 1:
-                move = self.build_road(board)
-                return [1, move]
+            elif move_type == Move.BUY_ROAD:
+                return Move(Move.BUY_ROAD, self.build_road(board))
 
-            elif move_type == 2:
-                move = self.build_settlement(board)
-                return [2, move]
+            elif move_type == Move.BUY_SETTLEMENT:
+                return Move(Move.BUY_SETTLEMENT, self.build_settlement(board))
 
-            elif move_type == 3:
-                move = self.build_city(board)
-                return [3, move]
+            elif move_type == Move.BUY_CITY:
+                return Move(Move.BUY_CITY, self.build_city(board))
 
-            elif move_type == 4:
-                return [4]
+            elif move_type == Move.BUY_DEV:
+                return Move(Move.BUY_DEV)
 
-            elif move_type == 5:
-                move = self.playDevCard(board)
-                return [5, move]
+            elif move_type == Move.PLAY_DEV:
+                return Move(Move.PLAY_DEV, self.playDevCard(board))
 
-            elif move_type == 6:
-                move = self.trade(board)
-                return [6, move]
+            elif move_type == Move.TRADE_BANK:
+                return Move(Move.TRADE_BANK, self.trade(board))
 
-            elif move_type == 9:
+            elif move_type == Move.ACCEPT_TRADE:
                 maps = self.trade_other_players()
                 move = Move(9, give_resource=maps[0], resource=maps[1])
                 return move
@@ -145,14 +140,14 @@ class Human(Player):
     def choose_road(self, board, deck, players):
         r0,c0 = map(int, input("Coordinate for road beginning/origin (Input form: row# col#): ").split())
         r1,c1 = map(int, input("Coordinate for road end (Input form: row# col#): ").split())
-        print('Building road from (', r0, ', ', c0, ') to (', r1, ', ', c1, ') ...')
+        print('Building road from ({}, {}) to ({}, {}) ...'.format(r0, c0, r1, c1))
         move = ((r0, c0), (r1, c1))
         return move     # List of tuples: two coordinates
 
 
     def build_settlement(self, board):
         r,c = map(int, input("Coordinate for settlement (Input form: row# col#): ").split())
-        print('Building settlement at (', r, ', ', c, ') ...')
+        print('Building settlement at ({}, {}) ...'.format(r, c))
 
         move = (r, c)
         return move     # Tuple: one coordinate
@@ -160,7 +155,7 @@ class Human(Player):
 
     def build_city(self, board):
         r,c = map(int, input("Coordinate for city (Input form: row# col#): ").split())
-        print('Building city at (', r, ', ', c, ') ...')
+        print('Building city at ({}, {}) ...'.format(r, c))
 
         move = (r, c)
         return move     # Tuple: one coordinate
@@ -200,8 +195,7 @@ class Human(Player):
     def should_accept_trade(self, receive, give, board, deck, players):
         options = [0]
         if self.can_accept_trade(give):
-            accept = input("Accept the following trade? (0 or 1) \nYou'd receive: " + str(receive) + \
-                "\nYou'd give: " + str(give))
+            accept = input("Accept the following trade? (0 or 1)\nYou'd receive: {}\nYou'd give: {}\n".format(receive, give))
             return int(accept)
         return 0
 
@@ -210,7 +204,7 @@ class Human(Player):
         while True:
             print("Below players are available to trade.")
             for trader in traders:
-                print("Player " + str(trader.player_num))
+                print("Player {}".format(trader.player_num))
             choice = int(input("Which player do you want to trade with? "))
             for trader in traders:
                 if trader.player_num == choice:
