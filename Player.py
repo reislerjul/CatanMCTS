@@ -48,7 +48,7 @@ class Player():
         return 
 
 
-    def move_robber(self, board, spot, victim):
+    def move_robber(self, board, spot, victim, deck, players):
         return
 
 
@@ -72,9 +72,12 @@ class Player():
         return 
 
 
-    def trade_other_players():
+    def trade_other_players(self):
         return 
 
+
+    def choose_trader(self, traders):
+        return
 
     ############################ FUNCTIONS NOT OVERRIDEN BY CHILD CLASSES ############################
 
@@ -120,8 +123,8 @@ class Player():
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
             if robber == 3:
-                if can_accept_trade(trade_resource):
-                    return [Move(Move.END_TURN), Move(Move.ACCEPT_TRADE, give_resource=trade_resource, \
+                if self.can_accept_trade(give_resource):
+                    return [Move(Move.END_TURN), Move(Move.ACCEPT_TRADE, give_resource=give_resource, \
                         resource=get_resource)]
                 return [Move(Move.END_TURN)]
 
@@ -151,10 +154,8 @@ class Player():
                     trade_for = ['g', 'w', 'o', 'b', 'l']
                     if resource[1] > 0:
                         trade_for.remove(resource[0])
-                        loss = {}
-                        gain - {}
-                        loss[resource[0]] = random.randint(1, resource[1])
-                        gain[random.choice(trade_for)] = random.randint(1, 2)
+                        loss = (resource[0], random.randint(1, resource[1]))
+                        gain = (random.choice(trade_for), random.randint(1, 2))
                         possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
 
 
@@ -543,7 +544,6 @@ class Player():
         # Play corresponds to the information that the board may
         # need when a dev card is played
 
-        # TODO: add to self.check_legal_move for trading
         play = None
         if not self.check_legal_move(move, board, deck):
             if self.print_invalid_move():
@@ -563,12 +563,10 @@ class Player():
 
 
         elif move.move_type == Move.ACCEPT_TRADE:
-            loss = move.give_resource.items() 
-            for element in loss:
-                self.resources[element[0]] -= element[1]
-            gain = move.resources.items()
-            for element in gain:
-                self.resources[element[0]] += element[1]
+            loss = move.give_resource
+            self.resources[loss[0]] -= int(loss[1])
+            gain = move.resource
+            self.resources[gain[0]] += int(gain[1])
 
         # For now, all players should randomly choose the 
         # player to trade with from the list of players
@@ -576,14 +574,17 @@ class Player():
         elif move.move_type == Move.PROPOSE_TRADE:
             traders = []
             for player in players:
-                if player.should_accept_trade(move.give_resource, move.resource, board, deck, players):
+                if player != self and player.should_accept_trade(move.give_resource, move.resource, board, deck, players):
                     traders.append(player)
             if len(traders) > 0:
-                chosen = traders[random.randint(0, len(traders) - 1)]
+                chosen = self.choose_trader(traders)
                 chosen.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.resource, \
-                    resource=move.give_resource))
+                    resource=move.give_resource), board, deck, players)
                 self.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.give_resource, \
-                    resource=move.resource))
+                    resource=move.resource), board, deck, players)
+            else:
+                if self.player_type == Player.HUMAN:
+                    print("Nobody has accepted the trade!")
 
 
         # Build a road
@@ -836,14 +837,11 @@ class Player():
         return move
 
 
-
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player
     def can_accept_trade(self, trade_map):
-        list_trade = trade_map.items()
-        for element in list_trade:
-            if self.resources[element[0]] < element[1]:
-                return False
+        if self.resources[trade_map[0]] < int(trade_map[1]):
+            return False
         return True
 
 

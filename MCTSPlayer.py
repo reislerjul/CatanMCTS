@@ -47,12 +47,13 @@ class MCTSPlayer(Player):
 
 
     # A helper function for moving the robber in the case of rolling a 7
-    def move_robber(self, board, spot, victim):
+    def move_robber(self, board, spot, victim, deck, players):
         while True:
             if board.robber != (2,0):
                 spots.remove(board.robber)
             spot = spots[random.randint(0, len(spots) - 1)]
-            invalid = self.make_move(7, board, None, (spot, victim))
+            move = Move(Move.MOVE_ROBBER, coord-spot, player=victim)
+            invalid = self.make_move(move, board, deck, players)
             if invalid == 1:
                 return
 
@@ -85,32 +86,29 @@ class MCTSPlayer(Player):
         return possible_cards[random.randint(0, len(possible_cards) - 1)]
 
 
-    def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, recieve=None):
-        if self.random:
-            possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0)
-
-            # Choose a move randomly from the set of possible moves
-            return possible_moves[random.randint(0, len(possible_moves) - 1)]
-            
+    def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, recieve=None):            
         AI = MCTSAI(board, self.time, self.max_moves, players, deck, dev_played, \
-            self.player_num, robber, self.weighted, self.thompson, trades_tried)
+            self.player_num, robber, self.weighted, self.thompson, trades_tried, give, recieve)
         board1 = copy.deepcopy(board)
-        if robber == 3:
-            move = AI.get_play(receive, give)
+        move = AI.get_play()
         return move
 
 
     # This is only called during road builder
     # TODO: test that this works
     def choose_road(self, board, deck, players):
-        move = decide_move(1, board, deck, players, 2)
+        move = self.decide_move(1, board, deck, players, 2)
         return move
 
 
     def should_accept_trade(self, receive, give, board, deck, players):
         if self.can_accept_trade(give):
-            move = decide_move(self, 0, board, deck, players, 3, give, receive)
+            move = self.decide_move(0, board, deck, players, 3, 0, give, receive)
             if move.move_type == Move.END_TURN:
                 return 0
             return 1
         return 0
+
+
+    def choose_trader(self, traders):
+        return traders[random.randint(0, len(traders) - 1)]

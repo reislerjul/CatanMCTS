@@ -43,9 +43,10 @@ class Human(Player):
 
 
     # A helper function for moving the robber in the case of rolling a 7
-    def move_robber(self, board, spot, victim):
+    def move_robber(self, board, spot, victim, deck, players):
         while True:
-            invalid = self.make_move(7, board, None, (spot, victim))
+            move = Move(Move.MOVE_ROBBER, coord-spot, player=victim)
+            invalid = self.make_move(move, board, deck, players)
             if invalid == 1:
                 return
 
@@ -54,7 +55,7 @@ class Human(Player):
         victim = None
 
         # Determine the players adjacent to the robber
-        possible_players = [p for p in board.players_adjacent_to_hex(move.coord) if p is not self]
+        possible_players = [p for p in board.players_adjacent_to_hex(move) if p is not self]
 
         # Get a list of the player numbers
         player_nums = [p.player_num for p in possible_players]
@@ -100,7 +101,7 @@ class Human(Player):
             r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
             spot = (r, c)
             victim = self.choose_victim(board, spot)
-            self.move_robber(board, spot, victim)
+            self.move_robber(board, spot, victim, board, deck, players)
         move_type = int(input('Select move: '))
         if not ((move_type == 5 and dev_played > 0) or (move_type == 9 and trades_tried > 1)):
 
@@ -183,16 +184,14 @@ class Human(Player):
 
     def trade_other_players(self):
         while True:
-            losses = input("What do you want to trade? (Input form: Num-Card Num-Card, ...) (Ex: 1-w 2-o)")
-            gains = input("What should others trade to you? (Input form: Num-Card Num-Card, ...) (Ex: 1-w 2-o)")
-            loss_map = {}
-            gain_map = {}
+            losses = input("What do you want to trade? (Input form: Num-Card) (Ex: 1-w)")
+            gains = input("What should others trade to you? (Input form: Num-Card) (Ex: 1-w)")
             loss_array = losses.split()
             for element in loss_array:
-                loss_map[element[2]] = element[0]
+                loss_map = (element[2], element[0])
             gain_array = gains.split()
             for element in gain_array:
-                gain_map[element[2]] = element[0]
+                gain_map = (element[2], element[0])
             if self.can_accept_trade(loss_map):
                 return (loss_map, gain_map)
             print("You don't have the resources for that trade! Try again.")
@@ -201,9 +200,20 @@ class Human(Player):
     def should_accept_trade(self, receive, give, board, deck, players):
         options = [0]
         if self.can_accept_trade(give):
-            accept = input("Accept the following trade? \nYou'd receive: " + str(receive) + \
+            accept = input("Accept the following trade? (0 or 1) \nYou'd receive: " + str(receive) + \
                 "\nYou'd give: " + str(give))
             return int(accept)
         return 0
 
+
+    def choose_trader(self, traders):
+        while True:
+            print("Below players are available to trade.")
+            for trader in traders:
+                print("Player " + str(trader.player_num))
+            choice = int(input("Which player do you want to trade with? "))
+            for trader in traders:
+                if trader.player_num == choice:
+                    return trader
+            print("That player is not available to trade! Choose another player.")
 

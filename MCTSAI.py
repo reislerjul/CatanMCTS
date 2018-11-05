@@ -18,8 +18,9 @@ class State():
         self.winner = 0
         self.trades_tried = trades_tried
 
+# Add give and receive to represent nodes where trades are occuring 
 class Node():
-    def __init__(self, _id, parent_id, player_num, prev_player, state, depth):
+    def __init__(self, _id, parent_id, player_num, prev_player, state, depth, give=None, receive=None):
         self.wins = 1
         self.plays = 2
         self.id = _id
@@ -29,15 +30,17 @@ class Node():
         self.prev_player_num = prev_player
         self.state = state
         self.depth = depth
+        self.give = give
+        self.receive = receive
 
 class MCTSAI():
 
     def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson, \
-        trades_tried):
+        trades_tried, give, receive):
         # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
         self.max_moves = max_moves
-        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber, trades_tried), 0)]
+        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber, trades_tried), 0, give, receive)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -48,13 +51,15 @@ class MCTSAI():
     # TODO: wins and plays dictionaries need to be updated
 
     def thompson_sample(self, node):
-        active_player = node.state.players[node.active_player - 1]
+        active_player = node.state.players[node.active_player_num - 1]
         legal = active_player.get_legal_moves(node.state.board,
                                               node.state.deck,
                                               node.state.dev_played,
                                               node.state.robber,
                                               self.weighted,
-                                              node.state.trades_tried)
+                                              node.state.trades_tried, 
+                                              node.give, 
+                                              node.receive)
         # Pick a move with thompson sampling
         '''
         max_sample = 0
@@ -77,7 +82,7 @@ class MCTSAI():
                     for move_made in legal],
                     key=lambda x: random.betavariate(x[0], x[1] - x[0]))[2]
 
-    def get_play(self, receive=None, give=None):
+    def get_play(self):
         state = self.nodes[0].state
         players = state.players
         board = state.board
@@ -85,16 +90,16 @@ class MCTSAI():
         dev_played = state.dev_played
         trades_tried = state.trades_tried
         robber = state.robber
-        # TODO: we need a way to represent whether a dev card has been played this turn
-        active_player = self.nodes[0].state.players[self.nodes[0].active_player - 1]
+
+        active_player = self.nodes[0].state.players[self.nodes[0].active_player_num - 1]
         legal = active_player.get_legal_moves(board,
                                               deck,
                                               dev_played,
                                               robber,
                                               self.weighted,
                                               trades_tried,
-                                              give,
-                                              receive)
+                                              self.nodes[0].give,
+                                              self.nodes[0].receive)
 
         if len(legal) == 1:
             return legal[0]
@@ -181,7 +186,7 @@ class MCTSAI():
             # player move
             player = state_copy.players[node.active_player_num-1]
             if move.move_type != Move.END_TURN:
-                player.make_move(move, state_copy.board, state_copy.deck)
+                player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
             next_player = node.active_player_num
             if move.move_type == Move.END_TURN:
                 next_player = -1

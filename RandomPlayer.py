@@ -42,12 +42,13 @@ class RandomPlayer(Player):
 
 
     # A helper function for moving the robber in the case of rolling a 7
-    def move_robber(self, board, spot, victim):
+    def move_robber(self, board, spot, victim, deck, players):
         while True:
             if board.robber != (2,0):
                 spots.remove(board.robber)
             spot = spots[random.randint(0, len(spots) - 1)]
-            invalid = self.make_move(7, board, None, (spot, victim))
+            move = Move(Move.MOVE_ROBBER, coord-spot, player=victim)
+            invalid = self.make_move(move, board, deck, players)
             if invalid == 1:
                 return
 
@@ -109,4 +110,8 @@ class RandomPlayer(Player):
         options = [0]
         if self.can_accept_trade(give):
             options.append(1)
-        return options[random.randint(0, len(options - 1))]
+        return options[random.randint(0, len(options) - 1)]
+
+
+    def choose_trader(self, traders):
+        return traders[random.randint(0, len(traders) - 1)]

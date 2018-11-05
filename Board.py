@@ -41,7 +41,7 @@ class Board():
         self.resource_list = ['w', 'b', 'l', 'g', 'o']
 
 
-    def init_board(self, debug = False):
+    def init_board(self, debug=False):
         '''
         creates the coordinate system and inits the board
         the coordinate system for settlements and road is defined as
@@ -260,7 +260,7 @@ class Board():
         # Print the coordinates if there is a settlement or city there.
         board_items = self.coords.items()
         for coordinate in board_items:
-            if coordinate.player:
+            if coordinate[1].player:
                 print("Coordinates: {}\n\n".format(coordinate))
         print("Robber location: {}".format(self.robber))
 
