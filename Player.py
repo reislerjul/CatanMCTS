@@ -427,10 +427,10 @@ class Player():
     # General: Make sure the player can only play the move if they have the
     # required resources
     def check_legal_move(self, move, board, deck):
-        if move.move_type == Move.BUY_ROAD \
-                and move.road[0] in board.coords \
-                and move.road[1] in board.coords \
-                and self.total_roads < 15:
+        if (move.move_type == Move.BUY_ROAD
+                and move.road[0] in board.coords
+                and move.road[1] in board.coords
+                and self.total_roads < 15):
             # Resources available to make a road
             if self.resources['b'] >= 1 and self.resources['l'] >=1:
                 state_o = board.coords[move.road[0]]
