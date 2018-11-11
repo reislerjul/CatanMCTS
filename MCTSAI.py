@@ -140,8 +140,7 @@ class MCTSAI():
     def run_cycle(self):
         node, move = self.run_selection()
 
-        # TODO: why is this move.end_turn?
-        if move.move_type == Move.END_TURN:
+        if not move:
             # winner has already been found
             winner = node.state.winner
             self.run_backpropogation(node, winner)
@@ -162,10 +161,10 @@ class MCTSAI():
                 next_player = current_node.prev_player_num
                 if next_player > len(current_node.state.players):
                     next_player = 1
-                move = Move(Move.ROLL_DICE, roll=roll, player=next_player)
+                move = Move(Move.ROLL_DICE, roll=roll, player=current_node.state.board.players[next_player - 1])
             else:
                 card = current_node.state.deck.peek()
-                move = Move(Move.DRAW_DEV, card_type=card, player=current_node.state.board.players[current_node.prev_player_num])
+                move = Move(Move.DRAW_DEV, card_type=card, player=current_node.state.board.players[current_node.prev_player_num - 1])
         if current_node.state.winner == 0:
             return current_node, move
         else:
