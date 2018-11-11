@@ -5,6 +5,7 @@ import settings
 
 from Game import Game
 from utils import Move
+from RandomPlayer import RandomPlayer
 
 # A class to represent the Monte Carlo Tree Search AI
 
@@ -48,10 +49,11 @@ class MCTSAI():
         #values of this parameter.
         self.C = 1.0
 
-    # TODO: wins and plays dictionaries need to be updated
 
     def thompson_sample(self, node):
         active_player = node.state.players[node.active_player_num - 1]
+
+        # TODO: why are there cases where robber is 3 and give/receive are none?
         legal = active_player.get_legal_moves(node.state.board,
                                               node.state.deck,
                                               node.state.dev_played,
@@ -134,6 +136,8 @@ class MCTSAI():
 
     def run_cycle(self):
         node, move = self.run_selection()
+
+        # TODO: why is this move.end_turn?
         if move.move_type == Move.END_TURN:
             # winner has already been found
             winner = node.state.winner
@@ -199,11 +203,29 @@ class MCTSAI():
                 node.state.winner = node.active_player_num
             return new_node
 
+        # TODO: should we have another case for trades?
+
     def run_simulation(self, node):
         state_copy = copy.deepcopy(node.state)
+        new_players = []
         for p in state_copy.players:
-            p.random = True
-        new_game = Game(state_copy.board, state_copy.deck, state_copy.players, verbose=False)
+            if isinstance(p, RandomPlayer):
+                new_players.append(p)
+            else:
+                new_player = RandomPlayer(p.player_num)
+                new_player.resources = p.resources
+                new_player.dev_cards = p.dev_cards
+                new_player.num_knights_played = p.num_knights_played
+                new_player.longest_road = p.longest_road
+                new_player.largest_army = p.largest_army
+                new_player.ports = p.ports
+                new_player.cities = p.cities
+                new_player.settlements = p.settlements
+                new_player.roads = p.roads
+                new_player.total_roads = p.total_roads
+                new_player.random = True
+                new_players.append(new_player)
+        new_game = Game(state_copy.board, state_copy.deck, new_players, verbose=False)
         winner = new_game.play_game()
         return winner
 

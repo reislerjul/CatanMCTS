@@ -45,7 +45,7 @@ class Human(Player):
     # A helper function for moving the robber in the case of rolling a 7
     def move_robber(self, board, spot, victim, deck, players):
         while True:
-            move = Move(Move.MOVE_ROBBER, coord-spot, player=victim)
+            move = Move(Move.MOVE_ROBBER, coord=spot, player=victim)
             invalid = self.make_move(move, board, deck, players)
             if invalid == 1:
                 return
@@ -101,7 +101,7 @@ class Human(Player):
             r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
             spot = (r, c)
             victim = self.choose_victim(board, spot)
-            self.move_robber(board, spot, victim, board, deck, players)
+            self.move_robber(board, spot, victim, deck, players)
         move_type = int(input('Select move: '))
         if not ((move_type == 5 and dev_played > 0) or (move_type == 9 and trades_tried > 1)):
 
