@@ -109,8 +109,6 @@ class MCTSPlayer(Player):
     def should_accept_trade(self, receive, give, board, deck, players):
         if self.can_accept_trade(give):
             move = self.decide_move(0, board, deck, players, 3, 0, give, receive)
-            print("move for accepting/rejecting trade:")
-            print(move)
             if move.move_type == Move.END_TURN:
                 return 0
             return 1
