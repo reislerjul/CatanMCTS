@@ -3,7 +3,7 @@ import random
 import settings
 
 from Player import Player
-from utils import Card
+from utils import Card, Move
 
 
 class RandomPlayer(Player):
@@ -82,8 +82,8 @@ class RandomPlayer(Player):
         return possible_cards[random.randint(0, len(possible_cards) - 1)]
 
 
-    def decide_move(self, dev_played, board, deck, players, robber):
-        possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0)
+    def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
+        possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
 
         # We should 
         # Choose a move randomly from the set of possible moves!
