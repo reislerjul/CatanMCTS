@@ -103,7 +103,7 @@ class Human(Player):
             victim = self.choose_victim(board, spot)
             self.move_robber(board, spot, victim, deck, players)
         move_type = int(input('Select move: '))
-        if not ((move_type == 5 and dev_played > 0) or (move_type == 9 and trades_tried > 1)):
+        if not ((move_type == Move.PLAY_DEV and dev_played > 0) or (move_type == Move.PROPOSE_TRADE and trades_tried > 1)):
 
             # Let's decide on the specific places to move in this
             # function so that we can abstract make_move to work for
@@ -129,9 +129,9 @@ class Human(Player):
             elif move_type == Move.TRADE_BANK:
                 return Move(Move.TRADE_BANK, self.trade(board))
 
-            elif move_type == Move.ACCEPT_TRADE:
+            elif move_type == Move.PROPOSE_TRADE:
                 maps = self.trade_other_players()
-                move = Move(9, give_resource=maps[0], resource=maps[1])
+                move = Move(Move.PROPOSE_TRADE, give_resource=maps[0], resource=maps[1])
                 return move
             return move_type
         else:

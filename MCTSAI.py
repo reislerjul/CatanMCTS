@@ -78,6 +78,9 @@ class MCTSAI():
                 move = move_made
         return move
         '''
+
+        # TODO: it seems like AI always accepts trade if they can; can we print out the rate of 
+        # accepting the trade vs. not accepting?
         return max([(self.nodes[node.children[move_made]].wins, self.nodes[node.children[move_made]].plays, move_made)
                     if move_made in node.children
                     else (1, 2, move_made)
