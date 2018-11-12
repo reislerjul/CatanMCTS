@@ -39,6 +39,7 @@ class Board():
         self.longest_road_size = 4
         self.longest_road_player = None
         self.resource_list = ['w', 'b', 'l', 'g', 'o']
+        self.active_player = None
 
 
     def init_board(self, debug=False):

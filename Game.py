@@ -48,6 +48,8 @@ class Game():
             self.board.print_board_state()
 
         for player in self.players:
+            self.board.active_player = player
+
             # TODO: allow player to play dev card before rolling 
             robber = 0
             dice1 = random.randint(1, 6)
