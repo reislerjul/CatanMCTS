@@ -28,6 +28,7 @@ class Move():
     ACCEPT_TRADE = 9
     ROLL_DICE  = 10
     DRAW_DEV = 11
+    DECLINE_TRADE = 12
 
     def __init__(self,
                  move_type,

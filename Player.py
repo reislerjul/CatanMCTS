@@ -123,9 +123,9 @@ class Player():
             # aceept a trade or don't accept a trade
             if robber == 3 and give_resource != None and get_resource != None:
                 if self.can_accept_trade(give_resource):
-                    return [Move(Move.END_TURN), Move(Move.ACCEPT_TRADE, give_resource=give_resource, \
+                    return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE, give_resource=give_resource, \
                         resource=get_resource)]
-                return [Move(Move.END_TURN)]
+                return [Move(Move.DECLINE_TRADE)]
 
 
             # We can always end our turn
