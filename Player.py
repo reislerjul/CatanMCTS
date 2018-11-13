@@ -47,26 +47,6 @@ class Player():
         return 
 
 
-    def move_robber(self, board, spot, victim, deck, players):
-        return
-
-
-    def choose_victim(self, board, move):
-        return
-
-
-    def choose_robber_position(self):
-        return
-
-
-    def choose_card(self, string):
-        return 
-
-
-    def choose_road(self, board):
-        return 
-
-
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, receive=None):
         return 
 
@@ -240,16 +220,9 @@ class Player():
                                 (sink, road_source) not in possible_roads:
                             possible_roads[(sink, road_source)] = True
 
-                # This means we are in MCTS and we are trying to find roads to build for road builder,
-                # So we only want to return the set of roads as possible moves
-                if robber == 2:
-                    return possible_roads.keys()
-
-
                 # We now have the possible roads, so lets add those moves!
                 for road in possible_roads:
                     possible_moves.append(Move(Move.BUY_ROAD, road=road))
-
 
 
             # Can we build a settlement?
@@ -629,7 +602,7 @@ class Player():
         elif move.move_type == Move.PLAY_DEV:
             self.dev_cards[move.card_type] -= 1
 
-            play = self.dev_card_handler(move.card_type, board, deck, players)
+            play = self.dev_card_handler(board, deck, players, move)
             move.card_type = play
 
             # If the dev card is road building, we've covered this in
@@ -672,18 +645,18 @@ class Player():
 
 
     # A helper function to handle playing dev cards
-    def dev_card_handler(self, card_type, board, deck, players):
+    def dev_card_handler(self, board, deck, players, move):
 
         # Handle the knight
-        if card_type == 'Knight':
+        if move.card_type == Move.KNIGHT:
             self.num_knights_played += 1
-            spot = self.choose_robber_position(board, players, deck)
-            victim = self.choose_victim(board, spot)
+            spot = move.coord
+            victim = move.player
             return (spot, victim)
 
         # Handle road builder; give the player resources for 2 roads then call
         # make_move for building roads until they place 2 valid roads
-        if card_type == "Road Building":
+        if move.card_type == Move.ROAD_BUILDING:
 
             # Take care of cases where too many roads are already built
             if self.total_roads == 15:
@@ -693,37 +666,42 @@ class Player():
                     return None
                 self.resources['l'] += 1
                 self.resources['b'] += 1
-                roads_played = 0
-                while roads_played < 1:
-                    move = self.choose_road(board, deck, players)
-                    if self.make_move(1, board, None, move) == 1:
-                        roads_played += 1
+                spot = move.road
+                # If make move fails, we should subtract the resources back
+                if self.make_move(1, board, None, spot) == -1:
+                    self.resources['l'] -= 1
+                    self.resources['b'] -= 1
                 return None
             else:
-                roads_played = 0
-                while roads_played < 2:
-                    if not self.possible_roads_build(board):
-                        return None
-                    self.resources['l'] += 1
-                    self.resources['b'] += 1
-                    move = self.choose_road(board)
-                    if self.make_move(1, board, None, move) == 1:
-                        roads_played += 1
+                if not self.possible_roads_build(board):
+                    return None
+                self.resources['l'] += 2
+                self.resources['b'] += 2
+                spot = move.road
+
+                
+                if self.make_move(1, board, None, move) == -1:
+                    self.resources['l'] -= 1
+                    self.resources['b'] -= 1
+
+                # TODO: build 2nd road
                 return None
 
         # year of plenty; choose 2 cards to receive
         possible_cards = ['w', 'l', 'g', 'b', 'o']
-        if card_type == "Year of Plenty":
+        if move.card_type == Move.YEAR_OF_PLENTY:
 
-            card1 = self.choose_card("Year of Plenty first")
-            card2 = self.choose_card("Year of Plenty second")
+            card1 = move.resource
+
+            # TODO: we need to choose a second resource
+
             self.resources[card1] += 1
-            self.resources[card2] += 1
+            #self.resources[card2] += 1
             return None
 
         # monopoly: choose a card and steal it from all other players
-        if card_type == "Monopoly":
-            card_choice = self.choose_card("Monopoly")
+        if move.card_type == Move.MONOPOLY:
+            card_choice = move.resource
             return card_choice
 
 

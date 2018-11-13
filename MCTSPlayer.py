@@ -46,46 +46,6 @@ class MCTSPlayer(Player):
         super().add_road(board, move)
 
 
-    # A helper function for moving the robber in the case of rolling a 7
-    def move_robber(self, board, spot, victim, deck, players):
-        while True:
-            if board.robber != (2,0):
-                spots.remove(board.robber)
-            spot = spots[random.randint(0, len(spots) - 1)]
-            move = Move(Move.MOVE_ROBBER, coord-spot, player=victim)
-            invalid = self.make_move(move, board, deck, players)
-            if invalid == 1:
-                return
-
-
-    def choose_victim(self, board, move):
-        victim = None
-
-        # Determine the players adjacent to the robber
-        possible_players = [p for p in board.players_adjacent_to_hex(move.coord) if p is not self]
-
-        # Get a list of the player numbers
-        player_nums = [p.player_num for p in possible_players]
-
-        if len(possible_players) > 0:
-            victim = possible_players[random.randint(0, len(possible_players) - 1)]
-        return victim
-
-
-    # This is only called when we play a dev card and are choosing a robber position
-    # TODO: test that this works correctly
-    def choose_robber_position(self, board, players, deck):
-        move = decide_move(1, board, deck, players, 1)
-        return move
-
-
-    # TODO: think about how to change this so that for year of plenty and monopoly
-    # we can use MCTS
-    def choose_card(self, string):
-        possible_cards = ['w', 'l', 'g', 'b', 'o']
-        return possible_cards[random.randint(0, len(possible_cards) - 1)]
-
-
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, recieve=None):
         if self.random:
             possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
@@ -96,13 +56,6 @@ class MCTSPlayer(Player):
             self.player_num, robber, self.weighted, self.thompson, trades_tried, give, recieve)
         board1 = copy.deepcopy(board)
         move = AI.get_play()
-        return move
-
-
-    # This is only called during road builder
-    # TODO: test that this works
-    def choose_road(self, board, deck, players):
-        move = self.decide_move(1, board, deck, players, 2)
         return move
 
 

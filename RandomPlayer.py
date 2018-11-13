@@ -41,69 +41,12 @@ class RandomPlayer(Player):
         super().add_road(board, move)
 
 
-    # A helper function for moving the robber in the case of rolling a 7
-    def move_robber(self, board, spot, victim, deck, players):
-        while True:
-            if board.robber != (2,0):
-                spots.remove(board.robber)
-            spot = spots[random.randint(0, len(spots) - 1)]
-            move = Move(Move.MOVE_ROBBER, coord-spot, player=victim)
-            invalid = self.make_move(move, board, deck, players)
-            if invalid == 1:
-                return
-
-
-    def choose_victim(self, board, move):
-        victim = None
-
-        # Determine the players adjacent to the robber
-        possible_players = [p for p in board.players_adjacent_to_hex(move.coord) if p is not self]
-
-        # Get a list of the player numbers
-        player_nums = [p.player_num for p in possible_players]
-
-        if len(possible_players) > 0:
-            victim = possible_players[random.randint(0, len(possible_players) - 1)]
-        return victim
-
-
-    # Three arguments aren't used, but we have them here because they're used for MCTSPlayer
-    def choose_robber_position(self, board, players, deck):
-        spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
-        (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), (3, 1), \
-        (0, 0), (2, 2), (0, 1)]
-        if board.robber != (2,0):
-            spots.remove(board.robber)
-        return spots[random.randint(0, len(spots) - 1)]
-
-
-    def choose_card(self, string):
-        possible_cards = ['w', 'l', 'g', 'b', 'o']
-        return possible_cards[random.randint(0, len(possible_cards) - 1)]
-
-
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
         possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
 
         # We should 
         # Choose a move randomly from the set of possible moves!
         return possible_moves[random.randint(0, len(possible_moves) - 1)]
-
-
-    def choose_road(self, board, deck, players):
-        possible_roads = {}
-
-        for road_source in list(self.roads.keys()):
-            possible_sinks = \
-            board.coords[road_source]['available roads']
-
-            for sink in possible_sinks:
-                if (road_source, sink) not in possible_roads and \
-                (sink, road_source) not in possible_roads:
-                    possible_roads[(sink, road_source)] = True
-
-        options = list(possible_roads.keys())
-        return options[random.randint(0, len(options) - 1)]
 
 
     def should_accept_trade(self, receive, give, board, deck, players):

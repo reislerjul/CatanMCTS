@@ -124,7 +124,29 @@ class Human(Player):
                 return Move(Move.BUY_DEV)
 
             elif move_type == Move.PLAY_DEV:
-                return Move(Move.PLAY_DEV, self.playDevCard(board))
+
+                new_move = Move(Move.PLAY_DEV, self.playDevCard(board))
+                dev_card = int(input("Choose dev card to play: (0 for Knight, \
+                    2 for Road Building, 3 for Monopoly, 4 for Year of Plenty)"))
+                new_move.card_type = dev_card
+                if dev_card == Card.KNIGHT:
+                    spot = self.choose_robber_position(board, players, deck)
+                    victim = self.choose_victim(board, spot)
+                    move.coord = spot
+                    move.player = victim
+                elif dev_card == Card.ROAD_BUILDING:
+                    road1 = self.choose_road(board, deck, players)
+                    # TODO: prompt the uset for a second road
+                    move.road = road1
+                elif dev_card == Card.MONOPOLY:
+                    card = self.choose_card("Monopoly")
+                    move.resource = card
+                elif dev_card == Card.YEAR_OF_PLENTY:
+                    card1 = self.choose_card("Year of Plenty")
+                    move.resource = card1
+
+                    # TODO: prompt the user for a second card
+                return new_move
 
             elif move_type == Move.TRADE_BANK:
                 return Move(Move.TRADE_BANK, self.trade(board))
