@@ -167,21 +167,39 @@ class Player():
                             # Get the set of possible places we can build a road
                             possible_roads = {}
 
-                            for road_source in list(self.roads.keys()):
+                            for road_source in self.roads.keys():
                                 possible_sinks = board.coords[road_source].available_roads
 
                                 for sink in possible_sinks:
                                     if (road_source, sink) not in possible_roads and \
-                                            (sink, road_source) not in possible_roads:
+                                       (sink, road_source) not in possible_roads:
                                         possible_roads[(sink, road_source)] = True
 
-                            # We now have the possible roads, so lets add those moves!
+
+                            # check for additional possible roads
+                            possible_road_pairs = {}
                             for road in possible_roads:
+                                for road_source in list(self.roads.keys()) + [road[0], road[1]]:
+                                    possible_sinks = board.coords[road_source].available_roads
+                                    
+                                    for sink in possible_sinks:
+                                        if (road[0], road[1], road_source, sink) not in possible_road_pairs and\
+                                           (road[1], road[0], road_source, sink) not in possible_road_pairs and\
+                                           (road[0], road[1], sink, road_source) not in possible_road_pairs and\
+                                           (road[1], road[0], sink, road_source) not in possible_road_pairs and\
+                                           (road_source, sink, road[0], road[1]) not in possible_road_pairs and\
+                                           (road_source, sink, road[1], road[0]) not in possible_road_pairs and\
+                                           (sink, road_source, road[0], road[1]) not in possible_road_pairs and\
+                                           (sink, road_source, road[1], road[0]) not in possible_road_pairs:
+                                            possible_road_pairs[(road[0], road[1], sink, road_source)] = True
+
+                            # We now have the possible roads, so lets add those moves!
+                            for road_pair in possible_road_pairs:
                                 if weighted:
                                     for i in range(10):
-                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, road=road))
+                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, road=(road_pair[0], road_pair[1])))
                                 else:
-                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, road=road))
+                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, road=(road_pair[0], road_pair[1])))
                         elif card == Card.MONOPOLY:
                             for r in board.resource_list:
                                 if weighted:
@@ -190,11 +208,13 @@ class Player():
                                 else:
                                     possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r))
                         elif card == Card.YEAR_OF_PLENTY:
-                            if weighted:
-                                for i in range(10):
-                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card))
-                            else:
-                                possible_moves.append(Move(Move.PLAY_DEV, card_type=card))
+                            for r in board.resource_list:
+                                for r2 in board.resource_list:
+                                    if weighted:
+                                        for i in range(10):
+                                            possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r, resource2=r2))
+                                    else:
+                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r, resource2=r2))
 
             # Can we build a city?
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
