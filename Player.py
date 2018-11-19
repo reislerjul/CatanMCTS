@@ -164,42 +164,61 @@ class Player():
                                     else:
                                         possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot))
                         elif card == Card.ROAD_BUILDING:
-                            # Get the set of possible places we can build a road
-                            possible_roads = {}
+                            if self.total_roads < 15:
+                                # Get the set of possible places we can build a road
+                                possible_roads = {}
 
-                            for road_source in self.roads.keys():
-                                possible_sinks = board.coords[road_source].available_roads
-
-                                for sink in possible_sinks:
-                                    if (road_source, sink) not in possible_roads and \
-                                       (sink, road_source) not in possible_roads:
-                                        possible_roads[(sink, road_source)] = True
-
-
-                            # check for additional possible roads
-                            possible_road_pairs = {}
-                            for road in possible_roads:
-                                for road_source in list(self.roads.keys()) + [road[0], road[1]]:
+                                for road_source in self.roads:
                                     possible_sinks = board.coords[road_source].available_roads
-                                    
+    
                                     for sink in possible_sinks:
-                                        if (road[0], road[1], road_source, sink) not in possible_road_pairs and\
-                                           (road[1], road[0], road_source, sink) not in possible_road_pairs and\
-                                           (road[0], road[1], sink, road_source) not in possible_road_pairs and\
-                                           (road[1], road[0], sink, road_source) not in possible_road_pairs and\
-                                           (road_source, sink, road[0], road[1]) not in possible_road_pairs and\
-                                           (road_source, sink, road[1], road[0]) not in possible_road_pairs and\
-                                           (sink, road_source, road[0], road[1]) not in possible_road_pairs and\
-                                           (sink, road_source, road[1], road[0]) not in possible_road_pairs:
-                                            possible_road_pairs[(road[0], road[1], sink, road_source)] = True
-
-                            # We now have the possible roads, so lets add those moves!
-                            for road_pair in possible_road_pairs:
-                                if weighted:
-                                    for i in range(10):
-                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, road=(road_pair[0], road_pair[1])))
-                                else:
-                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, road=(road_pair[0], road_pair[1])))
+                                        if (road_source, sink) not in possible_roads and \
+                                           (sink, road_source) not in possible_roads:
+                                            possible_roads[(sink, road_source)] = True
+    
+                                # We now have the possible single roads, so lets add those moves!
+                                for road in possible_roads:
+                                    if weighted:
+                                        for i in range(10):
+                                            possible_moves.append(Move(Move.PLAY_DEV,
+                                                                       card_type=card,
+                                                                       road=(road[0], road[1])))
+                                    else:
+                                        possible_moves.append(Move(Move.PLAY_DEV,
+                                                                   card_type=card,
+                                                                   road=(road[0], road[1])))
+    
+                                if self.total_roads < 14:
+                                    # check for additional possible roads
+                                    possible_road_pairs = {}
+                                    for road in possible_roads:
+                                        for road_source in list(self.roads.keys()) + [road[0], road[1]]:
+                                            possible_sinks = board.coords[road_source].available_roads
+                                            
+                                            for sink in possible_sinks:
+                                                if (road[0], road[1], road_source, sink) not in possible_road_pairs and\
+                                                   (road[1], road[0], road_source, sink) not in possible_road_pairs and\
+                                                   (road[0], road[1], sink, road_source) not in possible_road_pairs and\
+                                                   (road[1], road[0], sink, road_source) not in possible_road_pairs and\
+                                                   (road_source, sink, road[0], road[1]) not in possible_road_pairs and\
+                                                   (road_source, sink, road[1], road[0]) not in possible_road_pairs and\
+                                                   (sink, road_source, road[0], road[1]) not in possible_road_pairs and\
+                                                   (sink, road_source, road[1], road[0]) not in possible_road_pairs:
+                                                    possible_road_pairs[(road[0], road[1], sink, road_source)] = True
+        
+                                    # We now have the possible road pairs, so lets add those moves!
+                                    for road_pair in possible_road_pairs:
+                                        if weighted:
+                                            for i in range(10):
+                                                possible_moves.append(Move(Move.PLAY_DEV,
+                                                                           card_type=card,
+                                                                           road=(road_pair[0], road_pair[1]),
+                                                                           road2=(road_pair[2], road_pair[3])))
+                                        else:
+                                            possible_moves.append(Move(Move.PLAY_DEV,
+                                                                       card_type=card,
+                                                                       road=(road_pair[0], road_pair[1]),
+                                                                       road2=(road_pair[2], road_pair[3])))
                         elif card == Card.MONOPOLY:
                             for r in board.resource_list:
                                 if weighted:
@@ -215,7 +234,7 @@ class Player():
                                             possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r, resource2=r2))
                                     else:
                                         possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r, resource2=r2))
-
+    
             # Can we build a city?
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
             len(self.cities) < 4:
@@ -651,7 +670,7 @@ class Player():
         possible_roads = {}
 
         for road_source in list(self.roads.keys()):
-            possible_sinks = board.coords[road_source]['available roads']
+            possible_sinks = board.coords[road_source].available_roads
 
             for sink in possible_sinks:
                 if (road_source, sink) not in possible_roads and \
@@ -668,7 +687,7 @@ class Player():
     def dev_card_handler(self, board, deck, players, move):
 
         # Handle the knight
-        if move.card_type == Move.KNIGHT:
+        if move.card_type == Card.KNIGHT:
             self.num_knights_played += 1
             spot = move.coord
             victim = move.player
@@ -676,7 +695,7 @@ class Player():
 
         # Handle road builder; give the player resources for 2 roads then call
         # make_move for building roads until they place 2 valid roads
-        if move.card_type == Move.ROAD_BUILDING:
+        if move.card_type == Card.ROAD_BUILDING:
 
             # Take care of cases where too many roads are already built
             if self.total_roads == 15:
@@ -688,7 +707,7 @@ class Player():
                 self.resources['b'] += 1
                 spot = move.road
                 # If make move fails, we should subtract the resources back
-                if self.make_move(1, board, None, spot) == -1:
+                if self.make_move(move, board, deck, players) == -1:
                     self.resources['l'] -= 1
                     self.resources['b'] -= 1
                 return None
@@ -700,7 +719,7 @@ class Player():
                 spot = move.road
 
                 
-                if self.make_move(1, board, None, move) == -1:
+                if self.make_move(move, board, deck, players) == -1:
                     self.resources['l'] -= 1
                     self.resources['b'] -= 1
 
@@ -709,7 +728,7 @@ class Player():
 
         # year of plenty; choose 2 cards to receive
         possible_cards = ['w', 'l', 'g', 'b', 'o']
-        if move.card_type == Move.YEAR_OF_PLENTY:
+        if move.card_type == Card.YEAR_OF_PLENTY:
 
             card1 = move.resource
 
@@ -720,7 +739,7 @@ class Player():
             return None
 
         # monopoly: choose a card and steal it from all other players
-        if move.card_type == Move.MONOPOLY:
+        if move.card_type == Card.MONOPOLY:
             card_choice = move.resource
             return card_choice
 
