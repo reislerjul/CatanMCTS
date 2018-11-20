@@ -131,12 +131,13 @@ class Player():
                 resource_list = self.resources.items()
                 for resource in resource_list:
                     trade_for = ['g', 'w', 'o', 'b', 'l']
-                    if resource[1] > 0:
-                        trade_for.remove(resource[0])
-                        loss = (resource[0], random.randint(1, resource[1]))
-                        gain = (random.choice(trade_for), random.randint(1, 2))
-                        possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
-
+                    trade_for.remove(resource[0])
+                    for i in range(1, min(resource[1] + 1, 4)):
+                        loss = (resource[0], i)
+                        for element in trade_for:
+                            for j in range(1, 4):
+                                gain = (element, j)
+                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
 
             # Can we play a dev card?
             if dev_played == 0:
