@@ -9,6 +9,8 @@ from RandomPlayer import RandomPlayer
 from MCTSPlayer import MCTSPlayer
 from Human import Human
 import settings
+import json
+import random
 
 
 # This will contain the main method which will be the entry point into
@@ -34,34 +36,32 @@ def run_game(player_list):
     return(winner, game.num_rounds, vp_lst)
 
 
-
-
 if __name__ == '__main__':
     # We will assume that the commandline arguments give the players in the
     # order that they should play
     player_list = []
 
-    # Process the commandline arguments. There should be 3 or 4 commandline
-    # line arguments corresponding to each player. 0 means human player,
-    # 1 means random AI, 2 means MCTS AI.
-    args = sys.argv[1:]
-    assert(len(args) == 3 or len(args) == 4), "Incorrect number of players!"
+    # The parameters should be specified in a json file. The file will contain 
+    # the players/types of players, the number of simulations to run, and a 
+    # flag to indicate whether we should shuffle the order of play
+    filename = "catan_input.json"
+    index = 1
+    with open(filename) as f:
+        data = json.load(f)
 
-    for idx, arg in enumerate(args):
+    for player in data["players"]:
+        if player["type"] == "human":
+            player_list.append(Human(index))
+        if player["type"] == "random":
+            player_list.append(RandomPlayer(index))
+        if player["type"] == "MCTS":
+            player_list.append(MCTSPlayer(index, int(player["time"]), \
+                int(player["max_moves"]), int(player["weighted"]), int(player["thompson"])))
+        index += 1
 
-        player_type = int(arg)
-
-        if player_type == Player.HUMAN:
-            player_list.append(Human(int(idx + 1)))
-
-        elif player_type == Player.RANDOM_AI:
-            player_list.append(RandomPlayer(int(idx + 1)))
-
-        elif player_type == Player.MCTS_AI:
-            time = int(input("Time parameter for MCTS?"))
-            max_moves = int(input("Maximum moves parameter for MCTS?"))
-            weighted = int(input("Weighted parameter for MCTS? (0 or 1)"))
-            thompson = int(input("Thompson sampling for MCTS? (0 or 1)"))
-            player_list.append(MCTSPlayer(int(idx + 1), time, max_moves, weighted, thompson))
-
-    run_game(player_list)
+    num_games = int(data["num_games"])
+    shuffle = int(data["shuffle_order"])
+    for i in range(num_games):
+        if shuffle:
+            random.shuffle(player_list)
+        run_game(player_list)
