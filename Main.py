@@ -71,7 +71,9 @@ if __name__ == '__main__':
             'MCTS Num Ports', 'MCTS Num Cities', 'MCTS Num Settlements', \
             'MCTS Num Roads', 'MCTS Num Knights Played', 'MCTS Num YOP Played',\
             'MCTS Num Monopoly Played', 'MCTS Num Road Builder Played', \
-            'MCTS Num VP Dev Cards', 'MCTS Num Devs Bought']
+            'MCTS Num VP Dev Cards', 'MCTS Num Devs Bought', \
+            'MCTS Total Trades Conducted', 'MCTS Total Trades Proposed', \
+            'MCTS Trades Proposed Successfully', 'MCTS Trades Accepted']
 
         with open(r'catan_results.csv', 'w') as f:
             writer = csv.writer(f)
@@ -82,6 +84,18 @@ if __name__ == '__main__':
     for i in range(num_games):
         if shuffle:
             random.shuffle(player_list)
+
+        # We need to reset the players in the player list between rounds
+        for j in range(len(player_list)):
+            if player_list[j].player_type == Player.HUMAN:
+                player_list[j] = Human(j + 1)
+            elif player_list[j].player_type == Player.RANDOM_AI:
+                player_list[j] = RandomPlayer(j + 1)
+            elif player_list[j].player_type == Player.MCTS_AI:
+                player_list[j] = MCTSPlayer(j + 1, player_list[j].time, \
+                    player_list[j].max_moves, player_list[j].weighted, \
+                    player_list[j].thompson)
+
         winner, num_rounds, board = run_game(player_list)
         if record_file:
             row = []
@@ -117,6 +131,10 @@ if __name__ == '__main__':
                 row.append(MCTS_player.num_road_builder_played)
                 row.append(MCTS_player.dev_cards[Card.VICTORY_POINT])
                 row.append(MCTS_player.devs_bought)
+                row.append(MCTS_player.trades_conducted)
+                row.append(MCTS_player.trades_proposed)
+                row.append(MCTS_player.trades_proposed_success)
+                row.append(MCTS_player.trades_conducted - MCTS_player.trades_proposed_success)
             with open(r'catan_results.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(row)
