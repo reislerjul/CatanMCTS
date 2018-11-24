@@ -233,3 +233,6 @@ class Human(Player):
                     return trader
             print("That player is not available to trade! Choose another player.")
 
+
+    def to_string(self):
+        return "Human"

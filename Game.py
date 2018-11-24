@@ -71,7 +71,7 @@ class Game():
             
             # If the player has won, the game is over.
             if player.make_turn(self.board, self.deck, self.players, robber):
-                self.won = player.player_num
+                self.won = player
                 return 1
 
             # Player's state after their turn

@@ -70,3 +70,7 @@ class MCTSPlayer(Player):
 
     def choose_trader(self, traders):
         return traders[random.randint(0, len(traders) - 1)]
+
+
+    def to_string(self):
+        return "MCTS"

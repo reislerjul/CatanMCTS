@@ -32,7 +32,11 @@ class Player():
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}         # {(0,0):(1,1), (1,1):(0,0)...}
         self.total_roads = 0
+        self.num_yop_played = 0
+        self.num_monopoly_played = 0
+        self.num_road_builder_played = 0
         self.random = False
+        self.devs_bought = 0
 
 
     ############################## FUNCTIONS OVERRIDEN BY CHILD CLASSES ##############################
@@ -57,6 +61,9 @@ class Player():
 
     def choose_trader(self, traders):
         return
+
+    def to_string(self):
+        return "Player"
 
     ############################ FUNCTIONS NOT OVERRIDEN BY CHILD CLASSES ############################
 
@@ -697,6 +704,7 @@ class Player():
         # Handle road builder; give the player resources for 2 roads then call
         # make_move for building roads until they place 2 valid roads
         if move.card_type == Card.ROAD_BUILDING:
+            self.num_road_builder_played += 1
 
             # Take care of cases where too many roads are already built
             if self.total_roads == 15:
@@ -730,6 +738,7 @@ class Player():
         # year of plenty; choose 2 cards to receive
         possible_cards = ['w', 'l', 'g', 'b', 'o']
         if move.card_type == Card.YEAR_OF_PLENTY:
+            self.num_yop_played += 1
 
             card1 = move.resource
 
@@ -741,6 +750,7 @@ class Player():
 
         # monopoly: choose a card and steal it from all other players
         if move.card_type == Card.MONOPOLY:
+            self.num_monopoly_played += 1
             card_choice = move.resource
             return card_choice
 
@@ -851,8 +861,9 @@ class Player():
     # Returns 1 if the move is valid, -1 if the dev card stack is empty
     def drawDevCard(self, deck):
         move = deck.take_card(self)
+        if move == 1:
+            self.devs_bought += 1
         return move
-
 
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player
