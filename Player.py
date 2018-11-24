@@ -37,6 +37,14 @@ class Player():
         self.num_road_builder_played = 0
         self.random = False
         self.devs_bought = 0
+        self.trades_proposed = 0
+
+        # trades_conducted - trades_proposed_success if the number of trades accepted by this player 
+        # that someone else proposed
+        self.trades_proposed_success = 0
+
+        # Total trades made with this player during the game
+        self.trades_conducted = 0 
 
 
     ############################## FUNCTIONS OVERRIDEN BY CHILD CLASSES ##############################
@@ -119,6 +127,7 @@ class Player():
             possible_moves = [Move(Move.END_TURN)]
 
             # Can we buy dev card?
+            
             if self.resources['g'] > 0 \
                     and self.resources['w'] > 0 \
                     and self.resources['o'] > 0 \
@@ -128,7 +137,7 @@ class Player():
                         possible_moves.append(Move(Move.BUY_DEV))
                 else:
                     possible_moves.append(Move(Move.BUY_DEV))
-
+        
 
             # Can we ask for a trade?
             if trades_tried < 2:
@@ -146,6 +155,7 @@ class Player():
                                 gain = (element, j)
                                 possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
 
+            
             # Can we play a dev card?
             if dev_played == 0:
                 for card in self.dev_cards.keys():
@@ -366,6 +376,7 @@ class Player():
                             possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
                     else:
                         possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
+            
             return possible_moves
 
 
@@ -586,16 +597,19 @@ class Player():
             self.resources[loss[0]] -= int(loss[1])
             gain = move.resource
             self.resources[gain[0]] += int(gain[1])
+            self.trades_conducted += 1
 
         # For now, all players should randomly choose the 
         # player to trade with from the list of players
         # that'll accept the trade
         elif move.move_type == Move.PROPOSE_TRADE:
+            self.trades_proposed += 1
             traders = []
             for player in players:
                 if player != self and player.should_accept_trade(move.give_resource, move.resource, board, deck, players):
                     traders.append(player)
             if len(traders) > 0:
+                self.trades_proposed_success += 1
                 chosen = self.choose_trader(traders)
                 chosen.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.resource, \
                     resource=move.give_resource), board, deck, players)
