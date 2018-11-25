@@ -43,9 +43,7 @@ class RandomPlayer(Player):
 
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
         possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
-
-        # We should 
-        # Choose a move randomly from the set of possible moves!
+        # We should choose a move randomly from the set of possible moves!
         return possible_moves[random.randint(0, len(possible_moves) - 1)]
 
 

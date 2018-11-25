@@ -17,7 +17,10 @@ class Player():
     # MCTS AI with random choice of moves and 3 is MCTS AI with weighted choice
     def __init__(self, player_type, player_num):
         self.player_num = player_num
-        self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
+
+        # Have the players start with the resources to build the first two roads/
+        # settlements
+        self.resources = {'w':2, 'b':4, 'l':4, 'g':2, 'o':0}
         self.dev_cards = {Card.KNIGHT: 0,\
                           Card.VICTORY_POINT: 0,\
                           Card.ROAD_BUILDING:0,\
@@ -108,11 +111,46 @@ class Player():
         return 0
 
 
+    # We use this when the game starts to make sure that the first road attaches to the first 
+    # settlement and the second road attaches to the second settlement
+    def find_possible_road_spots(self, board):
+        possible_roads = []
+
+        # Find the settlement with no roads coming from it
+        correct_source = None
+        for element in self.settlements:
+            if element not in self.roads:
+                correct_source = element
+        assert(correct_source != None)
+
+        possible_sinks = board.coords[correct_source].available_roads
+        for sink in possible_sinks:
+            possible_roads.append(Move(Move.BUY_ROAD, road=(correct_source, sink)))
+        return possible_roads
+
+
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.
     # give_resource and get_resource should be None or maps of resources to their quanities
     def get_legal_moves(self, board, deck, dev_played, robber, weighted, trades_tried, give_resource=None, get_resource=None):
+            
             # Determine moves we can play and add them to the list.
+            if (board.round_num == 0 and len(self.settlements) == 0) or \
+                (board.round_num == 1 and len(self.settlements) == 1):
+                legal_settlements = []
+                for i in range(12):
+                    for j in range(6):
+                        loc = (i, j)
+                        if self.can_build_settlement(loc, board):
+                            legal_settlements.append(Move(Move.BUY_SETTLEMENT, coord=loc))
+                return legal_settlements
+            elif board.round_num == 0 and self.total_roads == 0:
+                return self.find_possible_road_spots(board)
+            elif board.round_num == 1 and self.total_roads == 1:
+                return self.find_possible_road_spots(board)
+            elif board.round_num == 1 or board.round_num == 0:
+                return [Move(Move.END_TURN)]
+
 
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
@@ -482,17 +520,20 @@ class Player():
                     and self.resources['l'] >=1 \
                     and self.resources['g'] >= 1 \
                     and self.resources['w'] >=1:
-               state = board.coords[move]
+               state = board.coords[move.coord]
+
                # Does not overlap with already created settlement
-               if state.player == 0:
+               if state.player == None:
                     next_list = list(state.roads.keys()) + state.available_roads
-                    # Next to another road
-                    if (move in self.roads.keys()):
-                        # Two spaces away from another settlement
-                        for next in next_list:
-                            next_state = board.coords[next]
-                            if next_state['player'] != 0:
-                                return False
+                    # Two spaces away from another settlement
+                    for next in next_list:
+                        next_state = board.coords[next]
+                        if next_state.player != None:
+                            return False
+
+                    # Next to another road. only needed when its not round 0 or 1
+                    if (move.coord in self.roads.keys() or \
+                        board.round_num == 0 or board.round_num == 1):
                         return True
 
         # Have a settlement at that spot
@@ -573,7 +614,6 @@ class Player():
 
         # Play corresponds to the information that the board may
         # need when a dev card is played
-
         play = None
         if not self.check_legal_move(move, board, deck):
             if self.print_invalid_move():
@@ -799,7 +839,7 @@ class Player():
             # Two spaces away from another settlement
             for next in next_list:
                 next_state = board.coords[next]
-                if next_state.player != 0:
+                if next_state.player != None:
                     return False
             return True
         if self.print_invalid_move():
@@ -814,7 +854,7 @@ class Player():
             state_o = board.coords[move[0]]
 
             # Does not overlap with already created road
-            if move[1] in state_o['available roads']:
+            if move[1] in state_o.available_roads:
 
                 # Next to another road or settlement
                 if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) or \

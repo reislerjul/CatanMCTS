@@ -40,6 +40,7 @@ class Board():
         self.longest_road_player = None
         self.resource_list = ['w', 'b', 'l', 'g', 'o']
         self.active_player = None
+        self.round_num = 0
 
 
     def init_board(self, debug=False):
@@ -478,7 +479,7 @@ class Board():
 
         # Build a settlement
         elif move.move_type == Move.BUY_SETTLEMENT:
-            self.add_settlement(player, move)
+            self.add_settlement(player, move.coord)
 
         # Build a city
         elif move.move_type == Move.BUY_CITY:

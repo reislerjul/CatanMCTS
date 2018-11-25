@@ -27,8 +27,20 @@ def run_game(player_list):
 
     # Play the game
     print("Starting Game.")
-    game.place_spots()
+    #game.place_spots()
     winner = game.play_game()
+    if player_list[0].player_type == Player.HUMAN:
+        print("player 1 settlements: " + str(player_list[0].settlements))
+        print("player 1 cities: " + str(player_list[0].cities))
+        print("player 1 roads: " + str(player_list[0].roads))
+        print("player 2 settlements: " + str(player_list[1].settlements))
+        print("player 3 cities: " + str(player_list[1].cities))
+        print("player 2 roads: " + str(player_list[1].roads))
+        print("player 3 settlements: " + str(player_list[2].settlements))
+        print("player 3 cities: " + str(player_list[2].cities))
+        print("player 3 roads: " + str(player_list[2].roads))
+
+
     print("Total Rounds: " + str(game.num_rounds))
     print("Game Over. Player " + str(winner.player_num) + " won.")
     return(winner, game.num_rounds, board)
