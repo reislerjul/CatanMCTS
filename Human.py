@@ -35,7 +35,7 @@ class Human(Player):
         # Choose where to play a road
         while not legal_road:
 
-            move = self.build_road(board)
+            move = self.choose_road(board)
             legal_road = self.can_build_road(move, board)
 
         # build the road
@@ -86,7 +86,38 @@ class Human(Player):
         return input(full_string)
 
 
+    def choose_spot_settlement(self, board):
+        legal_settlement = False
+        while not legal_settlement:
+                # Pick a legal spot
+                loc = self.build_settlement(board)
+                legal_settlement = self.can_build_settlement(loc, board)
+        move = Move(Move.BUY_SETTLEMENT, coord=loc)
+        return move
+
+    def choose_spot_road(self, board):
+        legal_road = False
+        while not legal_road:
+            loc = self.choose_road(board)
+            legal_road = self.can_build_road(loc, board)
+        move = Move(Move.BUY_ROAD, road=loc)
+        return move
+
+
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
+        if board.round_num == 0 and len(self.settlements) == 0:
+            return self.choose_spot_settlement(board)
+        elif board.round_num == 0 and self.total_roads == 0:
+            return self.choose_spot_road(board)
+        elif board.round_num == 0:
+            return Move(Move.END_TURN)
+        elif board.round_num == 1 and len(self.settlements) == 1:
+            return self.choose_spot_settlement(board)
+        elif board.round_num == 1 and self.total_roads == 1:
+            return self.choose_spot_road(board)
+        elif board.round_num == 1:
+            return Move(Move.END_TURN)
+
         self.printResources()
         print('Moves available:')
         print('Enter {} for ending/passing your turn'.format(Move.END_TURN))
@@ -112,13 +143,13 @@ class Human(Player):
                 return Move(Move.END_TURN)
 
             elif move_type == Move.BUY_ROAD:
-                return Move(Move.BUY_ROAD, self.build_road(board))
+                return Move(Move.BUY_ROAD, road=self.choose_road(board))
 
             elif move_type == Move.BUY_SETTLEMENT:
-                return Move(Move.BUY_SETTLEMENT, self.build_settlement(board))
+                return Move(Move.BUY_SETTLEMENT, coord=self.build_settlement(board))
 
             elif move_type == Move.BUY_CITY:
-                return Move(Move.BUY_CITY, self.build_city(board))
+                return Move(Move.BUY_CITY, coord=self.build_city(board))
 
             elif move_type == Move.BUY_DEV:
                 return Move(Move.BUY_DEV)
@@ -135,17 +166,14 @@ class Human(Player):
                     move.coord = spot
                     move.player = victim
                 elif dev_card == Card.ROAD_BUILDING:
-                    road1 = self.choose_road(board, deck, players)
-                    # TODO: prompt the uset for a second road
-                    move.road = road1
+                    move.road = self.choose_road(board, deck, players)
+                    move.road2 = self.choose_road(board, deck, players)
                 elif dev_card == Card.MONOPOLY:
                     card = self.choose_card("Monopoly")
                     move.resource = card
                 elif dev_card == Card.YEAR_OF_PLENTY:
-                    card1 = self.choose_card("Year of Plenty")
-                    move.resource = card1
-
-                    # TODO: prompt the user for a second card
+                    move.resource = self.choose_card("Year of Plenty")
+                    move.resource2 = self.choose_card("Year of Plenty")
                 return new_move
 
             elif move_type == Move.TRADE_BANK:
@@ -159,7 +187,7 @@ class Human(Player):
         else:
             print("You have already played a dev card in this round or have reached maximum allowed trades")
 
-    def choose_road(self, board, deck, players):
+    def choose_road(self, board):
         r0,c0 = map(int, input("Coordinate for road beginning/origin (Input form: row# col#): ").split())
         r1,c1 = map(int, input("Coordinate for road end (Input form: row# col#): ").split())
         print('Building road from ({}, {}) to ({}, {}) ...'.format(r0, c0, r1, c1))
@@ -233,3 +261,6 @@ class Human(Player):
                     return trader
             print("That player is not available to trade! Choose another player.")
 
+
+    def to_string(self):
+        return "Human"

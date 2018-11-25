@@ -17,7 +17,10 @@ class Player():
     # MCTS AI with random choice of moves and 3 is MCTS AI with weighted choice
     def __init__(self, player_type, player_num):
         self.player_num = player_num
-        self.resources = {'w':0, 'b':0, 'l':0, 'g':0, 'o':0}
+
+        # Have the players start with the resources to build the first two roads/
+        # settlements
+        self.resources = {'w':2, 'b':4, 'l':4, 'g':2, 'o':0}
         self.dev_cards = {Card.KNIGHT: 0,\
                           Card.VICTORY_POINT: 0,\
                           Card.ROAD_BUILDING:0,\
@@ -32,7 +35,19 @@ class Player():
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}         # {(0,0):(1,1), (1,1):(0,0)...}
         self.total_roads = 0
+        self.num_yop_played = 0
+        self.num_monopoly_played = 0
+        self.num_road_builder_played = 0
         self.random = False
+        self.devs_bought = 0
+        self.trades_proposed = 0
+
+        # trades_conducted - trades_proposed_success if the number of trades accepted by this player 
+        # that someone else proposed
+        self.trades_proposed_success = 0
+
+        # Total trades made with this player during the game
+        self.trades_conducted = 0 
 
 
     ############################## FUNCTIONS OVERRIDEN BY CHILD CLASSES ##############################
@@ -57,6 +72,9 @@ class Player():
 
     def choose_trader(self, traders):
         return
+
+    def to_string(self):
+        return "Player"
 
     ############################ FUNCTIONS NOT OVERRIDEN BY CHILD CLASSES ############################
 
@@ -93,11 +111,46 @@ class Player():
         return 0
 
 
+    # We use this when the game starts to make sure that the first road attaches to the first 
+    # settlement and the second road attaches to the second settlement
+    def find_possible_road_spots(self, board):
+        possible_roads = []
+
+        # Find the settlement with no roads coming from it
+        correct_source = None
+        for element in self.settlements:
+            if element not in self.roads:
+                correct_source = element
+        assert(correct_source != None)
+
+        possible_sinks = board.coords[correct_source].available_roads
+        for sink in possible_sinks:
+            possible_roads.append(Move(Move.BUY_ROAD, road=(correct_source, sink)))
+        return possible_roads
+
+
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.
     # give_resource and get_resource should be None or maps of resources to their quanities
     def get_legal_moves(self, board, deck, dev_played, robber, weighted, trades_tried, give_resource=None, get_resource=None):
+            
             # Determine moves we can play and add them to the list.
+            if (board.round_num == 0 and len(self.settlements) == 0) or \
+                (board.round_num == 1 and len(self.settlements) == 1):
+                legal_settlements = []
+                for i in range(12):
+                    for j in range(6):
+                        loc = (i, j)
+                        if self.can_build_settlement(loc, board):
+                            legal_settlements.append(Move(Move.BUY_SETTLEMENT, coord=loc))
+                return legal_settlements
+            elif board.round_num == 0 and self.total_roads == 0:
+                return self.find_possible_road_spots(board)
+            elif board.round_num == 1 and self.total_roads == 1:
+                return self.find_possible_road_spots(board)
+            elif board.round_num == 1 or board.round_num == 0:
+                return [Move(Move.END_TURN)]
+
 
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
@@ -112,6 +165,7 @@ class Player():
             possible_moves = [Move(Move.END_TURN)]
 
             # Can we buy dev card?
+            
             if (self.resources['g'] > 0
                 and self.resources['w'] > 0
                 and self.resources['o'] > 0
@@ -121,7 +175,7 @@ class Player():
                         possible_moves.append(Move(Move.BUY_DEV))
                 else:
                     possible_moves.append(Move(Move.BUY_DEV))
-
+        
 
             # Can we ask for a trade?
             if trades_tried < 2:
@@ -139,6 +193,7 @@ class Player():
                                 gain = (element, j)
                                 possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
 
+            
             # Can we play a dev card?
             if dev_played == 0:
                 for card in self.dev_cards.keys():
@@ -359,6 +414,7 @@ class Player():
                             possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
                     else:
                         possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
+            
             return possible_moves
 
 
@@ -465,16 +521,19 @@ class Player():
                 and self.resources['g'] >= 1
                 and self.resources['w'] >=1):
                state = board.coords[move.coord]
+
                # Does not overlap with already created settlement
-               if state.player == 0:
+               if state.player == None:
                     next_list = list(state.roads.keys()) + state.available_roads
-                    # Next to another road
-                    if (move in self.roads.keys()):
-                        # Two spaces away from another settlement
-                        for next in next_list:
-                            next_state = board.coords[next]
-                            if next_state['player'] != 0:
-                                return False
+                    # Two spaces away from another settlement
+                    for next in next_list:
+                        next_state = board.coords[next]
+                        if next_state.player != None:
+                            return False
+
+                    # Next to another road. only needed when its not round 0 or 1
+                    if (move.coord in self.roads.keys() or \
+                        board.round_num == 0 or board.round_num == 1):
                         return True
 
         # Have a settlement at that spot
@@ -555,7 +614,6 @@ class Player():
 
         # Play corresponds to the information that the board may
         # need when a dev card is played
-
         play = None
         if not self.check_legal_move(move, board, deck):
             if self.print_invalid_move():
@@ -579,16 +637,19 @@ class Player():
             self.resources[loss[0]] -= int(loss[1])
             gain = move.resource
             self.resources[gain[0]] += int(gain[1])
+            self.trades_conducted += 1
 
         # For now, all players should randomly choose the 
         # player to trade with from the list of players
         # that'll accept the trade
         elif move.move_type == Move.PROPOSE_TRADE:
+            self.trades_proposed += 1
             traders = []
             for player in players:
                 if player != self and player.should_accept_trade(move.give_resource, move.resource, board, deck, players):
                     traders.append(player)
             if len(traders) > 0:
+                self.trades_proposed_success += 1
                 chosen = self.choose_trader(traders)
                 chosen.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.resource, \
                     resource=move.give_resource), board, deck, players)
@@ -697,6 +758,7 @@ class Player():
         # Handle road builder; give the player resources for 2 roads then call
         # make_move for building roads until they place 2 valid roads
         if move.card_type == Card.ROAD_BUILDING:
+            self.num_road_builder_played += 1
 
             # Take care of cases where too many roads are already built
             if self.total_roads == 15:
@@ -730,6 +792,7 @@ class Player():
         # year of plenty; choose 2 cards to receive
         possible_cards = ['w', 'l', 'g', 'b', 'o']
         if move.card_type == Card.YEAR_OF_PLENTY:
+            self.num_yop_played += 1
 
             card1 = move.resource
 
@@ -741,6 +804,7 @@ class Player():
 
         # monopoly: choose a card and steal it from all other players
         if move.card_type == Card.MONOPOLY:
+            self.num_monopoly_played += 1
             card_choice = move.resource
             return card_choice
 
@@ -790,7 +854,7 @@ class Player():
             state_o = board.coords[move[0]]
 
             # Does not overlap with already created road
-            if move[1] in state_o['available roads']:
+            if move[1] in state_o.available_roads:
 
                 # Next to another road or settlement
                 if (move[0] in self.roads.keys()) or (move[1] in self.roads.keys()) or \
@@ -851,8 +915,9 @@ class Player():
     # Returns 1 if the move is valid, -1 if the dev card stack is empty
     def drawDevCard(self, deck):
         move = deck.take_card(self)
+        if move == 1:
+            self.devs_bought += 1
         return move
-
 
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player

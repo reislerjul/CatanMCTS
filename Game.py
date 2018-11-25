@@ -47,37 +47,50 @@ class Game():
         if settings.DEBUG:
             self.board.print_board_state()
 
-        for player in self.players:
-            self.board.active_player = player
+        if self.num_rounds == 0:
+            self.board.round_num = self.num_rounds
+            for player in self.players:
+                self.board.active_player = player
+                player.make_turn(self.board, self.deck, self.players, 0)
 
-            # TODO: allow player to play dev card before rolling 
-            robber = 0
-            dice1 = random.randint(1, 6)
-            dice2 = random.randint(1, 6)
+        elif self.num_rounds == 1:
+            self.board.round_num = self.num_rounds
+            for player in self.players[::-1]:
+                self.board.active_player = player
+                player.make_turn(self.board, self.deck, self.players, 0)
+        else:
+            self.board.round_num = self.num_rounds
+            for player in self.players:
+                self.board.active_player = player
 
-            # Player's state before their turn
-            if settings.DEBUG:
-                print("Player " + str(player.player_num) + "\'s turn.")
-                print("State of player before turn:")
-                player.printResources()
-                print("Dice Roll: " + str(dice1 + dice2))
+                # TODO: allow player to play dev card before rolling 
+                robber = 0
+                dice1 = random.randint(1, 6)
+                dice2 = random.randint(1, 6)
 
-            self.board.allocate_resources(dice1 + dice2, self.players)
+                # Player's state before their turn
+                if settings.DEBUG:
+                    print("Player " + str(player.player_num) + "\'s turn.")
+                    print("State of player before turn:")
+                    player.printResources()
+                    print("Dice Roll: " + str(dice1 + dice2))
 
-            # If the roll is 7, the player should move the robber and steal
-            if dice1 + dice2 == 7:
-                robber = 1
+                self.board.allocate_resources(dice1 + dice2, self.players)
 
-            
-            # If the player has won, the game is over.
-            if player.make_turn(self.board, self.deck, self.players, robber):
-                self.won = player.player_num
-                return 1
+                # If the roll is 7, the player should move the robber and steal
+                if dice1 + dice2 == 7:
+                    robber = 1
 
-            # Player's state after their turn
-            if settings.DEBUG:
-                print("State of player after turn:")
-                player.printResources()
+                
+                # If the player has won, the game is over.
+                if player.make_turn(self.board, self.deck, self.players, robber):
+                    self.won = player
+                    return 1
+
+                # Player's state after their turn
+                if settings.DEBUG:
+                    print("State of player after turn:")
+                    player.printResources()
 
 
         # print the board state at the end of the round
@@ -101,7 +114,6 @@ class Game():
             # The other win condition will occur when 500 turns are played. 
             # Take the player with the highest number of points.
             if self.num_rounds == 500:
-                print(self.players)
                 self.won = self.players[0]
                 max_points = self.players[0].calculate_vp()
                 for player in self.players[1:]:
