@@ -4,11 +4,11 @@ import settings
 from utils import Card, Move
 
 class Coord():
-    def __init__(self,\
-                 location,\
-                 player=None,\
-                 resource_locs=[],\
-                 ports=set(),\
+    def __init__(self,
+                 location,
+                 player=None,
+                 resource_locs=[],
+                 ports=set(),
                  neighbours=[]):
         self.player = player
         self.location = location

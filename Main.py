@@ -65,3 +65,4 @@ if __name__ == '__main__':
         if shuffle:
             random.shuffle(player_list)
         run_game(player_list)
+        print(player_list)

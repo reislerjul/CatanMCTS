@@ -112,10 +112,10 @@ class Player():
             possible_moves = [Move(Move.END_TURN)]
 
             # Can we buy dev card?
-            if self.resources['g'] > 0 \
-                    and self.resources['w'] > 0 \
-                    and self.resources['o'] > 0 \
-                    and len(deck.cards_left) > 0:
+            if (self.resources['g'] > 0
+                and self.resources['w'] > 0
+                and self.resources['o'] > 0
+                and len(deck.cards_left) > 0):
                 if weighted:
                     for i in range(10):
                         possible_moves.append(Move(Move.BUY_DEV))
@@ -460,11 +460,11 @@ class Player():
                 and move.coord in board.coords.keys() \
                 and len(self.settlements) < 5:
             # Resources available to make a settlement
-            if self.resources['b'] >= 1 \
-                    and self.resources['l'] >=1 \
-                    and self.resources['g'] >= 1 \
-                    and self.resources['w'] >=1:
-               state = board.coords[move]
+            if (self.resources['b'] >= 1
+                and self.resources['l'] >=1
+                and self.resources['g'] >= 1
+                and self.resources['w'] >=1):
+               state = board.coords[move.coord]
                # Does not overlap with already created settlement
                if state.player == 0:
                     next_list = list(state.roads.keys()) + state.available_roads
@@ -769,13 +769,13 @@ class Player():
         state = board.coords[coords]
 
         # Does not overlap with already created settlement
-        if state.player == None:
+        if state.player:
             next_list = list(state.roads.keys()) + state.available_roads
 
             # Two spaces away from another settlement
-            for next in next_list:
-                next_state = board.coords[next]
-                if next_state.player != 0:
+            for n in next_list:
+                next_state = board.coords[n]
+                if next_state.player:
                     return False
             return True
         if self.print_invalid_move():
