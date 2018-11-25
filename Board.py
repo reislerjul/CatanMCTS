@@ -31,7 +31,7 @@ class Board():
         self.robber = (2,0)
         self.resources = self.init_resources()
         self.hex = self.init_hexes()
-        self.coords = self.init_board(debug = False)
+        self.coords = self.init_board(debug=False)
         self.r_allocator = {}
         self.adjacent = {}
         self.largest_army_size = 2
@@ -52,196 +52,196 @@ class Board():
         more info about the games state
         '''
         coords = {}
-        coords[(0, 0)] = Coord((0, 0),\
-                               resource_locs=[(0, 0)],\
-                               ports={'3'},\
+        coords[(0, 0)] = Coord((0, 0),
+                               resource_locs=[(0, 0)],
+                               ports={'3'},
                                neighbours=[(1, 0), (1, 1)])
-        coords[(0, 1)] = Coord((0, 1),\
-                               resource_locs=[(0, 1)],\
-                               ports={'2 w'},\
+        coords[(0, 1)] = Coord((0, 1),
+                               resource_locs=[(0, 1)],
+                               ports={'2 w'},
                                neighbours=[(1, 1), (1, 2)])
-        coords[(0, 2)] = Coord((0, 2),\
-                               resource_locs=[(0, 2)],\
+        coords[(0, 2)] = Coord((0, 2),
+                               resource_locs=[(0, 2)],
                                neighbours=[(1, 2), (1, 3)])
 
-        coords[(1, 0)] = Coord((1, 0),\
-                               resource_locs=[(0, 0)],\
-                               ports={'3'},\
+        coords[(1, 0)] = Coord((1, 0),
+                               resource_locs=[(0, 0)],
+                               ports={'3'},
                                neighbours=[(2, 0), (0, 0)])
-        coords[(1, 1)] = Coord((1, 1),\
-                               resource_locs=[(0, 0), (0, 1)],\
+        coords[(1, 1)] = Coord((1, 1),
+                               resource_locs=[(0, 0), (0, 1)],
                                neighbours=[(0, 0), (0, 1), (2, 1)])
-        coords[(1, 2)] = Coord((1, 2),\
-                               resource_locs=[(0, 1), (0, 2)],\
-                               ports={'2 w'},\
+        coords[(1, 2)] = Coord((1, 2),
+                               resource_locs=[(0, 1), (0, 2)],
+                               ports={'2 w'},
                                neighbours=[(0, 2), (0, 1), (2, 2)])
-        coords[(1, 3)] = Coord((1, 3),\
-                               resource_locs=[(0, 2)],\
+        coords[(1, 3)] = Coord((1, 3),
+                               resource_locs=[(0, 2)],
                                neighbours=[(0, 2), (2, 3)])
 
-        coords[(2, 0)] = Coord((2, 0),\
-                               resource_locs=[(0, 0), (1, 0)],\
+        coords[(2, 0)] = Coord((2, 0),
+                               resource_locs=[(0, 0), (1, 0)],
                                neighbours=[(3, 0), (1, 0), (3, 1)])
-        coords[(2, 1)] = Coord((2, 1),\
-                               resource_locs=[(0, 0), (0, 1), (1, 1)],\
+        coords[(2, 1)] = Coord((2, 1),
+                               resource_locs=[(0, 0), (0, 1), (1, 1)],
                                neighbours=[(3, 1), (1, 1), (3, 2)])
-        coords[(2, 2)] = Coord((2, 2),\
-                               resource_locs=[(0, 2), (0, 1), (1, 2)],\
+        coords[(2, 2)] = Coord((2, 2),
+                               resource_locs=[(0, 2), (0, 1), (1, 2)],
                                neighbours=[(3, 2), (1, 2), (3, 3)])
-        coords[(2, 3)] = Coord((2, 3),\
-                               resource_locs=[(0, 2), (1, 3)],\
-                               ports={'3'},\
+        coords[(2, 3)] = Coord((2, 3),
+                               resource_locs=[(0, 2), (1, 3)],
+                               ports={'3'},
                                neighbours=[(3, 3), (1, 3), (3, 4)])
 
-        coords[(3, 0)] = Coord((3, 0),\
-                               resource_locs=[(1, 0)],\
-                               ports={'2 o'},\
+        coords[(3, 0)] = Coord((3, 0),
+                               resource_locs=[(1, 0)],
+                               ports={'2 o'},
                                neighbours=[(4, 0), (2, 0)])
-        coords[(3, 1)] = Coord((3, 1),\
-                               resource_locs=[(1, 0), (0, 0), (1, 1)],\
+        coords[(3, 1)] = Coord((3, 1),
+                               resource_locs=[(1, 0), (0, 0), (1, 1)],
                                neighbours=[(4, 1), (2, 0), (2, 1)])
-        coords[(3, 2)] = Coord((3, 2),\
-                               resource_locs=[(1, 1), (0, 1), (1, 2)],\
+        coords[(3, 2)] = Coord((3, 2),
+                               resource_locs=[(1, 1), (0, 1), (1, 2)],
                                neighbours=[(4, 2), (2, 2), (2, 1)])
-        coords[(3, 3)] = Coord((3, 3),\
-                               resource_locs=[(1, 2), (0, 2), (1, 3)],\
+        coords[(3, 3)] = Coord((3, 3),
+                               resource_locs=[(1, 2), (0, 2), (1, 3)],
                                neighbours=[(4, 3), (2, 3), (2, 2)])
-        coords[(3, 4)] = Coord((3, 4),\
-                               resource_locs=[(1, 2)],\
-                               ports={'3'},\
+        coords[(3, 4)] = Coord((3, 4),
+                               resource_locs=[(1, 2)],
+                               ports={'3'},
                                neighbours=[(2, 3), (4, 4)])
 
-        coords[(4, 0)] = Coord((4, 0),\
-                               resource_locs=[(1, 0), (2, 0)],\
-                               ports={'2 o'},\
+        coords[(4, 0)] = Coord((4, 0),
+                               resource_locs=[(1, 0), (2, 0)],
+                               ports={'2 o'},
                                neighbours=[(3, 0), (5, 0), (5, 1)])
-        coords[(4, 1)] = Coord((4, 1),\
-                               resource_locs=[(1, 0), (1, 1), (2, 1)],\
+        coords[(4, 1)] = Coord((4, 1),
+                               resource_locs=[(1, 0), (1, 1), (2, 1)],
                                neighbours=[(3, 1), (5, 1), (5, 2)])
-        coords[(4, 2)] = Coord((4, 2),\
-                               resource_locs=[(1, 1), (1, 2), (2, 2)],\
+        coords[(4, 2)] = Coord((4, 2),
+                               resource_locs=[(1, 1), (1, 2), (2, 2)],
                                neighbours=[(3, 2), (5, 2), (5, 3)])
-        coords[(4, 3)] = Coord((4, 3),\
-                               resource_locs=[(1, 2), (1, 3), (2, 3)],\
+        coords[(4, 3)] = Coord((4, 3),
+                               resource_locs=[(1, 2), (1, 3), (2, 3)],
                                neighbours=[(3, 3), (5, 3), (5, 4)])
-        coords[(4, 4)] = Coord((4, 4),\
-                               resource_locs=[(1, 3), (2, 4)],\
+        coords[(4, 4)] = Coord((4, 4),
+                               resource_locs=[(1, 3), (2, 4)],
                                neighbours=[(3, 4), (5, 5), (5, 4)])
 
-        coords[(5, 0)] = Coord((5, 0),\
-                               resource_locs=[(2, 0)],\
+        coords[(5, 0)] = Coord((5, 0),
+                               resource_locs=[(2, 0)],
                                neighbours=[(4, 0), (6, 0)])
-        coords[(5, 1)] = Coord((5, 1),\
-                               resource_locs=[(1, 0), (2, 0), (2, 1)],\
+        coords[(5, 1)] = Coord((5, 1),
+                               resource_locs=[(1, 0), (2, 0), (2, 1)],
                                neighbours=[(6, 1), (4, 0), (4, 1)])
-        coords[(5, 2)] = Coord((5, 2),\
-                               resource_locs=[(1, 1), (2, 1), (2, 2)],\
+        coords[(5, 2)] = Coord((5, 2),
+                               resource_locs=[(1, 1), (2, 1), (2, 2)],
                                neighbours=[(6, 2), (4, 1), (4, 2)])
-        coords[(5, 3)] = Coord((5, 3),\
-                               resource_locs=[(1, 2), (2, 2), (2, 3)],\
+        coords[(5, 3)] = Coord((5, 3),
+                               resource_locs=[(1, 2), (2, 2), (2, 3)],
                                neighbours=[(6, 3), (4, 2), (4, 3)])
-        coords[(5, 4)] = Coord((5, 4),\
-                               resource_locs=[(1, 3), (2, 3), (2, 4)],\
+        coords[(5, 4)] = Coord((5, 4),
+                               resource_locs=[(1, 3), (2, 3), (2, 4)],
                                neighbours=[(6, 4), (4, 3), (4, 4)])
-        coords[(5, 5)] = Coord((5, 5),\
-                               resource_locs=[(2, 4)],\
-                               ports={'3'},\
+        coords[(5, 5)] = Coord((5, 5),
+                               resource_locs=[(2, 4)],
+                               ports={'3'},
                                neighbours=[(6, 5), (4, 4)])
 
-        coords[(6, 0)] = Coord((6, 0),\
-                               resource_locs=[(2, 0)],\
+        coords[(6, 0)] = Coord((6, 0),
+                               resource_locs=[(2, 0)],
                                neighbours=[(5, 0), (7, 0)])
-        coords[(6, 1)] = Coord((6, 1),\
-                               resource_locs=[(3, 0), (2, 0), (2, 1)],\
+        coords[(6, 1)] = Coord((6, 1),
+                               resource_locs=[(3, 0), (2, 0), (2, 1)],
                                neighbours=[(5, 1), (7, 0), (7, 1)])
-        coords[(6, 2)] = Coord((6, 2),\
-                               resource_locs=[(3, 1), (2, 1), (2, 2)],\
+        coords[(6, 2)] = Coord((6, 2),
+                               resource_locs=[(3, 1), (2, 1), (2, 2)],
                                neighbours=[(5, 2), (7, 1), (7, 2)])
-        coords[(6, 3)] = Coord((6, 3),\
-                               resource_locs=[(3, 2), (2, 2), (2, 3)],\
+        coords[(6, 3)] = Coord((6, 3),
+                               resource_locs=[(3, 2), (2, 2), (2, 3)],
                                neighbours=[(5, 3), (7, 2), (7, 3)])
-        coords[(6, 4)] = Coord((6, 4),\
-                               resource_locs=[(3, 3), (2, 3), (2, 4)],\
+        coords[(6, 4)] = Coord((6, 4),
+                               resource_locs=[(3, 3), (2, 3), (2, 4)],
                                neighbours=[(5, 4), (7, 3), (7, 4)])
-        coords[(6, 5)] = Coord((6, 5),\
-                               resource_locs=[(2, 4)],\
-                               ports={'3'},\
+        coords[(6, 5)] = Coord((6, 5),
+                               resource_locs=[(2, 4)],
+                               ports={'3'},
                                neighbours=[(5, 5), (7, 4)])
 
-        coords[(7, 0)] = Coord((7, 0),\
-                               resource_locs=[(3, 0), (2, 0)],\
-                               ports={'2 g'},\
+        coords[(7, 0)] = Coord((7, 0),
+                               resource_locs=[(3, 0), (2, 0)],
+                               ports={'2 g'},
                                neighbours=[(6, 0), (6, 1), (8, 0)])
-        coords[(7, 1)] = Coord((7, 1),\
-                               resource_locs=[(3, 0), (3, 1), (2, 1)],\
+        coords[(7, 1)] = Coord((7, 1),
+                               resource_locs=[(3, 0), (3, 1), (2, 1)],
                                neighbours=[(6, 1), (6, 2), (8, 1)])
-        coords[(7, 2)] = Coord((7, 2),\
-                               resource_locs=[(3, 1), (3, 2), (2, 2)],\
+        coords[(7, 2)] = Coord((7, 2),
+                               resource_locs=[(3, 1), (3, 2), (2, 2)],
                                neighbours=[(6, 2), (6, 3), (8, 2)])
-        coords[(7, 3)] = Coord((7, 3),\
-                               resource_locs=[(3, 2), (3, 3), (2, 3)],\
+        coords[(7, 3)] = Coord((7, 3),
+                               resource_locs=[(3, 2), (3, 3), (2, 3)],
                                neighbours=[(6, 3), (6, 4), (8, 3)])
-        coords[(7, 4)] = Coord((7, 4),\
-                               resource_locs=[(3, 3), (2, 4)],\
+        coords[(7, 4)] = Coord((7, 4),
+                               resource_locs=[(3, 3), (2, 4)],
                                neighbours=[(6, 4), (6, 5), (8, 4)])
 
-        coords[(8, 0)] = Coord((8, 0),\
-                               resource_locs=[(3, 0)],\
-                               ports={'2 g'},\
+        coords[(8, 0)] = Coord((8, 0),
+                               resource_locs=[(3, 0)],
+                               ports={'2 g'},
                                neighbours=[(7, 0), (9, 0)])
-        coords[(8, 1)] = Coord((8, 1),\
-                               resource_locs=[(3, 0), (3, 1), (4, 0)],\
+        coords[(8, 1)] = Coord((8, 1),
+                               resource_locs=[(3, 0), (3, 1), (4, 0)],
                                neighbours=[(7, 1), (9, 0), (9, 1)])
-        coords[(8, 2)] = Coord((8, 2),\
-                               resource_locs=[(3, 1), (3, 2), (4, 1)],\
+        coords[(8, 2)] = Coord((8, 2),
+                               resource_locs=[(3, 1), (3, 2), (4, 1)],
                                neighbours=[(7, 2), (9, 1), (9, 2)])
-        coords[(8, 3)] = Coord((8, 3),\
-                               resource_locs=[(3, 2), (3, 3), (4, 2)],\
+        coords[(8, 3)] = Coord((8, 3),
+                               resource_locs=[(3, 2), (3, 3), (4, 2)],
                                neighbours=[(7, 3), (9, 2), (9, 3)])
-        coords[(8, 4)] = Coord((8, 0),\
-                               resource_locs=[(3, 3)],\
-                               ports={'2, b'},\
+        coords[(8, 4)] = Coord((8, 0),
+                               resource_locs=[(3, 3)],
+                               ports={'2, b'},
                                neighbours=[(7, 4), (9, 3)])
 
-        coords[(9, 0)] = Coord((9, 0),\
-                               resource_locs=[(3, 0), (4, 0)],\
+        coords[(9, 0)] = Coord((9, 0),
+                               resource_locs=[(3, 0), (4, 0)],
                                neighbours=[(8, 0), (10, 0), (8, 1)])
-        coords[(9, 1)] = Coord((9, 1),\
-                               resource_locs=[(3, 1), (4, 0), (4, 1)],\
+        coords[(9, 1)] = Coord((9, 1),
+                               resource_locs=[(3, 1), (4, 0), (4, 1)],
                                neighbours=[(8, 1), (10, 1), (8, 2)])
-        coords[(9, 2)] = Coord((9, 2),\
-                               resource_locs=[(3, 2), (4, 1), (4, 2)],\
+        coords[(9, 2)] = Coord((9, 2),
+                               resource_locs=[(3, 2), (4, 1), (4, 2)],
                                neighbours=[(8, 2), (10, 2), (8, 3)])
-        coords[(9, 3)] = Coord((9, 3),\
-                               resource_locs=[(3, 3), (4, 2)],\
-                               ports={'2 b'},\
+        coords[(9, 3)] = Coord((9, 3),
+                               resource_locs=[(3, 3), (4, 2)],
+                               ports={'2 b'},
                                neighbours=[(8, 3), (10, 3), (8, 4)])
 
-        coords[(10, 0)] = Coord((10, 0),\
-                                resource_locs=[(4, 0)],\
-                                ports={'3'},\
+        coords[(10, 0)] = Coord((10, 0),
+                                resource_locs=[(4, 0)],
+                                ports={'3'},
                                 neighbours=[(9, 0), (11, 0)])
-        coords[(10, 1)] = Coord((10, 1),\
-                                resource_locs=[(4, 0), (4, 1)],\
+        coords[(10, 1)] = Coord((10, 1),
+                                resource_locs=[(4, 0), (4, 1)],
                                 neighbours=[(9, 1), (11, 0), (11, 1)])
-        coords[(10, 2)] = Coord((10, 2),\
-                                resource_locs=[(4, 1), (4, 2)],\
-                                ports={'2 l'},\
+        coords[(10, 2)] = Coord((10, 2),
+                                resource_locs=[(4, 1), (4, 2)],
+                                ports={'2 l'},
                                 neighbours=[(9, 2), (11, 1), (11, 2)])
-        coords[(10, 3)] = Coord((10, 3),\
-                                resource_locs=[(4, 2)],\
+        coords[(10, 3)] = Coord((10, 3),
+                                resource_locs=[(4, 2)],
                                 neighbours=[(9, 3), (11, 2)])
 
-        coords[(11, 0)] = Coord((11, 0),\
-                                resource_locs=[(4, 0)],\
-                                ports={'3'},\
+        coords[(11, 0)] = Coord((11, 0),
+                                resource_locs=[(4, 0)],
+                                ports={'3'},
                                 neighbours=[(10, 0), (10, 1)])
-        coords[(11, 1)] = Coord((11, 1),\
-                                resource_locs=[(4, 1)],\
-                                ports={'2 l'},\
+        coords[(11, 1)] = Coord((11, 1),
+                                resource_locs=[(4, 1)],
+                                ports={'2 l'},
                                 neighbours=[(10, 1), (10, 2)])
-        coords[(11, 2)] = Coord((11, 2),\
-                                resource_locs=[(4, 2)],\
+        coords[(11, 2)] = Coord((11, 2),
+                                resource_locs=[(4, 2)],
                                 neighbours=[(10, 2), (10, 3)])
 
         if debug == True:
@@ -471,11 +471,15 @@ class Board():
         '''
         # End turn
         if move.move_type == Move.END_TURN:
+            current_player_num = player.player_num
+            next_player_index = current_player_num % len(self.players)
+            self.active_player = self.players[next_player_index]
             return 0
 
         # Build a road
         elif move.move_type == Move.BUY_ROAD:
-            self.build_road(move.road[0], move.road[1], player)
+            road_coords = list(move.road)
+            self.build_road(road_coords[0], road_coords[1], player)
 
         # Build a settlement
         elif move.move_type == Move.BUY_SETTLEMENT:
@@ -493,7 +497,7 @@ class Board():
         elif move.move_type == Move.PLAY_DEV:
             if move.card_type == Card.KNIGHT:
                 self.move_robber(move.coord, knight=True, player=player)
-                if hasattr(move, 'player'):
+                if move.player:
                     self.steal_from(move.player, player)
             elif move.card_type == Card.ROAD_BUILDING:
                 self.build_road(move.road[0], move.road[1], player)
@@ -512,10 +516,15 @@ class Board():
             pass
 
         # Move robber
-        if move.move_type == Move.MOVE_ROBBER:
+        elif move.move_type == Move.MOVE_ROBBER:
             self.move_robber(move.coord)
-            if hasattr(move, 'player'):
+            if move.player:
                 self.steal_from(move.player, player)
+
+        # Propose trade
+        elif move.move_type == Move.PROPOSE_TRADE:
+            self.traders = []
+            self.pending_trade = move
 
 
     def get_cost(self, player):

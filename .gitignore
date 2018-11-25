@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 output.txt
 settings.py
+catan_input.json
+catan_results.csv
