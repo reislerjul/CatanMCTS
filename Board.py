@@ -41,6 +41,7 @@ class Board():
         self.resource_list = ['w', 'b', 'l', 'g', 'o']
         self.active_player = None
         self.round_num = 0
+        self.pending_trade = None
 
 
     def init_board(self, debug=False):

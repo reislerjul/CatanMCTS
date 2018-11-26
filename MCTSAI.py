@@ -162,7 +162,7 @@ class MCTSAI():
                 if next_player > len(current_node.state.players):
                     next_player = 1
                 move = Move(Move.ROLL_DICE, roll=roll, player=current_node.state.board.players[next_player - 1])
-            else:
+            elif current_node.active_player_num == -2:
                 card = current_node.state.deck.peek()
                 move = Move(Move.DRAW_DEV, card_type=card, player=current_node.state.board.players[current_node.prev_player_num - 1])
         if current_node.state.winner == 0:
@@ -198,6 +198,8 @@ class MCTSAI():
                 next_player = -1
             if move.move_type == Move.BUY_DEV:
                 next_player = -2
+            if move.move_type in [Move.ACCEPT_TRADE, Move.DECLINE_TRADE]:
+                next_player = node.active_player_num % len(state_copy.players) + 1
             new_node = Node(len(self.nodes), node.id, next_player, node.active_player_num, state_copy, node.depth+1)
             self.nodes.append(new_node)
             node.children[move] = new_node.id

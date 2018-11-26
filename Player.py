@@ -147,13 +147,20 @@ class Player():
                 else:
                     return [Move(Move.END_TURN)]
 
+            print('{}, {}, {}'.format(board.round_num, board.active_player.player_num, self.player_num))
+
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
             if board.active_player != self:
-                if self.can_accept_trade(give_resource):
-                    return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE, give_resource=give_resource, \
-                        resource=get_resource)]
+                if self.can_accept_trade(board.pending_trade.resource):
+                    return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE)]
                 return [Move(Move.DECLINE_TRADE)]
+
+            # check to see if we must select a trader
+            if board.pending_trade:
+                moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
+                if len(moves) > 0:
+                    return moves
 
 
             # We can always end our turn
@@ -666,15 +673,26 @@ class Player():
         '''
         # End turn
         if move.move_type == Move.END_TURN:
+            board.update_board(self, move)
             return 0
 
-
         elif move.move_type == Move.ACCEPT_TRADE:
-            loss = move.give_resource
+            board.traders.append(self)
+
+        elif move.move_type == Move.CHOOSE_TRADER:
+            self.trades_proposed_success += 1
+            chosen = move.player
+
+            loss = board.pending_trade.give_resource
+            chosen.resources[loss[0]] += int(loss[1])
             self.resources[loss[0]] -= int(loss[1])
-            gain = move.resource
-            self.resources[gain[0]] += int(gain[1])
+
+            gain = board.pending_trade.resource
+            chosen.resources[gain[0]] += int(gain[1])
+            self.resources[gain[0]] -= int(gain[1])
+
             self.trades_conducted += 1
+            board.pending_trade = None
 
         # For now, all players should randomly choose the
         # player to trade with from the list of players
@@ -682,20 +700,7 @@ class Player():
         elif move.move_type == Move.PROPOSE_TRADE:
             self.trades_proposed += 1
             board.traders = []
-            for player in players:
-                if player != self and player.should_accept_trade(move.give_resource, move.resource, board, deck, players):
-                    board.traders.append(player)
-            if len(board.traders) > 0:
-                self.trades_proposed_success += 1
-                chosen = self.choose_trader(board.traders)
-                chosen.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.resource, \
-                    resource=move.give_resource), board, deck, players)
-                self.make_move(Move(Move.ACCEPT_TRADE, give_resource=move.give_resource, \
-                    resource=move.resource), board, deck, players)
-            else:
-                if self.player_type == Player.HUMAN:
-                    print("Nobody has accepted the trade!")
-
+            board.pending_trade = move
 
         # Build a road
         elif move.move_type == Move.BUY_ROAD:
@@ -745,12 +750,11 @@ class Player():
             self.trade_resources(move.give_resource, move.resource)
 
         # Move robber.
-        if move.move_type == Move.MOVE_ROBBER:
-            board.update_board(self, move)
+        elif move.move_type == Move.MOVE_ROBBER:
+            pass
 
-        else:
-            # Apply the changes to the board
-            board.update_board(self, move)
+        # Apply the changes to the board
+        board.update_board(self, move)
         return 1
 
 
@@ -925,6 +929,17 @@ class Player():
 
                 if move.move_type == Move.PROPOSE_TRADE:
                     trades_tried += 1
+                    trade_player_index = self.player_num % len(board.players)
+                    trade_player = board.players[trade_player_index]
+                    while trade_player != self:
+                        trade_move = trade_player.decide_move(dev_played, board, deck, players, robber, trades_tried)
+                        move_made = trade_player.make_move(move, board, deck, players)
+                        trade_player_index = (trade_player_index + 1) % len(board.players)
+                        trade_player = board.players[trade_player_index]
+                    
+                    else:
+                        if self.player_type == Player.HUMAN:
+                            print("Nobody has accepted the trade!")
 
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
@@ -944,10 +959,7 @@ class Player():
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player
     def can_accept_trade(self, trade_map):
-        if self.resources[trade_map[0]] < int(trade_map[1]):
-            return False
-        return True
-
+        return self.resources[trade_map[0]] >= int(trade_map[1])
 
     def hashable_player(self):
         res = sorted(self.resources.items())
