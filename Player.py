@@ -147,8 +147,6 @@ class Player():
                 else:
                     return [Move(Move.END_TURN)]
 
-            print('{}, {}, {}'.format(board.round_num, board.active_player.player_num, self.player_num))
-
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
             if board.active_player != self:
