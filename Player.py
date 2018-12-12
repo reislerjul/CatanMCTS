@@ -499,7 +499,8 @@ class Player():
     def check_legal_move(self, move, board, deck):
         if board.active_player != self:
             if move.move_type == Move.ACCEPT_TRADE:
-                return self.resources[move.give_resource[0]] >= move.give_resource[1]
+                return (self.resources[board.pending_trade.give_resource[0]]
+                        >= board.pending_trade.give_resource[1])
             if move.move_type == Move.DECLINE_TRADE:
                 return True
             return False
