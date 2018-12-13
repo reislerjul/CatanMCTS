@@ -165,7 +165,6 @@ class Player():
             possible_moves = [Move(Move.END_TURN)]
 
             # Can we buy dev card?
-
             if (self.resources['g'] > 0
                 and self.resources['w'] > 0
                 and self.resources['o'] > 0
@@ -333,11 +332,11 @@ class Player():
             if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
             (self.resources['w'] >= 3 and '3' in self.ports) or (self.resources['w'] >= 4):
                 if (self.resources['w'] >= 2 and '2 w' in self.ports):
-                    numTrade = '2'
+                    numTrade = 2
                 elif (self.resources['w'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
+                    numTrade = 3
                 else:
-                    numTrade = '4'
+                    numTrade = 4
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='o'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='l'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='g'))
@@ -346,11 +345,11 @@ class Player():
             if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
             (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
                 if (self.resources['o'] >= 2 and '2 o' in self.ports):
-                    numTrade = '2'
+                    numTrade = 2
                 elif (self.resources['o'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
+                    numTrade = 3
                 else:
-                    numTrade = '4'
+                    numTrade = 4
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='w'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='l'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='g'))
@@ -359,11 +358,11 @@ class Player():
             if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
             (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
                 if (self.resources['l'] >= 2 and '2 l' in self.ports):
-                    numTrade = '2'
+                    numTrade = 2
                 elif (self.resources['l'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
+                    numTrade = 3
                 else:
-                    numTrade = '4'
+                    numTrade = 4
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='w'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='o'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='g'))
@@ -372,11 +371,11 @@ class Player():
             if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
             (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
                 if (self.resources['b'] >= 2 and '2 b' in self.ports):
-                    numTrade = '2'
+                    numTrade = 2
                 elif (self.resources['b'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
+                    numTrade = 3
                 else:
-                    numTrade = '4'
+                    numTrade = 4
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='w'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='o'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='g'))
@@ -385,11 +384,11 @@ class Player():
             if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
             (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
                 if (self.resources['g'] >= 2 and '2 g' in self.ports):
-                    numTrade = '2'
+                    numTrade = 2
                 elif (self.resources['g'] >= 3 and '3' in self.ports):
-                    numTrade = '3'
+                    numTrade = 3
                 else:
-                    numTrade = '4'
+                    numTrade = 4
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='w'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='o'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='b'))
@@ -654,7 +653,6 @@ class Player():
     # 0 if we are passing our turn, 1 if the move is a valid move,
     # -1 if the move is not legal
     def make_move(self, move, board, deck, players):
-
         # Play corresponds to the information that the board may
         # need when a dev card is played
         play = None
@@ -837,12 +835,12 @@ class Player():
     # A helper function to decrement the resources correctly if the trade
     # with bank option is chosen.
     def trade_resources(self, old_res, new_res):
-        if '2 ' + old_res[1] in self.ports:
-            self.resources[old_res[1]] -= 2
+        if '2 ' + old_res in self.ports:
+            self.resources[old_res] -= 2
         elif '3' in self.ports:
-            self.resources[old_res[1]] -= 3
+            self.resources[old_res] -= 3
         else:
-            self.resources[old_res[1]] -= 4
+            self.resources[old_res] -= 4
         self.resources[new_res] += 1
         return
 
@@ -914,7 +912,6 @@ class Player():
         # This should indicate the number of trades proposed. We will limit
         # players to proposing 2 trades per turn
         trades_tried = 0
-
         while True:
 
             move = self.decide_move(dev_played, board, deck, players, robber, trades_tried)
@@ -946,6 +943,8 @@ class Player():
 
             if move_made == 0:
                 break
+        if self.player_type == Player.MCTS_AI and not self.random:
+            print("______end of MCTS turn______")
 
 
     # Returns 1 if the move is valid, -1 if the dev card stack is empty
