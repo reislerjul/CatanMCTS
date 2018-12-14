@@ -47,13 +47,6 @@ class RandomPlayer(Player):
         return possible_moves[random.randint(0, len(possible_moves) - 1)]
 
 
-    def should_accept_trade(self, receive, give, board, deck, players):
-        options = [0]
-        if self.can_accept_trade(give):
-            options.append(1)
-        return options[random.randint(0, len(options) - 1)]
-
-
     def choose_trader(self, traders):
         return traders[random.randint(0, len(traders) - 1)]
 

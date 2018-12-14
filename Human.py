@@ -99,12 +99,16 @@ class Human(Player):
         legal_road = False
         while not legal_road:
             loc = self.choose_road(board)
-            legal_road = self.can_build_road(loc, board)
-        move = Move(Move.BUY_ROAD, road=loc)
+            move = Move(Move.BUY_ROAD, road=loc)
+            legal_road = self.can_build_road(move, board)
         return move
 
 
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
+        if self.random:
+            possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
+            # Choose a move randomly from the set of possible moves!
+            return possible_moves[random.randint(0, len(possible_moves) - 1)]
         if board.round_num == 0 and len(self.settlements) == 0:
             return self.choose_spot_settlement(board)
         elif board.round_num == 0 and self.total_roads == 0:
@@ -187,18 +191,20 @@ class Human(Player):
         else:
             print("You have already played a dev card in this round or have reached maximum allowed trades")
 
+
     def choose_road(self, board):
         r0,c0 = map(int, input("Coordinate for road beginning/origin (Input form: row# col#): ").split())
         r1,c1 = map(int, input("Coordinate for road end (Input form: row# col#): ").split())
         print('Building road from ({}, {}) to ({}, {}) ...'.format(r0, c0, r1, c1))
-        move = ((r0, c0), (r1, c1))
+        move = set()
+        move.add((r0, c0))
+        move.add((r1, c1))
         return move     # List of tuples: two coordinates
 
 
     def build_settlement(self, board):
         r,c = map(int, input("Coordinate for settlement (Input form: row# col#): ").split())
         print('Building settlement at ({}, {}) ...'.format(r, c))
-
         move = (r, c)
         return move     # Tuple: one coordinate
 

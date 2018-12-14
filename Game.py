@@ -122,11 +122,3 @@ class Game():
                         max_points = curr_vp
                         self.won = player
                 return self.won
-        
-
-
-
-
-
-
-

@@ -56,16 +56,8 @@ class MCTSPlayer(Player):
             self.player_num, robber, self.weighted, self.thompson, trades_tried, give, recieve)
         board1 = copy.deepcopy(board)
         move = AI.get_play()
+        print("move: " + str(move.move_type))
         return move
-
-
-    def should_accept_trade(self, receive, give, board, deck, players):
-        if self.can_accept_trade(give):
-            move = self.decide_move(0, board, deck, players, 3, 0, give, receive)
-            if move.move_type == Move.END_TURN:
-                return 0
-            return 1
-        return 0
 
 
     def choose_trader(self, traders):

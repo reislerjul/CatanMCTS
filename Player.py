@@ -159,11 +159,15 @@ class Player():
                 moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
                 if len(moves) > 0:
                     return moves
+                # Even if there aren't available traders, we want to return so that
+                # eventually the pending trade will be set to false
+                else:
+                    return [Move(Move.CHOOSE_TRADER, player=None)]
 
 
             # We can always end our turn
             possible_moves = [Move(Move.END_TURN)]
-
+            
             # Can we buy dev card?
             if (self.resources['g'] > 0
                 and self.resources['w'] > 0
@@ -174,7 +178,7 @@ class Player():
                         possible_moves.append(Move(Move.BUY_DEV))
                 else:
                     possible_moves.append(Move(Move.BUY_DEV))
-
+            
 
             # Can we ask for a trade?
             if trades_tried < 2:
@@ -192,7 +196,7 @@ class Player():
                                 gain = (element, j)
                                 possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
 
-
+            
             # Can we play a dev card?
             if dev_played == 0:
                 for card in self.dev_cards.keys():
@@ -407,7 +411,7 @@ class Player():
                             possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
                     else:
                         possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
-
+            
             return possible_moves
 
 
@@ -643,7 +647,8 @@ class Player():
                 return True
 
         # For propose and accept trade, we check elsewhere that these are legal moves
-        if move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE:
+        if move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE or \
+        move.move_type == Move.CHOOSE_TRADER:
             return True
 
         return False
@@ -675,21 +680,21 @@ class Player():
 
         elif move.move_type == Move.ACCEPT_TRADE:
             board.traders.append(self)
+            self.trades_conducted += 1
 
         elif move.move_type == Move.CHOOSE_TRADER:
-            self.trades_proposed_success += 1
             chosen = move.player
 
-            loss = board.pending_trade.give_resource
-            chosen.resources[loss[0]] += int(loss[1])
-            self.resources[loss[0]] -= int(loss[1])
+            if chosen != None:
+                self.trades_proposed_success += 1
+                loss = board.pending_trade.give_resource
+                chosen.resources[loss[0]] += int(loss[1])
+                self.resources[loss[0]] -= int(loss[1])
 
-            gain = board.pending_trade.resource
-            chosen.resources[gain[0]] += int(gain[1])
-            self.resources[gain[0]] -= int(gain[1])
-
-            self.trades_conducted += 1
-            board.pending_trade = None
+                gain = board.pending_trade.resource
+                chosen.resources[gain[0]] += int(gain[1])
+                self.resources[gain[0]] -= int(gain[1])
+            board.pending_trade = False
 
         # For now, all players should randomly choose the
         # player to trade with from the list of players
@@ -932,10 +937,9 @@ class Player():
                         move_made = trade_player.make_move(move, board, deck, players)
                         trade_player_index = (trade_player_index + 1) % len(board.players)
                         trade_player = board.players[trade_player_index]
-                    
-                    else:
-                        if self.player_type == Player.HUMAN:
-                            print("Nobody has accepted the trade!")
+
+            # look into what happens if nobody can trade
+
 
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
@@ -943,8 +947,6 @@ class Player():
 
             if move_made == 0:
                 break
-        if self.player_type == Player.MCTS_AI and not self.random:
-            print("______end of MCTS turn______")
 
 
     # Returns 1 if the move is valid, -1 if the dev card stack is empty
