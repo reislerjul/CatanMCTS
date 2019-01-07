@@ -38,7 +38,6 @@ class Player():
         self.num_yop_played = 0
         self.num_monopoly_played = 0
         self.num_road_builder_played = 0
-        self.random = False
         self.devs_bought = 0
         self.trades_proposed = 0
 

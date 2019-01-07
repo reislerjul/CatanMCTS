@@ -105,10 +105,6 @@ class Human(Player):
 
 
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
-        if self.random:
-            possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
-            # Choose a move randomly from the set of possible moves!
-            return possible_moves[random.randint(0, len(possible_moves) - 1)]
         if board.round_num == 0 and len(self.settlements) == 0:
             return self.choose_spot_settlement(board)
         elif board.round_num == 0 and self.total_roads == 0:
