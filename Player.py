@@ -502,8 +502,7 @@ class Player():
     def check_legal_move(self, move, board, deck):
         if board.active_player != self:
             if move.move_type == Move.ACCEPT_TRADE:
-                return (self.resources[board.pending_trade.give_resource[0]]
-                        >= board.pending_trade.give_resource[1])
+                return self.can_accept_trade(board.pending_trade.resource)
             if move.move_type == Move.DECLINE_TRADE:
                 return True
             return False
@@ -701,8 +700,6 @@ class Player():
         # that'll accept the trade
         elif move.move_type == Move.PROPOSE_TRADE:
             self.trades_proposed += 1
-            board.traders = []
-            board.pending_trade = move
 
         # Build a road
         elif move.move_type == Move.BUY_ROAD:
@@ -934,7 +931,7 @@ class Player():
                     trade_player = board.players[trade_player_index]
                     while trade_player != self:
                         trade_move = trade_player.decide_move(dev_played, board, deck, players, robber, trades_tried)
-                        move_made = trade_player.make_move(move, board, deck, players)
+                        move_made = trade_player.make_move(trade_move, board, deck, players)
                         trade_player_index = (trade_player_index + 1) % len(board.players)
                         trade_player = board.players[trade_player_index]
 

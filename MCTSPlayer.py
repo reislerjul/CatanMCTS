@@ -56,7 +56,6 @@ class MCTSPlayer(Player):
             self.player_num, robber, self.weighted, self.thompson, trades_tried, give, recieve)
         board1 = copy.deepcopy(board)
         move = AI.get_play()
-        print("move: " + str(move.move_type))
         return move
 
 
