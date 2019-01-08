@@ -16,7 +16,7 @@ class Game():
 
     # This function represents the start of the game in which
     # each player chooses their spots. 
-    def place_spots(self, mode = 'beginner'):
+    def place_spots(self, mode='beginner'):
         if mode == 'beginner':
             a = [0,1,2,3]
             random.shuffle(a)
@@ -47,19 +47,17 @@ class Game():
         if settings.DEBUG:
             self.board.print_board_state()
 
+        self.board.round_num = self.num_rounds
         if self.num_rounds == 0:
-            self.board.round_num = self.num_rounds
             for player in self.players:
                 self.board.active_player = player
                 player.make_turn(self.board, self.deck, self.players, 0)
 
         elif self.num_rounds == 1:
-            self.board.round_num = self.num_rounds
             for player in self.players[::-1]:
                 self.board.active_player = player
                 player.make_turn(self.board, self.deck, self.players, 0)
         else:
-            self.board.round_num = self.num_rounds
             for player in self.players:
                 self.board.active_player = player
 

@@ -525,19 +525,25 @@ class Player():
                 and move.coord in board.coords.keys() \
                 and len(self.settlements) < 5:
             # Resources available to make a settlement
+            #print('in check legal move for settlements')
+            #print('round number: ' + str(board.round_num))
+            #print(self.resources)
             if (self.resources['b'] >= 1
                 and self.resources['l'] >=1
                 and self.resources['g'] >= 1
                 and self.resources['w'] >=1):
-               state = board.coords[move.coord]
+                #print('have resources')
+                state = board.coords[move.coord]
 
                # Does not overlap with already created settlement
-               if state.player == None:
+                if state.player == None:
+                    #print('doesnt overlap with already created')
                     next_list = list(state.roads.keys()) + state.available_roads
                     # Two spaces away from another settlement
                     for n in next_list:
                         next_state = board.coords[n]
                         if next_state.player != None:
+                            #print('not two away')
                             return False
 
                     # Next to another road. only needed when its not round 0 or 1
@@ -660,6 +666,11 @@ class Player():
         # need when a dev card is played
         play = None
         if not self.check_legal_move(move, board, deck):
+            #print(move.move_type)
+            #print('illegal move')
+            #print("round: " + str(board.round_num))
+            #print(self.resources)
+            #print(len(self.settlements))
             if self.print_invalid_move():
                 print("Illegal move!")
             return -1
@@ -708,6 +719,18 @@ class Player():
 
         # Build a settlement
         elif move.move_type == Move.BUY_SETTLEMENT:
+            #print('printing surrounding resources: ')
+            #print(board.resources[move.coord])
+            #print('done printing surrounding resources')
+
+            # after playing a second settlement, players
+            # get the resources surrounding that settlement
+            if board.round_num == 1:
+                resources = board.coords[move.coord].resource_locs
+                for hex_loc in resources:
+                    vals = board.resources[hex_loc]
+                    if vals[0] in self.resources:
+                        self.resources[vals[0]] += 1
             self.resources['b'] -= 1
             self.resources['l'] -= 1
             self.resources['g'] -= 1
@@ -933,9 +956,6 @@ class Player():
                         move_made = trade_player.make_move(trade_move, board, deck, players)
                         trade_player_index = (trade_player_index + 1) % len(board.players)
                         trade_player = board.players[trade_player_index]
-
-            # look into what happens if nobody can trade
-
 
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:

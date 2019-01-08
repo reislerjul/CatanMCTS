@@ -36,11 +36,10 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, max_moves, players, deck, dev_played, player_num, robber, weighted, thompson, \
+    def __init__(self, board, time, players, deck, dev_played, player_num, robber, weighted, thompson, \
         trades_tried, give, receive):
         # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
-        self.max_moves = max_moves
         self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber, trades_tried), 0, give, receive)]
         self.max_depth = 0
         self.weighted = weighted
@@ -111,7 +110,9 @@ class MCTSAI():
 
         start = datetime.datetime.utcnow()
         while datetime.datetime.utcnow() - start < self.timer:
+            print('running cycle')
             self.run_cycle()
+        print('finished running cycles!')
 
         root = self.nodes[0]
         # Pick the move with the most wins.
@@ -171,6 +172,7 @@ class MCTSAI():
             return current_node, None
 
     def run_expansion(self, node, move):
+        print(node.active_player_num-1)
         state_copy = copy.deepcopy(node.state)
         if node.active_player_num == -1:
             # roll dice
@@ -180,7 +182,7 @@ class MCTSAI():
             return new_node
         elif node.active_player_num == -2:
             # draw dev card
-            state_copy.players[move.player.player_num-1].dev_cards[move.card_type] += 1
+            state_copy.players[move.player.player_num - 1].dev_cards[move.card_type] += 1
             state_copy.deck.remove_card_type(move.card_type)
             new_node = Node(len(self.nodes), node.id, move.player.player_num, node.active_player_num, state_copy, node.depth+1)
             self.nodes.append(new_node)
@@ -207,8 +209,6 @@ class MCTSAI():
                 node.state.winner = node.active_player_num
             return new_node
 
-        # TODO: should we have another case for trades?
-
     def run_simulation(self, node):
         state_copy = copy.deepcopy(node.state)
         new_players = []
@@ -224,9 +224,16 @@ class MCTSAI():
             new_player.settlements = p.settlements
             new_player.roads = p.roads
             new_player.total_roads = p.total_roads
-            new_player.random = True
+            if p.player_num == state_copy.board.active_player.player_num:
+                state_copy.board.active_player = new_player
+            if p.player_num == state_copy.board.largest_army_player:
+                state_copy.board.largest_army_player = new_player
+            if p.player_num == state_copy.board.longest_road_player:
+                state_copy.board.longest_road_player = new_player
             new_players.append(new_player)
+        state_copy.board.players = new_players
         new_game = Game(state_copy.board, state_copy.deck, new_players, verbose=False)
+        new_game.num_rounds = state_copy.board.round_num
         winner = new_game.play_game()
         return winner
 

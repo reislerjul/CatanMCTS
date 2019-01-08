@@ -68,8 +68,7 @@ if __name__ == '__main__':
             player_list.append(RandomPlayer(index))
         if player["type"] == "MCTS":
             MCTS_player = MCTSPlayer(index, int(player["time"]), \
-                int(player["max_moves"]), int(player["weighted"]), \
-                int(player["thompson"]))
+                int(player["weighted"]), int(player["thompson"]))
             player_list.append(MCTS_player)
         index += 1
 
@@ -105,8 +104,7 @@ if __name__ == '__main__':
                 player_list[j] = RandomPlayer(j + 1)
             elif player_list[j].player_type == Player.MCTS_AI:
                 player_list[j] = MCTSPlayer(j + 1, player_list[j].time, \
-                    player_list[j].max_moves, player_list[j].weighted, \
-                    player_list[j].thompson)
+                    player_list[j].weighted, player_list[j].thompson)
 
         winner, num_rounds, board = run_game(player_list)
         if record_file:

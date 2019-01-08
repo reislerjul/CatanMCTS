@@ -10,10 +10,9 @@ from utils import Card, Move
 class MCTSPlayer(Player):
 
 
-    def __init__(self, player_num, time, max_moves, weighted, thompson):
+    def __init__(self, player_num, time, weighted, thompson):
         super().__init__(Player.MCTS_AI, player_num)
         self.time = time
-        self.max_moves = max_moves
         self.weighted = weighted
         self.thompson = thompson
 
@@ -47,10 +46,11 @@ class MCTSPlayer(Player):
 
 
     def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, recieve=None):
-        AI = MCTSAI(board, self.time, self.max_moves, players, deck, dev_played, \
+        AI = MCTSAI(board, self.time, players, deck, dev_played, \
             self.player_num, robber, self.weighted, self.thompson, trades_tried, give, recieve)
-        board1 = copy.deepcopy(board)
+        #board1 = copy.deepcopy(board)
         move = AI.get_play()
+        #print('move decided')
         return move
 
 
