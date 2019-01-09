@@ -8,8 +8,6 @@ from utils import Card, Move
 
 
 class Human(Player):
-    # TODO: test
-
     def __init__(self, player_num):
         super().__init__(Player.HUMAN, player_num)
 
@@ -40,12 +38,6 @@ class Human(Player):
 
         # build the road
         super().add_road(board, move)
-
-
-    # A helper function for moving the robber in the case of rolling a 7
-    def move_robber(self, board, spot, victim, deck, players):
-        move = Move(Move.MOVE_ROBBER, coord=spot, player=victim)
-        return move
 
 
     def choose_victim(self, board, move):
@@ -125,7 +117,7 @@ class Human(Player):
             r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
             spot = (r, c)
             victim = self.choose_victim(board, spot)
-            return self.move_robber(board, spot, victim, deck, players)
+            return Move(Move.MOVE_ROBBER, coord=spot, player=victim)
 
         self.printResources()
         print('Moves available:')

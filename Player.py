@@ -972,6 +972,7 @@ class Player():
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
                     return 1
+
             if move_made == 0:
                 break
         self.has_rolled = False
