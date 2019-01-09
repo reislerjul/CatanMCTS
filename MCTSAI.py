@@ -10,12 +10,11 @@ from RandomPlayer import RandomPlayer
 # A class to represent the Monte Carlo Tree Search AI
 
 class State():
-    def __init__(self, players, board, deck, dev_played, robber, trades_tried):
+    def __init__(self, players, board, deck, dev_played, trades_tried):
         self.players = players
         self.board = board
         self.deck = deck
         self.dev_played = dev_played
-        self.robber = robber
         self.winner = 0
         self.trades_tried = trades_tried
 
@@ -36,11 +35,11 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, players, deck, dev_played, player_num, robber, weighted, thompson, \
+    def __init__(self, board, time, players, deck, dev_played, player_num, weighted, thompson, \
         trades_tried, give, receive):
         # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
-        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, robber, trades_tried), 0, give, receive)]
+        self.nodes = [Node(0, -1, player_num, 0, State(players, board, deck, dev_played, trades_tried), 0, give, receive)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -52,11 +51,9 @@ class MCTSAI():
     def thompson_sample(self, node):
         active_player = node.state.players[node.active_player_num - 1]
 
-        # TODO: why are there cases where robber is 3 and give/receive are none?
         legal = active_player.get_legal_moves(node.state.board,
                                               node.state.deck,
                                               node.state.dev_played,
-                                              node.state.robber,
                                               self.weighted,
                                               node.state.trades_tried, 
                                               node.give, 
@@ -77,9 +74,6 @@ class MCTSAI():
                 move = move_made
         return move
         '''
-
-        # TODO: it seems like AI always accepts trade if they can; can we print out the rate of 
-        # accepting the trade vs. not accepting?
         return max([(self.nodes[node.children[move_made]].wins, self.nodes[node.children[move_made]].plays, move_made)
                     if move_made in node.children
                     else (1, 2, move_made)
@@ -93,13 +87,11 @@ class MCTSAI():
         deck = state.deck
         dev_played = state.dev_played
         trades_tried = state.trades_tried
-        robber = state.robber
 
         active_player = self.nodes[0].state.players[self.nodes[0].active_player_num - 1]
         legal = active_player.get_legal_moves(board,
                                               deck,
                                               dev_played,
-                                              robber,
                                               self.weighted,
                                               trades_tried,
                                               self.nodes[0].give,
@@ -153,10 +145,16 @@ class MCTSAI():
     def run_selection(self):
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
+
+        # TODO: fix this part later
+        print('____starting new loop_____')
         while current_node.state.winner == 0 and move in current_node.children:
             current_node = self.nodes[current_node.children[move]]
+            print('active player num')
+            print(current_node.active_player_num)
             if current_node.active_player_num > 0:
                 move = self.thompson_sample(current_node)
+                print("move type: " + str(move.move_type))
             elif current_node.active_player_num == -1:
                 roll = random.randint(1, 6) + random.randint(1, 6)
                 next_player = current_node.prev_player_num
@@ -166,13 +164,14 @@ class MCTSAI():
             elif current_node.active_player_num == -2:
                 card = current_node.state.deck.peek()
                 move = Move(Move.DRAW_DEV, card_type=card, player=current_node.state.board.players[current_node.prev_player_num - 1])
+        print('after loop move: ' + str(move.move_type))
         if current_node.state.winner == 0:
             return current_node, move
         else:
             return current_node, None
 
     def run_expansion(self, node, move):
-        print(node.active_player_num-1)
+        #print(node.active_player_num-1)
         state_copy = copy.deepcopy(node.state)
         if node.active_player_num == -1:
             # roll dice
@@ -197,7 +196,8 @@ class MCTSAI():
                 player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
             next_player = node.active_player_num
             if move.move_type == Move.END_TURN:
-                next_player = -1
+                if node.state.board.round_num != 0 and node.state.board.round_num != 1:
+                    next_player = -1
             if move.move_type == Move.BUY_DEV:
                 next_player = -2
             if move.move_type in [Move.ACCEPT_TRADE, Move.DECLINE_TRADE]:
@@ -224,6 +224,7 @@ class MCTSAI():
             new_player.settlements = p.settlements
             new_player.roads = p.roads
             new_player.total_roads = p.total_roads
+            new_player.has_rolled = p.has_rolled
             if p.player_num == state_copy.board.active_player.player_num:
                 state_copy.board.active_player = new_player
             if p.player_num == state_copy.board.largest_army_player:

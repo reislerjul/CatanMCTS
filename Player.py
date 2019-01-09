@@ -35,6 +35,10 @@ class Player():
         self.settlements = []   #[(0,0), (1,1)...]
         self.roads = {}         # {(0,0):(1,1),(1,1):(0,0), ...}
         self.total_roads = 0
+        self.has_rolled = False
+        self.move_robber = False
+
+        # This stuff on bottom is used for bookkeeping
         self.num_yop_played = 0
         self.num_monopoly_played = 0
         self.num_road_builder_played = 0
@@ -61,7 +65,7 @@ class Player():
         return
 
 
-    def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, receive=None):
+    def decide_move(self, dev_played, board, deck, players, trades_tried, give=None, receive=None):
         return
 
 
@@ -131,7 +135,7 @@ class Player():
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.
     # give_resource and get_resource should be None or maps of resources to their quanities
-    def get_legal_moves(self, board, deck, dev_played, robber, weighted, trades_tried, give_resource=None, get_resource=None):
+    def get_legal_moves(self, board, deck, dev_played, weighted, trades_tried, give_resource=None, get_resource=None):
 
             # Determine moves we can play and add them to the list.
             if board.round_num in [0, 1]:
@@ -163,6 +167,30 @@ class Player():
                 else:
                     return [Move(Move.CHOOSE_TRADER, player=None)]
 
+            # We need to roll at the beginning of the turn
+            if not self.has_rolled:
+                self.has_rolled = True 
+                roll = random.randint(1, 6) + random.randint(1, 6)
+                if roll == 7:
+                    self.move_robber = True
+                return [Move(Move.ROLL_DICE, roll=roll, player=self)]
+
+
+            if self.move_robber:
+                possible_moves = []
+                spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                         (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
+                         (3, 1), (0, 0), (2, 2), (0, 1)]
+                for spot in spots:
+                    possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
+
+                    if possible_players != []:
+                        for p in possible_players:
+                            possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
+                    else:
+                        possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
+                self.move_robber = False
+                return possible_moves
 
             # We can always end our turn
             possible_moves = [Move(Move.END_TURN)]
@@ -396,20 +424,6 @@ class Player():
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='o'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='b'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='l'))
-
-            if robber:
-                possible_moves = []
-                spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
-                         (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
-                         (3, 1), (0, 0), (2, 2), (0, 1)]
-                for spot in spots:
-                    possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
-
-                    if possible_players != []:
-                        for p in possible_players:
-                            possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
-                    else:
-                        possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
             
             return possible_moves
 
@@ -652,7 +666,7 @@ class Player():
 
         # For propose and accept trade, we check elsewhere that these are legal moves
         if move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE or \
-        move.move_type == Move.CHOOSE_TRADER:
+        move.move_type == Move.CHOOSE_TRADER or move.move_type == Move.ROLL_DICE:
             return True
 
         return False
@@ -687,6 +701,9 @@ class Player():
             board.update_board(self, move)
             return 0
 
+        elif move.move_type == Move.ROLL_DICE:
+            self.has_rolled = True
+
         elif move.move_type == Move.ACCEPT_TRADE:
             board.traders.append(self)
             self.trades_conducted += 1
@@ -701,8 +718,8 @@ class Player():
                 self.resources[loss[0]] -= int(loss[1])
 
                 gain = board.pending_trade.resource
-                chosen.resources[gain[0]] += int(gain[1])
-                self.resources[gain[0]] -= int(gain[1])
+                chosen.resources[gain[0]] -= int(gain[1])
+                self.resources[gain[0]] += int(gain[1])
             board.pending_trade = False
 
         # For now, all players should randomly choose the
@@ -772,7 +789,7 @@ class Player():
 
         # Move robber.
         elif move.move_type == Move.MOVE_ROBBER:
-            pass
+            self.move_robber = False
 
         # Apply the changes to the board
         board.update_board(self, move)
@@ -927,8 +944,7 @@ class Player():
     # Don't update dev cards till end of turn
     # note i added players here because the MCTSAI needs info to make decisions
     # for what the other players might have.
-    def make_turn(self, board, deck, players, robber):
-
+    def make_turn(self, board, deck, players):
         # This should indicate whether a dev card has already been
         # played during this turn. If so, we can't play another one.
         dev_played = 0
@@ -937,11 +953,7 @@ class Player():
         # players to proposing 2 trades per turn
         trades_tried = 0
         while True:
-
-            move = self.decide_move(dev_played, board, deck, players, robber, trades_tried)
-            #robber should only be the first move
-            robber = 0
-
+            move = self.decide_move(dev_played, board, deck, players, trades_tried)
             move_made = self.make_move(move, board, deck, players)
             if move_made == 1:
                 if move.move_type == Move.PLAY_DEV:
@@ -952,7 +964,7 @@ class Player():
                     trade_player_index = self.player_num % len(board.players)
                     trade_player = board.players[trade_player_index]
                     while trade_player != self:
-                        trade_move = trade_player.decide_move(dev_played, board, deck, players, robber, trades_tried)
+                        trade_move = trade_player.decide_move(dev_played, board, deck, players, trades_tried)
                         move_made = trade_player.make_move(trade_move, board, deck, players)
                         trade_player_index = (trade_player_index + 1) % len(board.players)
                         trade_player = board.players[trade_player_index]
@@ -960,9 +972,9 @@ class Player():
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
                     return 1
-
             if move_made == 0:
                 break
+        self.has_rolled = False
 
 
     # Returns 1 if the move is valid, -1 if the dev card stack is empty

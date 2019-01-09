@@ -41,8 +41,8 @@ class RandomPlayer(Player):
         super().add_road(board, move)
 
 
-    def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
-        possible_moves = self.get_legal_moves(board, deck, dev_played, robber, 0, trades_tried)
+    def decide_move(self, dev_played, board, deck, players, trades_tried):
+        possible_moves = self.get_legal_moves(board, deck, dev_played, 0, trades_tried)
         #print(possible_moves[0].move_type)
         # We should choose a move randomly from the set of possible moves!
         return possible_moves[random.randint(0, len(possible_moves) - 1)]

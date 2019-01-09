@@ -44,11 +44,8 @@ class Human(Player):
 
     # A helper function for moving the robber in the case of rolling a 7
     def move_robber(self, board, spot, victim, deck, players):
-        while True:
-            move = Move(Move.MOVE_ROBBER, coord=spot, player=victim)
-            invalid = self.make_move(move, board, deck, players)
-            if invalid == 1:
-                return
+        move = Move(Move.MOVE_ROBBER, coord=spot, player=victim)
+        return move
 
 
     def choose_victim(self, board, move):
@@ -104,7 +101,7 @@ class Human(Player):
         return move
 
 
-    def decide_move(self, dev_played, board, deck, players, robber, trades_tried):
+    def decide_move(self, dev_played, board, deck, players, trades_tried):
         if board.round_num == 0 and len(self.settlements) == 0:
             return self.choose_spot_settlement(board)
         elif board.round_num == 0 and self.total_roads == 0:
@@ -118,6 +115,18 @@ class Human(Player):
         elif board.round_num == 1:
             return Move(Move.END_TURN)
 
+        if not self.has_rolled:
+            roll = random.randint(1, 6) + random.randint(1, 6)
+            if roll == 7:
+                self.move_robber = True
+            return Move(Move.ROLL_DICE, roll=roll, player=self)
+
+        if self.move_robber:
+            r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
+            spot = (r, c)
+            victim = self.choose_victim(board, spot)
+            return self.move_robber(board, spot, victim, deck, players)
+
         self.printResources()
         print('Moves available:')
         print('Enter {} for ending/passing your turn'.format(Move.END_TURN))
@@ -128,11 +137,7 @@ class Human(Player):
         print('Enter {} to play a dev card'.format(Move.PLAY_DEV))
         print('Enter {} to make a trade with bank'.format(Move.TRADE_BANK))
         print('Enter {} to propose a trade with other players'.format(Move.PROPOSE_TRADE))
-        if robber:
-            r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
-            spot = (r, c)
-            victim = self.choose_victim(board, spot)
-            self.move_robber(board, spot, victim, deck, players)
+
         move_type = int(input('Select move: '))
         if not ((move_type == Move.PLAY_DEV and dev_played > 0) or (move_type == Move.PROPOSE_TRADE and trades_tried > 1)):
 

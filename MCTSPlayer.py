@@ -45,9 +45,9 @@ class MCTSPlayer(Player):
         super().add_road(board, move)
 
 
-    def decide_move(self, dev_played, board, deck, players, robber, trades_tried, give=None, recieve=None):
+    def decide_move(self, dev_played, board, deck, players, trades_tried, give=None, recieve=None):
         AI = MCTSAI(board, self.time, players, deck, dev_played, \
-            self.player_num, robber, self.weighted, self.thompson, trades_tried, give, recieve)
+            self.player_num, self.weighted, self.thompson, trades_tried, give, recieve)
         #board1 = copy.deepcopy(board)
         move = AI.get_play()
         #print('move decided')

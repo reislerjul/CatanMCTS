@@ -477,6 +477,9 @@ class Board():
             self.active_player = self.players[next_player_index]
             return 0
 
+        elif move.move_type == Move.ROLL_DICE:
+          self.allocate_resources(move.roll, self.players)
+
         # Build a road
         elif move.move_type == Move.BUY_ROAD:
             road_coords = list(move.road)
