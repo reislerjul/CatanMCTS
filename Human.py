@@ -8,7 +8,7 @@ from utils import Card, Move
 
 
 class Human(Player):
-
+    # TODO: test
 
     def __init__(self, player_num):
         super().__init__(Player.HUMAN, player_num)
