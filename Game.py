@@ -92,7 +92,7 @@ class Game():
 
             # The other win condition will occur when 500 turns are played. 
             # Take the player with the highest number of points.
-            if self.num_rounds == 500:
+            if self.num_rounds == 4:
                 self.won = self.players[0]
                 max_points = self.players[0].calculate_vp()
                 for player in self.players[1:]:

@@ -169,7 +169,6 @@ class Player():
 
             # We need to roll at the beginning of the turn
             if not self.has_rolled:
-                self.has_rolled = True 
                 roll = random.randint(1, 6) + random.randint(1, 6)
                 if roll == 7:
                     self.move_robber = True
@@ -703,6 +702,9 @@ class Player():
 
         elif move.move_type == Move.ROLL_DICE:
             self.has_rolled = True
+            for player in players:
+                if player != self:
+                    player.has_rolled = False
 
         elif move.move_type == Move.ACCEPT_TRADE:
             board.traders.append(self)
@@ -952,6 +954,7 @@ class Player():
         # This should indicate the number of trades proposed. We will limit
         # players to proposing 2 trades per turn
         trades_tried = 0
+        self.has_rolled = False
         while True:
             move = self.decide_move(dev_played, board, deck, players, trades_tried)
             move_made = self.make_move(move, board, deck, players)

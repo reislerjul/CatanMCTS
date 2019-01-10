@@ -81,6 +81,7 @@ class MCTSAI():
                     key=lambda x: random.betavariate(x[0], x[1] - x[0]))[2]
 
     def get_play(self):
+        #print("__________________STARTING AI CALL__________________")
         state = self.nodes[0].state
         players = state.players
         board = state.board
@@ -102,11 +103,56 @@ class MCTSAI():
 
         start = datetime.datetime.utcnow()
         while datetime.datetime.utcnow() - start < self.timer:
-            print('running cycle')
+            #print('running cycle')
             self.run_cycle()
-        print('finished running cycles!')
+        #print('finished running cycles!')
 
         root = self.nodes[0]
+
+
+        # Breadth first traversal of the created MCTS tree
+        '''
+        queue = [root]        
+        while len(queue) > 0:
+            print("----NODE----")
+            curr_node = queue.pop(0)
+            print("parent id: " + str(curr_node.parent_id))
+            print("node id:" + str(curr_node.id))
+            print("active player: " + str(curr_node.active_player_num))
+            for move in curr_node.children.items():
+                print("**child**")
+                print("child id: " + str(move[1]))
+                print("move type: " + str(move[0].move_type))
+                queue.append(self.nodes[curr_node.children[move[0]]])
+        '''
+
+        # This will find the longest path in the tree and print it
+        '''
+        max_depth = 0
+        max_depth_node = None
+        for node in self.nodes:
+            if node.depth > max_depth:
+                max_depth = node.depth
+                max_depth_node = node
+        path = [max_depth_node]
+        while max_depth_node.id > 0:
+            max_depth_node = self.nodes[max_depth_node.parent_id]
+            path.append(max_depth_node)
+        print("_________PRINTING LONGEST PATH_________")
+        for node in path[::-1]:
+            print("----NODE----")
+            print("parent id: " + str(node.parent_id))
+            print("node id:" + str(node.id))
+            print("depth: " + str(node.depth))
+            print("active player: " + str(node.active_player_num))
+            print("round num: " + str(node.state.board.round_num))
+            print("has rolled dice: " + str(node.state.players[node.active_player_num - 1].has_rolled))
+            for move in node.children.items():
+                child = self.nodes[node.children[move[0]]]
+                if child in path:
+                    print("move type to get to child: " + str(move[0].move_type))
+        '''
+
         # Pick the move with the most wins.
         '''
         max_winrate = -1
@@ -147,18 +193,20 @@ class MCTSAI():
         move = self.thompson_sample(current_node)
 
         # TODO: fix this part later
-        print('____starting new loop_____')
+        #print('____starting new loop_____')
         while current_node.state.winner == 0 and move in current_node.children:
             current_node = self.nodes[current_node.children[move]]
-            print('active player num')
-            print(current_node.active_player_num)
+            #print('active player num')
+            #print(current_node.active_player_num)
+            #print('round num')
+            #print(current_node.state.board.round_num)
             if current_node.active_player_num > 0:
                 move = self.thompson_sample(current_node)
-                print("move type: " + str(move.move_type))
+                #print("move type: " + str(move.move_type))
             elif current_node.active_player_num == -2:
                 card = current_node.state.deck.peek()
                 move = Move(Move.DRAW_DEV, card_type=card, player=current_node.state.board.players[current_node.curr_player_num - 1])
-        print('after loop move: ' + str(move.move_type))
+        #print('after loop move: ' + str(move.move_type))
         if current_node.state.winner == 0:
             return current_node, move
         else:
@@ -204,6 +252,7 @@ class MCTSAI():
                         turn_player = len(state_copy.players)
                         active_player = len(state_copy.players)
                     state_copy.board.round_num += 1
+                state_copy.board.active_player = state_copy.players[active_player - 1]
             new_node = Node(len(self.nodes), node.id, active_player, turn_player, 
                 state_copy, node.depth + 1)
         self.nodes.append(new_node)
