@@ -198,7 +198,7 @@ class Player():
             if (self.resources['g'] > 0
                 and self.resources['w'] > 0
                 and self.resources['o'] > 0
-                and len(deck.cards_left) > 0):
+                and deck.peek != -1):
                 if weighted:
                     for i in range(10):
                         possible_moves.append(Move(Move.BUY_DEV))
