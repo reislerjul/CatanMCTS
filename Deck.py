@@ -10,7 +10,7 @@ from utils import Card
 class Deck():
 
     def __init__(self):
-        self.cards_left = 20
+        self.cards_left = ()
         self.initialize_stack()
 
     def initialize_stack(self):
@@ -23,35 +23,24 @@ class Deck():
                          + [Card.MONOPOLY] * 2
                          + [Card.YEAR_OF_PLENTY] * 2)
 
-    def take_card(self, player):
+    def take_card(self, card_index):
         '''
-        takes a random card and gives it to the player
+        pulls the dev card from the deck
         '''
-        num_cards = len(self.cards_left)
-        if num_cards > 0:
-            selected = random.randint(0, num_cards - 1)
-            card = self.cards_left[selected]
-            self.cards_left[selected] = self.cards_left[-1]
+        if card_index < len(self.cards_left):
+            card = self.cards_left[card_index]
+            self.cards_left[card_index] = self.cards_left[-1]
             del self.cards_left[-1]
-            player.dev_cards[card] += 1
-            return 1
+            return card
         return -1
-
-    def remove_card_type(self, card_type):
-        '''
-        removes a card of the given type
-        '''
-        index = self.cards_left.index(card_type)
-        self.cards_left[index] = self.cards_left[-1]
-        del self.cards_left[-1]
 
     def peek(self):
         '''
-        returns a random card in the deck
+        returns the index of a random card in the deck
         '''
         num_cards = len(self.cards_left)
         if num_cards > 0:
             selected = random.randint(0, num_cards - 1)
-            return self.cards_left[selected]
+            return selected
         return -1
 

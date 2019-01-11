@@ -4,4 +4,4 @@ def init():
     global DEBUG
     global POINTS_TO_WIN
     DEBUG = 0
-    POINTS_TO_WIN = 5
+    POINTS_TO_WIN = 10

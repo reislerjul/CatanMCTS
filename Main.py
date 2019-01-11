@@ -83,8 +83,8 @@ if __name__ == '__main__':
             'MCTS Num Roads', 'MCTS Num Knights Played', 'MCTS Num YOP Played',\
             'MCTS Num Monopoly Played', 'MCTS Num Road Builder Played', \
             'MCTS Num VP Dev Cards', 'MCTS Num Devs Bought', \
-            'MCTS Total Trades Conducted', 'MCTS Total Trades Proposed', \
-            'MCTS Trades Proposed Successfully', 'MCTS Trades Accepted']
+            'MCTS Total Trades Accepted', 'MCTS Total Trades Proposed', \
+            'MCTS Trades Proposed Successfully', 'Total Trades with Bank']
 
         with open(r'catan_results.csv', 'w') as f:
             writer = csv.writer(f)
@@ -141,10 +141,10 @@ if __name__ == '__main__':
                 row.append(MCTS_player.num_road_builder_played)
                 row.append(MCTS_player.dev_cards[Card.VICTORY_POINT])
                 row.append(MCTS_player.devs_bought)
-                row.append(MCTS_player.trades_conducted)
+                row.append(MCTS_player.trades_accepted)
                 row.append(MCTS_player.trades_proposed)
-                row.append(MCTS_player.trades_proposed_success)
-                row.append(MCTS_player.trades_conducted - MCTS_player.trades_proposed_success)
+                row.append(MCTS_player.trades_proposed_successfully)
+                row.append(MCTS_player.bank_trades)
             with open(r'catan_results.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(row)
