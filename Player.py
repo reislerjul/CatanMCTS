@@ -37,6 +37,8 @@ class Player():
         self.total_roads = 0
         self.has_rolled = False
         self.move_robber = False
+        self.dev_played = 0
+        self.trades_tried = 0
 
         # This stuff on bottom is used for bookkeeping
         self.num_yop_played = 0
@@ -56,20 +58,10 @@ class Player():
     def print_invalid_move(self):
         return False
 
-
-    def choose_spot(self, board, idx):
+    def decide_move(self, board, deck, players):
         return
-
-
-    def decide_move(self, dev_played, board, deck, players, trades_tried, give=None, receive=None):
-        return
-
 
     def trade_other_players(self):
-        return
-
-
-    def choose_trader(self, traders):
         return
 
     def to_string(self):
@@ -131,7 +123,7 @@ class Player():
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.
     # give_resource and get_resource should be None or maps of resources to their quanities
-    def get_legal_moves(self, board, deck, dev_played, weighted, trades_tried, give_resource=None, get_resource=None):
+    def get_legal_moves(self, board, deck, weighted):
 
             # Determine moves we can play and add them to the list.
             if board.round_num in [0, 1]:
@@ -153,19 +145,26 @@ class Player():
                     return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE)]
                 return [Move(Move.DECLINE_TRADE)]
 
+            # We've proposed a trade and now we need to ask other players to accept
+            if board.trade_step > 0 and board.trade_step < 1 + len(board.players):
+                trade_player_index = self.player_num % len(board.players)
+                trade_player = board.players[trade_player_index]
+                while trade_player != self:
+                    trade_move = trade_player.decide_move(board, deck, board.players)
+                    move_made = trade_player.make_move(trade_move, board, deck, board.players)
+                    trade_player_index = (trade_player_index + 1) % len(board.players)
+                    trade_player = board.players[trade_player_index]
+                return [Move(Move.ASK_TRADE, player=tuple(board.traders))]
+
             # check to see if we must select a trader
             if board.pending_trade:
                 moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
-                if len(moves) > 0:
-                    return moves
-                # Even if there aren't available traders, we want to return so that
-                # eventually the pending trade will be set to false
-                else:
-                    return [Move(Move.CHOOSE_TRADER, player=None)]
+                moves.append(Move(Move.CHOOSE_TRADER, player=None))
+                return moves
 
             # Can we play a dev card?
             possible_moves = []
-            if dev_played == 0:
+            if self.dev_played == 0:
                 for card in self.dev_cards.keys():
                     if self.dev_cards[card] > 0:
                         if card == Card.KNIGHT:
@@ -261,7 +260,6 @@ class Player():
                 roll = random.randint(1, 6) + random.randint(1, 6)
                 return possible_moves + [Move(Move.ROLL_DICE, roll=roll, player=self)]
 
-
             if self.move_robber:
                 possible_moves = []
                 spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
@@ -279,7 +277,7 @@ class Player():
                 return possible_moves
 
             # We can always end our turn
-            possible_moves = [Move(Move.END_TURN)]
+            possible_moves.append(Move(Move.END_TURN))
             
             # Can we buy dev card?
             card = deck.peek()
@@ -295,7 +293,7 @@ class Player():
             
 
             # Can we ask for a trade?
-            if trades_tried < 2:
+            if self.trades_tried < 2:
                 # For MCTSPlayer and RandomPlayer, this should be a bit different than the real game.
                 # we will assume that the trades they want to try are in the form of 1 type of resource
                 # for another type of resource instead of trading multiple types for 1
@@ -435,30 +433,6 @@ class Player():
               + self.longest_road
               + self.largest_army)
 
-
-    # A function that allows the players to choose their
-    # settlement and road placement at the beginning of the game
-    def choose_spot2(self, board, n_val):
-        p_settlements = [((3,1),(8,3)), ((10,2), (8,1)), ((2,3),(5,4)), ((4,2), (6,3)),]
-        p_roads = [(frozenset([(3,1), (2,1)]), frozenset([(8,3),(9,2)])),
-                   (frozenset([(10,2),(11,1)]), frozenset([(8,1),(7,1)])),
-                   (frozenset([(5,4),(6,4)]), frozenset([(2,3),(3,3)])),
-                   (frozenset([(4,2),(3,2)]), frozenset([(6,3),(5,3)]))]
-        self.settlements.append(p_settlements[n_val][0])
-        self.settlements.append(p_settlements[n_val][1])
-        for i, spot in enumerate(self.settlements):
-            state = board.coords[spot]
-            for p in state.ports:
-                self.ports.append(p)
-            if i == 1:
-                board.add_settlement(self, spot, True)
-            if i == 0:
-                board.add_settlement(self, spot)
-        road1 = p_roads[n_val][0]
-        road2 = p_roads[n_val][1]
-        self.add_road(board, road1)
-        self.add_road(board, road2)
-
     def add_settlement(self, board, loc, idx):
         # Add the settlement to the board and update player fields
         self.settlements.append(loc)
@@ -514,8 +488,13 @@ class Player():
                 return True
             return False
 
+        # This means that every other player should've been asked for the trade
+        if move.move_type == Move.ASK_TRADE and board.trade_step >= len(board.players):
+            return True
+
         if (not self.has_rolled and (move.move_type != move.ROLL_DICE and 
             move.move_type != move.PLAY_DEV)) and board.round_num > 1:
+            #print('shouldnt be here')
             return False
             
         if move.move_type == Move.BUY_ROAD:
@@ -674,6 +653,7 @@ class Player():
     # 0 if we are passing our turn, 1 if the move is a valid move,
     # -1 if the move is not legal
     def make_move(self, move, board, deck, players):
+        #print("move type: " + str(move.move_type))
         # Play corresponds to the information that the board may
         # need when a dev card is played
         play = None
@@ -694,6 +674,8 @@ class Player():
             print("Move type: " + str(move_type))
             print("Move: " + str(move))
         '''
+
+        #print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
         if move.move_type == Move.ROLL_DICE:
             self.has_rolled = True
             for player in players:
@@ -704,7 +686,6 @@ class Player():
 
         elif move.move_type == Move.ACCEPT_TRADE:
             self.trades_accepted += 1
-            board.traders.append(self)
 
         elif move.move_type == Move.CHOOSE_TRADER:
             chosen = move.player
@@ -718,12 +699,12 @@ class Player():
                 gain = board.pending_trade.resource
                 chosen.resources[gain[0]] -= int(gain[1])
                 self.resources[gain[0]] += int(gain[1])
-            board.pending_trade = False
 
         # For now, all players should randomly choose the
         # player to trade with from the list of players
         # that'll accept the trade
         elif move.move_type == Move.PROPOSE_TRADE:
+            self.trades_tried += 1
             self.trades_proposed += 1
 
         # Build a road
@@ -774,6 +755,8 @@ class Player():
 
         # Play a dev card
         elif move.move_type == Move.PLAY_DEV:
+            self.dev_played += 1
+            self.dev_played += 1
             self.dev_cards[move.card_type] -= 1
 
             play = self.dev_card_handler(board, deck, players, move)
@@ -798,6 +781,9 @@ class Player():
 
         # End turn
         if move.move_type == Move.END_TURN:
+            self.dev_played = 0
+            self.trades_tried = 0
+            self.has_rolled = False
             return 0
 
         return 1
@@ -952,38 +938,24 @@ class Player():
     # note i added players here because the MCTSAI needs info to make decisions
     # for what the other players might have.
     def make_turn(self, board, deck, players):
+        #print("______NEXT PLAYER_______")
         # This should indicate whether a dev card has already been
         # played during this turn. If so, we can't play another one.
-        dev_played = 0
 
         # This should indicate the number of trades proposed. We will limit
         # players to proposing 2 trades per turn
-        trades_tried = 0
-        self.has_rolled = False
+        #print("__________NEXT TURN__________")
         while True:
-            move = self.decide_move(dev_played, board, deck, players, trades_tried)
+            move = self.decide_move(board, deck, players)
             move_made = self.make_move(move, board, deck, players)
             if move_made == 1:
-                if move.move_type == Move.PLAY_DEV:
-                    dev_played += 1
-
-                if move.move_type == Move.PROPOSE_TRADE:
-                    trades_tried += 1
-                    trade_player_index = self.player_num % len(board.players)
-                    trade_player = board.players[trade_player_index]
-                    while trade_player != self:
-                        trade_move = trade_player.decide_move(dev_played, board, deck, players, trades_tried)
-                        move_made = trade_player.make_move(trade_move, board, deck, players)
-                        trade_player_index = (trade_player_index + 1) % len(board.players)
-                        trade_player = board.players[trade_player_index]
-
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
                     return 1
 
             if move_made == 0:
+                #print("move type: " + str(move.move_type))
                 break
-        self.has_rolled = False
 
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player

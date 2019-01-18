@@ -5,7 +5,7 @@ import settings
 # This class takes care of the game state of the Catan game 
 class Game():
 
-    def __init__(self, board, deck, players, verbose=True):
+    def __init__(self, board, deck, players, start_player=0, trading=False, verbose=True):
         self.board = board
         self.deck = deck
         self.num_players = len(players)
@@ -13,6 +13,12 @@ class Game():
         self.players = players
         self.num_rounds = 0
         self.verbose = verbose
+
+        # Only used when a game is created from MCTS algorithm. In MCTS algorithm, 
+        # the game may start from the middle of the round, so we don't want the 
+        # game to always start with the first player
+        self.start_player = start_player
+
 
     # This function represents the start of the game in which
     # each player chooses their spots. 
@@ -42,23 +48,26 @@ class Game():
     def round(self):
         # print the board state at the beginning of the round
         if self.verbose:
-            print(self.num_rounds)
+            print("****" + str(self.num_rounds) + "****") 
 
         if settings.DEBUG:
             self.board.print_board_state()
 
         self.board.round_num = self.num_rounds
         if self.num_rounds == 0:
-            for player in self.players:
+            for i in range(self.start_player, len(self.players)):
+                player = self.players[i]
                 self.board.active_player = player
                 player.make_turn(self.board, self.deck, self.players)
 
         elif self.num_rounds == 1:
-            for player in self.players[::-1]:
+            for i in range(1, len(self.players) + 1):
+                player = self.players[len(self.players) - i]
                 self.board.active_player = player
                 player.make_turn(self.board, self.deck, self.players)
         else:
-            for player in self.players:
+            for i in range(self.start_player, len(self.players)):
+                player = self.players[i]
                 self.board.active_player = player
                 
                 # If the player has won, the game is over.
@@ -71,13 +80,14 @@ class Game():
                     print("State of player after turn:")
                     player.printResources()
 
+        # We should only start in the middle of a round once when the MCTS algorithm calls the game
+        self.start_player = 0
 
         # print the board state at the end of the round
         if settings.DEBUG:
             self.board.print_board_state()
 
         self.num_rounds += 1
-
         return 0
 
 

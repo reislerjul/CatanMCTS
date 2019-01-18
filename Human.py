@@ -83,7 +83,7 @@ class Human(Player):
             legal_road = self.can_build_road(move, board)
         return move
 
-    def decide_move(self, dev_played, board, deck, players, trades_tried):
+    def decide_move(self, board, deck, players):
         if board.round_num == 0 and len(self.settlements) == 0:
             return self.choose_spot_settlement(board)
         elif board.round_num == 0 and self.total_roads == 0:
@@ -121,7 +121,7 @@ class Human(Player):
         print('Enter {} to propose a trade with other players'.format(Move.PROPOSE_TRADE))
 
         move_type = int(input('Select move: '))
-        if not ((move_type == Move.PLAY_DEV and dev_played > 0) or (move_type == Move.PROPOSE_TRADE and trades_tried > 1)):
+        if not ((move_type == Move.PLAY_DEV and self.dev_played > 0) or (move_type == Move.PROPOSE_TRADE and self.trades_tried > 1)):
 
             # Let's decide on the specific places to move in this
             # function so that we can abstract make_move to work for

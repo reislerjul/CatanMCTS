@@ -42,6 +42,8 @@ class Board():
         self.active_player = None
         self.round_num = 0
         self.pending_trade = False
+        self.traders = []
+        self.trade_step = 0
 
 
     def init_board(self, debug=False):
@@ -517,7 +519,7 @@ class Board():
 
         # Trade with bank
         elif move.move_type == Move.TRADE_BANK:
-            pass
+          pass
 
         # Move robber
         elif move.move_type == Move.MOVE_ROBBER:
@@ -529,3 +531,16 @@ class Board():
         elif move.move_type == Move.PROPOSE_TRADE:
             self.traders = []
             self.pending_trade = move
+            self.trade_step = 1
+
+        elif move.move_type == Move.ASK_TRADE or move.move_type == Move.ACCEPT_TRADE or move.move_type == Move.DECLINE_TRADE:
+            self.trade_step += 1
+
+        elif move.move_type == Move.CHOOSE_TRADER:
+            self.pending_trade = False
+            self.trade_step = 0
+
+        elif move.move_type == Move.ACCEPT_TRADE:
+            if player not in self.traders:
+                self.traders.append(player)
+

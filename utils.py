@@ -29,7 +29,8 @@ class Move():
     ROLL_DICE  = 10
     DECLINE_TRADE = 11
     CHOOSE_TRADER = 12
-    DISCARD_HALF = 13
+    ASK_TRADE = 13
+    DISCARD_HALF = 14
 
     def __init__(self,
                  move_type,
