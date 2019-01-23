@@ -506,7 +506,12 @@ class Board():
                 if move.player:
                     self.steal_from(move.player, player)
             elif move.card_type == Card.ROAD_BUILDING:
-                self.build_road(move.road[0], move.road[1], player)
+                if move.road != None:
+                    road_coords = list(move.road)
+                    self.build_road(road_coords[0], road_coords[1], player)
+                if move.road2 != None:
+                    road_coords = list(move.road2)
+                    self.build_road(road_coords[0], road_coords[1], player)
             elif move.card_type == Card.MONOPOLY:
                 total = 0
                 for p in self.players:
@@ -514,8 +519,6 @@ class Board():
                     total += count
                     p.resources[move.resource] = 0
                 player.resources[move.resource] = total
-            elif move.card_type == Card.YEAR_OF_PLENTY:
-                pass
 
         # Trade with bank
         elif move.move_type == Move.TRADE_BANK:

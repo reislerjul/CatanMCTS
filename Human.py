@@ -14,27 +14,6 @@ class Human(Player):
     def print_invalid_move(self):
         return True
 
-    def choose_spot(self, board, idx):
-        legal_settlement = False
-        legal_road = False
-
-        while not legal_settlement:
-
-            # Pick a legal spot
-            loc = self.build_settlement(board)
-            legal_settlement = self.can_build_settlement(loc, board)
-
-        # Add the settlement to the board and update player fields
-        super().add_settlement(board, loc, idx)
-
-        # Choose where to play a road
-        while not legal_road:
-            move = self.choose_road(board)
-            legal_road = self.can_build_road(move, board)
-
-        # build the road
-        super().add_road(board, move)
-
     def choose_victim(self, board, move):
         victim = None
 

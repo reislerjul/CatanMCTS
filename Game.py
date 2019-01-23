@@ -19,30 +19,6 @@ class Game():
         # game to always start with the first player
         self.start_player = start_player
 
-
-    # This function represents the start of the game in which
-    # each player chooses their spots. 
-    def place_spots(self, mode='beginner'):
-        if mode == 'beginner':
-            a = [0,1,2,3]
-            random.shuffle(a)
-            for i, player in enumerate(self.players):
-                player.choose_spot2(self.board, a[i])
-        else:
-            # Place first settlement/road
-            for player in self.players:
-                if settings.DEBUG:
-                    print("Choose first settlement for player " + str(player.player_num))
-                player.choose_spot(self.board, 1)
-    
-            # Place second settlement/road
-            for player in self.players[::-1]:
-                if settings.DEBUG:
-                    print("Choose second settlement for player " + str(player.player_num))
-                player.choose_spot(self.board, 2)
-    
-
-
     # This function represents a round in which each player 
     # has one turn.
     def round(self):
@@ -94,8 +70,7 @@ class Game():
     # This function is called from the main method and is used to 
     # play the game. The function calls the round function until 
     # a player has won. 
-    def play_game(self):
-        
+    def play_game(self):        
         while True:
             if self.round():
                 return self.won

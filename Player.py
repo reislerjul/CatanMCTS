@@ -140,7 +140,7 @@ class Player():
 
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
-            if board.active_player != self:
+            if board.active_player.player_num != self.player_num:
                 if self.can_accept_trade(board.pending_trade.resource):
                     return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE)]
                 return [Move(Move.DECLINE_TRADE)]
@@ -151,6 +151,8 @@ class Player():
                 trade_player = board.players[trade_player_index]
                 while trade_player != self:
                     trade_move = trade_player.decide_move(board, deck, board.players)
+                    if trade_move.card_type == 2:
+                        print("road builder move from trading spot?")
                     move_made = trade_player.make_move(trade_move, board, deck, board.players)
                     trade_player_index = (trade_player_index + 1) % len(board.players)
                     trade_player = board.players[trade_player_index]
@@ -200,45 +202,28 @@ class Player():
                                         if frozenset([road_source, sink]) not in possible_roads:
                                             possible_roads.add(frozenset([road_source, sink]))
 
-                                # We now have the possible single roads, so lets add those moves!
-                                for road in possible_roads:
-                                    if weighted:
-                                        for i in range(10):
-                                            possible_moves.append(Move(Move.PLAY_DEV,
-                                                                       card_type=card,
-                                                                       road=road))
-                                    else:
+                                if self.total_roads == 14:
+                                    # We now have the possible single roads, so lets add those moves!
+                                    for road in possible_roads:
                                         possible_moves.append(Move(Move.PLAY_DEV,
                                                                    card_type=card,
                                                                    road=road))
-
-                                if self.total_roads < 14:
+                                else:
                                     # check for additional possible roads
                                     possible_road_pairs = set()
                                     for road in possible_roads:
                                         for road_source in set(self.roads.keys()) | road:
                                             possible_sinks = board.coords[road_source].available_roads
-
                                             for sink in possible_sinks:
                                                 if road == frozenset([road_source, sink]):
                                                     continue
-                                                if frozenset([road, frozenset([road_source, sink])]) not in possible_road_pairs:
-                                                    possible_road_pairs.add(frozenset([road, frozenset([road_source, sink])]))
-
-                                    # We now have the possible road pairs, so lets add those moves!
-                                    for road_pair in possible_road_pairs:
-                                        roads = list(road_pair)
-                                        if weighted:
-                                            for i in range(10):
-                                                possible_moves.append(Move(Move.PLAY_DEV,
-                                                                           card_type=card,
-                                                                           road=roads[0],
-                                                                           road2=roads[1]))
-                                        else:
-                                            possible_moves.append(Move(Move.PLAY_DEV,
+                                                roads = frozenset([road, frozenset([road_source, sink])])
+                                                if roads not in possible_road_pairs:
+                                                    possible_road_pairs.add(roads)
+                                                    possible_moves.append(Move(Move.PLAY_DEV,
                                                                        card_type=card,
-                                                                       road=roads[0],
-                                                                       road2=roads[1]))
+                                                                       road=road,
+                                                                       road2=frozenset([road_source, sink])))
                         elif card == Card.MONOPOLY:
                             for r in board.resource_list:
                                 if weighted:
@@ -445,7 +430,7 @@ class Player():
             board.add_settlement(self, loc)
 
 
-    def add_road(self, board, road, update_board=True):
+    def add_road(self, board, road):
         coords = list(road)
         if coords[0] in self.roads:
             self.roads[coords[0]].append(coords[1])
@@ -455,8 +440,6 @@ class Player():
             self.roads[coords[1]].append(coords[0])
         else:
             self.roads[coords[1]] = [coords[0]]
-        if update_board:
-            board.build_road(coords[0], coords[1], self)
         self.total_roads += 1
 
 
@@ -503,7 +486,7 @@ class Player():
                 and road_coords[1] in board.coords
                 and self.total_roads < 15):
                 # Resources available to make a road
-                if self.resources['b'] >= 1 and self.resources['l'] >=1:
+                if self.resources['b'] >= 1 and self.resources['l'] >= 1:
                     state_o = board.coords[road_coords[0]]
                     # Does not overlap with already created road
                     if road_coords[1] in state_o.available_roads:
@@ -656,10 +639,15 @@ class Player():
         #print("move type: " + str(move.move_type))
         # Play corresponds to the information that the board may
         # need when a dev card is played
+
+        #print('move: ' + str(move.move_type) + ', round: ' + str(board.round_num) + 
+        #    ', player: ' + str(self.player_num) + ', has rolled: ' + str(self.has_rolled) + 
+        #    ', active player: ' + str(board.active_player.player_num))
         play = None
         if not self.check_legal_move(move, board, deck):
             #print(move.move_type)
-            #print('illegal move')
+            print('illegal move: ' + str(move.move_type) + ', round: ' + str(board.round_num))
+            #print("card: " + str(move.card_type))
             #print("round: " + str(board.round_num))
             #print(self.resources)
             #print(len(self.settlements))
@@ -674,13 +662,9 @@ class Player():
             print("Move type: " + str(move_type))
             print("Move: " + str(move))
         '''
-
         #print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
         if move.move_type == Move.ROLL_DICE:
             self.has_rolled = True
-            for player in players:
-                if player != self:
-                    player.has_rolled = False
             if move.roll == 7:
                 self.move_robber = True
 
@@ -711,7 +695,7 @@ class Player():
         elif move.move_type == Move.BUY_ROAD:
             self.resources['b'] -= 1
             self.resources['l'] -= 1
-            self.add_road(board, move.road, update_board=False)
+            self.add_road(board, move.road)
 
         # Build a settlement
         elif move.move_type == Move.BUY_SETTLEMENT:
@@ -758,14 +742,7 @@ class Player():
             self.dev_played += 1
             self.dev_played += 1
             self.dev_cards[move.card_type] -= 1
-
-            play = self.dev_card_handler(board, deck, players, move)
-            move.card_type = play
-
-            # If the dev card is road building, we've covered this in
-            # the dev card handler, so we can just return
-            if move.card_type == Card.ROAD_BUILDING:
-                return 1
+            self.dev_card_handler(board, deck, players, move)
 
         # Trade with bank
         elif move.move_type == Move.TRADE_BANK:
@@ -785,23 +762,7 @@ class Player():
             self.trades_tried = 0
             self.has_rolled = False
             return 0
-
         return 1
-
-
-    # A helper function to make sure that possible roads exist for the player. If
-    # they don't, we have to pass from road building
-    def possible_roads_build(self, board):
-        if self.total_roads > 14:
-            return False
-        for road_source in self.roads:
-            possible_sinks = board.coords[road_source].available_roads
-
-            for sink in possible_sinks:
-                return True
-
-        return False
-
 
     # A helper function to handle playing dev cards
     def dev_card_handler(self, board, deck, players, move):
@@ -809,61 +770,24 @@ class Player():
         # Handle the knight
         if move.card_type == Card.KNIGHT:
             self.num_knights_played += 1
-            spot = move.coord
-            victim = move.player
-            return (spot, victim)
-
         # Handle road builder; give the player resources for 2 roads then call
         # make_move for building roads until they place 2 valid roads
-        if move.card_type == Card.ROAD_BUILDING:
+        elif move.card_type == Card.ROAD_BUILDING:
             self.num_road_builder_played += 1
-
-            # Take care of cases where too many roads are already built
-            if self.total_roads == 15:
-                return None
-            elif self.total_roads == 14:
-                if not self.possible_roads_build(board):
-                    return None
-                self.resources['l'] += 1
-                self.resources['b'] += 1
-                spot = move.road
-                # If make move fails, we should subtract the resources back
-                if self.make_move(move, board, deck, players) == -1:
-                    self.resources['l'] -= 1
-                    self.resources['b'] -= 1
-                return None
-            else:
-                if not self.possible_roads_build(board):
-                    return None
-                self.resources['l'] += 2
-                self.resources['b'] += 2
-                spot = move.road
-
-
-                if self.make_move(move, board, deck, players) == -1:
-                    self.resources['l'] -= 1
-                    self.resources['b'] -= 1
-
-                # TODO: build 2nd road
-                return None
-
+            if move.road != None:
+                self.add_road(board, move.road)
+            if move.road2 != None:
+                self.add_road(board, move.road2)
         # year of plenty; choose 2 cards to receive
-        possible_cards = ['w', 'l', 'g', 'b', 'o']
-        if move.card_type == Card.YEAR_OF_PLENTY:
+        elif move.card_type == Card.YEAR_OF_PLENTY:
+            possible_cards = ['w', 'l', 'g', 'b', 'o']
             self.num_yop_played += 1
-
-            card1 = move.resource
-            card2 = move.resource2
-
-            self.resources[card1] += 1
-            self.resources[card2] += 1
-            return None
+            self.resources[move.resource] += 1
+            self.resources[move.resource2] += 1
 
         # monopoly: choose a card and steal it from all other players
-        if move.card_type == Card.MONOPOLY:
+        elif move.card_type == Card.MONOPOLY:
             self.num_monopoly_played += 1
-            card_choice = move.resource
-            return card_choice
 
 
     # A helper function to decrement the resources correctly if the trade

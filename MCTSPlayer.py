@@ -17,9 +17,9 @@ class MCTSPlayer(Player):
         self.thompson = thompson
 
     def decide_move(self, board, deck, players):
-        AI = MCTSAI(board, self.time, players, deck, \
+        AI = MCTSAI(board, self.time, players, deck, 
+            board.active_player.player_num, 
             self.player_num, self.weighted, self.thompson)
-        #board1 = copy.deepcopy(board)
         move = AI.get_play()
         #print('move decided')
         return move

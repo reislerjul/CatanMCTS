@@ -30,10 +30,10 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, players, deck, player_num, weighted, thompson):
+    def __init__(self, board, time, players, deck, active_player_num, curr_player_num, weighted, thompson):
         # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
-        self.nodes = [Node(0, -1, player_num, player_num, State(players, board, deck), 0)]
+        self.nodes = [Node(0, -1, active_player_num, curr_player_num, State(players, board, deck), 0)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -86,10 +86,11 @@ class MCTSAI():
             return legal[0]
 
         start = datetime.datetime.utcnow()
-        while datetime.datetime.utcnow() - start < self.timer:
+        #while datetime.datetime.utcnow() - start < self.timer:
             #print('running cycle')
-            self.run_cycle()
+         #   self.run_cycle()
         #print('finished running cycles!')
+        self.run_cycle()
 
         root = self.nodes[0]
 
@@ -174,6 +175,7 @@ class MCTSAI():
 
 
     def run_selection(self):
+        #print("start of selection")
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
 
@@ -196,6 +198,7 @@ class MCTSAI():
             return current_node, None
 
     def run_expansion(self, node, move):
+        #print("start of expansion")
         state_copy = copy.deepcopy(node.state)
         player = state_copy.players[node.active_player_num - 1]
         turn_player = node.active_player_num
@@ -207,7 +210,7 @@ class MCTSAI():
             if move.move_type == move.ROLL_DICE:
                 player.has_rolled = True
             elif move.move_type in {Move.ACCEPT_TRADE, Move.DECLINE_TRADE}:
-                turn_player = (node.active_player_num % len(state_copy.players)) + 1
+                turn_player = (node.curr_player_num % len(state_copy.players)) + 1
         else:
             # Update the round number. Also, on the second round, the order of play is reverse
             if state_copy.board.round_num != 1:
