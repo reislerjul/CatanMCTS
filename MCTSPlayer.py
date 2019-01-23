@@ -21,7 +21,6 @@ class MCTSPlayer(Player):
             board.active_player.player_num, 
             self.player_num, self.weighted, self.thompson)
         move = AI.get_play()
-        #print('move decided')
         return move
 
     def to_string(self):

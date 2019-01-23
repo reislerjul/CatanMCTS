@@ -50,6 +50,10 @@ class Player():
         self.trades_accepted = 0 
         self.bank_trades = 0
 
+        # Keep track of the total rounds the player has had and the total number of moves. 
+        # This doesn't include invalid moves or ending the turn 
+        self.avg_moves_round = [0, 0]
+
 
     ############################## FUNCTIONS OVERRIDEN BY CHILD CLASSES ##############################
 
@@ -141,6 +145,8 @@ class Player():
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
             if board.active_player.player_num != self.player_num:
+                #print("trading active player: " + str(board.active_player.player_num) + 
+                #    ", turn player: " + str(self.player_num))
                 if self.can_accept_trade(board.pending_trade.resource):
                     return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE)]
                 return [Move(Move.DECLINE_TRADE)]
@@ -151,8 +157,6 @@ class Player():
                 trade_player = board.players[trade_player_index]
                 while trade_player != self:
                     trade_move = trade_player.decide_move(board, deck, board.players)
-                    if trade_move.card_type == 2:
-                        print("road builder move from trading spot?")
                     move_made = trade_player.make_move(trade_move, board, deck, board.players)
                     trade_player_index = (trade_player_index + 1) % len(board.players)
                     trade_player = board.players[trade_player_index]
@@ -639,6 +643,7 @@ class Player():
         #print("move type: " + str(move.move_type))
         # Play corresponds to the information that the board may
         # need when a dev card is played
+        #print("trying to make move: " + str(move.move_type))
 
         #print('move: ' + str(move.move_type) + ', round: ' + str(board.round_num) + 
         #    ', player: ' + str(self.player_num) + ', has rolled: ' + str(self.has_rolled) + 
@@ -646,7 +651,9 @@ class Player():
         play = None
         if not self.check_legal_move(move, board, deck):
             #print(move.move_type)
-            print('illegal move: ' + str(move.move_type) + ', round: ' + str(board.round_num))
+            print('illegal move: ' + str(move.move_type) + ', round: ' + str(board.round_num) + 
+                ', player: ' + str(self.player_num))
+            print('active player: ' + str(board.active_player.player_num))
             #print("card: " + str(move.card_type))
             #print("round: " + str(board.round_num))
             #print(self.resources)
@@ -672,6 +679,7 @@ class Player():
             self.trades_accepted += 1
 
         elif move.move_type == Move.CHOOSE_TRADER:
+            #print("choosing traders")
             chosen = move.player
 
             if chosen != None:
@@ -758,6 +766,7 @@ class Player():
 
         # End turn
         if move.move_type == Move.END_TURN:
+            #print("ending turn")
             self.dev_played = 0
             self.trades_tried = 0
             self.has_rolled = False
@@ -869,10 +878,13 @@ class Player():
         # This should indicate the number of trades proposed. We will limit
         # players to proposing 2 trades per turn
         #print("__________NEXT TURN__________")
+        self.avg_moves_round[0] += 1
         while True:
             move = self.decide_move(board, deck, players)
             move_made = self.make_move(move, board, deck, players)
             if move_made == 1:
+                self.avg_moves_round[1] += 1
+
                 # Did the move cause us to win?
                 if self.calculate_vp() >= settings.POINTS_TO_WIN:
                     return 1

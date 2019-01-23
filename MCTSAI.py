@@ -86,11 +86,13 @@ class MCTSAI():
             return legal[0]
 
         start = datetime.datetime.utcnow()
-        #while datetime.datetime.utcnow() - start < self.timer:
+        while datetime.datetime.utcnow() - start < self.timer:
             #print('running cycle')
-         #   self.run_cycle()
+            self.run_cycle()
         #print('finished running cycles!')
-        self.run_cycle()
+        #print("____CYCLE STARTING____")
+        #self.run_cycle()
+        #print("____CYCLE ENDING____")
 
         root = self.nodes[0]
 
@@ -163,6 +165,10 @@ class MCTSAI():
 
     def run_cycle(self):
         node, move = self.run_selection()
+        #print("selected move: " + str(move.move_type))
+        #print("node active player: " + str(node.state.board.active_player.player_num))
+        #print("node turn player: " + str(node.curr_player_num))
+
 
         if not move:
             # winner has already been found
@@ -200,8 +206,8 @@ class MCTSAI():
     def run_expansion(self, node, move):
         #print("start of expansion")
         state_copy = copy.deepcopy(node.state)
-        player = state_copy.players[node.active_player_num - 1]
-        turn_player = node.active_player_num
+        player = state_copy.players[node.curr_player_num - 1]
+        turn_player = node.curr_player_num
         active_player = node.active_player_num
         if move.move_type != Move.END_TURN:
             player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)

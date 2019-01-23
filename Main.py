@@ -60,7 +60,6 @@ if __name__ == '__main__':
     with open(filename) as f:
         data = json.load(f)
 
-    MCTS_player = None
     for player in data["players"]:
         if player["type"] == "human":
             player_list.append(Human(index))
@@ -74,17 +73,18 @@ if __name__ == '__main__':
 
     record_file = int(data["record_data"])
     if record_file:
-        fields=['Winner Type','Winner Num','First Player Type', \
-            'First Player VP', 'Second Player Type', 'Second Player VP',\
-            'Third Player Type', 'Third Player VP', 'Fourth Player Type', \
-            'Fourth Player VP', 'Number Rounds', 'Largest Army Player', \
-            'Largest Army Size', 'Longest Road Player', 'Longest Road Size', \
-            'MCTS Num Ports', 'MCTS Num Cities', 'MCTS Num Settlements', \
-            'MCTS Num Roads', 'MCTS Num Knights Played', 'MCTS Num YOP Played',\
-            'MCTS Num Monopoly Played', 'MCTS Num Road Builder Played', \
-            'MCTS Num VP Dev Cards', 'MCTS Num Devs Bought', \
-            'MCTS Total Trades Accepted', 'MCTS Total Trades Proposed', \
-            'MCTS Trades Proposed Successfully', 'Total Trades with Bank']
+        fields=['Winner Type','Winner Num','First Player Type', 
+            'First Player VP', 'Second Player Type', 'Second Player VP',
+            'Third Player Type', 'Third Player VP', 'Fourth Player Type', 
+            'Fourth Player VP', 'Number Rounds', 'Largest Army Player', 
+            'Largest Army Size', 'Longest Road Player', 'Longest Road Size', 
+            'MCTS Num Ports', 'MCTS Num Cities', 'MCTS Num Settlements', 
+            'MCTS Num Roads', 'MCTS Num Knights Played', 'MCTS Num YOP Played',
+            'MCTS Num Monopoly Played', 'MCTS Num Road Builder Played', 
+            'MCTS Num VP Dev Cards', 'MCTS Num Devs Bought', 
+            'MCTS Total Trades Accepted', 'MCTS Total Trades Proposed', 
+            'MCTS Trades Proposed Successfully', 'Total Trades with Bank', 
+            'Average Move per Turn']
 
         with open(r'catan_results.csv', 'w') as f:
             writer = csv.writer(f)
@@ -93,6 +93,7 @@ if __name__ == '__main__':
     num_games = int(data["num_games"])
     shuffle = int(data["shuffle_order"])
     for i in range(num_games):
+        MCTS_player = None
         if shuffle:
             random.shuffle(player_list)
 
@@ -105,6 +106,7 @@ if __name__ == '__main__':
             elif player_list[j].player_type == Player.MCTS_AI:
                 player_list[j] = MCTSPlayer(j + 1, player_list[j].time, \
                     player_list[j].weighted, player_list[j].thompson)
+                MCTS_player = player_list[j]
 
         winner, num_rounds, board = run_game(player_list)
         if record_file:
@@ -145,6 +147,7 @@ if __name__ == '__main__':
                 row.append(MCTS_player.trades_proposed)
                 row.append(MCTS_player.trades_proposed_successfully)
                 row.append(MCTS_player.bank_trades)
+                row.append(float(MCTS_player.avg_moves_round[1]) / MCTS_player.avg_moves_round[0])
             with open(r'catan_results.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(row)
