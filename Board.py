@@ -497,10 +497,6 @@ class Board():
         elif move.move_type == Move.BUY_CITY:
             self.upgrade_settlement(player, move.coord)
 
-        # Draw a dev card
-        elif move.move_type == Move.BUY_DEV:
-            pass
-
         # Play a dev card
         elif move.move_type == Move.PLAY_DEV:
             if move.card_type == Card.KNIGHT:
@@ -521,10 +517,6 @@ class Board():
                     total += count
                     p.resources[move.resource] = 0
                 player.resources[move.resource] = total
-
-        # Trade with bank
-        elif move.move_type == Move.TRADE_BANK:
-          pass
 
         # Move robber
         elif move.move_type == Move.MOVE_ROBBER:

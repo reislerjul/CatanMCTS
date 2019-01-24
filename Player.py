@@ -657,7 +657,7 @@ class Player():
             #print("round: " + str(board.round_num))
             #print(self.resources)
             #print(len(self.settlements))
-            if player.player_type == Player.HUMAN:
+            if self.player_type == Player.HUMAN:
                 print("Illegal move!")
             return -1
 
@@ -880,7 +880,7 @@ class Player():
             print("Player {} has resources and devs:".format(player.player_num))
             for r in board.resource_list:
                 print('    {}: {}'.format(r, player.resources[r]))
-            for dev in self.dev_cards.items():
+            for dev in player.dev_cards.items():
                 print('    {}: {}'.format(dev[0], dev[1]))
         print("settlements: " + str(self.settlements))
         print("cities: " + str(self.cities))

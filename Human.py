@@ -144,7 +144,8 @@ class Human(Player):
                     return Move(Move.BUY_CITY, coord=self.build_city(board))
 
                 elif move_type == Move.BUY_DEV:
-                    return Move(Move.BUY_DEV)
+                    card = deck.peek()
+                    return Move(Move.BUY_DEV, card_type=card, player=self.player_num)
 
                 elif move_type == Move.PLAY_DEV:
 
@@ -169,7 +170,7 @@ class Human(Player):
                     return new_move
 
                 elif move_type == Move.TRADE_BANK:
-                    return Move(Move.TRADE_BANK, self.trade(board))
+                    return self.trade(board)
 
                 elif move_type == Move.PROPOSE_TRADE:
                     maps = self.trade_other_players()
@@ -212,12 +213,10 @@ class Human(Player):
         return move
 
     def trade(self, board):
-        numCards = input("How many cards do you want to trade?")
+        numCards = int(input("How many cards do you want to trade?"))
         card = input("Lumber, Ore, Wool, Brick, or Grain? (Input form: l, o, w, b, g)")
-        oldRes = (numCards, card)
         newRes = input("Which resource would you like in exchange? (Input form: l, o, w, b, g)")
-        move = (oldRes, newRes)
-        return move     # Tuple of tuple: Trade of multiple cards for one card
+        return Move(Move.TRADE_BANK, num_trade=numCards, give_resource=card, resource=newRes)    
 
     def trade_other_players(self):
         while True:
