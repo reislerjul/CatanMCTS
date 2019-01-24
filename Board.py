@@ -201,7 +201,7 @@ class Board():
         coords[(8, 3)] = Coord((8, 3),
                                resource_locs=[(3, 2), (3, 3), (4, 2)],
                                neighbours=[(7, 3), (9, 2), (9, 3)])
-        coords[(8, 4)] = Coord((8, 0),
+        coords[(8, 4)] = Coord((8, 4),
                                resource_locs=[(3, 3)],
                                ports={'2, b'},
                                neighbours=[(7, 4), (9, 3)])
@@ -247,6 +247,8 @@ class Board():
                                 resource_locs=[(4, 2)],
                                 neighbours=[(10, 2), (10, 3)])
 
+
+        '''
         if debug == True:
             for key, val in coords.items():
                 if val.available_roads != val.neighbours:
@@ -256,7 +258,7 @@ class Board():
                         a = self.resources[i]
                     except IndexError as e:
                         print(key, e)
-
+        '''
         return coords
 
     # Print the board state
@@ -538,12 +540,10 @@ class Board():
 
         elif move.move_type == Move.ASK_TRADE or move.move_type == Move.ACCEPT_TRADE or move.move_type == Move.DECLINE_TRADE:
             self.trade_step += 1
+            if move.move_type == Move.ACCEPT_TRADE:
+                if player not in self.traders:
+                    self.traders.append(player)
 
         elif move.move_type == Move.CHOOSE_TRADER:
             self.pending_trade = False
             self.trade_step = 0
-
-        elif move.move_type == Move.ACCEPT_TRADE:
-            if player not in self.traders:
-                self.traders.append(player)
-

@@ -26,8 +26,10 @@ class Game():
         if self.verbose:
             print("****" + str(self.num_rounds) + "****") 
 
+        '''
         if settings.DEBUG:
             self.board.print_board_state()
+        '''
 
         self.board.round_num = self.num_rounds
         if self.num_rounds == 0:
@@ -51,17 +53,21 @@ class Game():
                     self.won = player
                     return 1
 
+                '''
                 # Player's state after their turn
                 if settings.DEBUG:
                     print("State of player after turn:")
                     player.printResources()
+                '''
 
         # We should only start in the middle of a round once when the MCTS algorithm calls the game
         self.start_player = 0
 
+        '''
         # print the board state at the end of the round
         if settings.DEBUG:
             self.board.print_board_state()
+        '''
 
         self.num_rounds += 1
         return 0

@@ -511,6 +511,8 @@ class Player():
                 and self.resources['g'] >= 1
                 and self.resources['w'] >=1):
                 #print('have resources')
+                if move.coord not in board.coords:
+                    return False
                 state = board.coords[move.coord]
 
                # Does not overlap with already created settlement
@@ -651,14 +653,11 @@ class Player():
         play = None
         if not self.check_legal_move(move, board, deck):
             #print(move.move_type)
-            print('illegal move: ' + str(move.move_type) + ', round: ' + str(board.round_num) + 
-                ', player: ' + str(self.player_num))
-            print('active player: ' + str(board.active_player.player_num))
             #print("card: " + str(move.card_type))
             #print("round: " + str(board.round_num))
             #print(self.resources)
             #print(len(self.settlements))
-            if self.print_invalid_move():
+            if player.player_type == Player.HUMAN:
                 print("Illegal move!")
             return -1
 
@@ -670,6 +669,9 @@ class Player():
             print("Move: " + str(move))
         '''
         #print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
+        print("")
+        print("printing move:")
+        print(str(move))
         if move.move_type == Move.ROLL_DICE:
             self.has_rolled = True
             if move.roll == 7:
@@ -871,6 +873,36 @@ class Player():
     # note i added players here because the MCTSAI needs info to make decisions
     # for what the other players might have.
     def make_turn(self, board, deck, players):
+        print("_____PLAYER " + str(self.player_num) + " TURN_____")
+        print("STATE OF BOARD BEFORE TURN")
+        print("PLAYERS")
+        for player in board.players:
+            print("Player {} has resources and devs:".format(player.player_num))
+            for r in board.resource_list:
+                print('    {}: {}'.format(r, player.resources[r]))
+            for dev in self.dev_cards.items():
+                print('    {}: {}'.format(dev[0], dev[1]))
+        print("settlements: " + str(self.settlements))
+        print("cities: " + str(self.cities))
+        print("ports: " + str(self.ports))
+        print("roads: " + str(self.roads))
+        print("BOARD")
+        print("robber: " + str(board.robber))
+        if board.largest_army_player != None:
+            print("largest army player: " + str(board.largest_army_player.player_num))
+        if board.longest_road_player != None:
+            print("longest road player: " + str(board.longest_road_player.player_num))
+        for coord in board.coords.values():
+            if coord.player != None:
+                print("COORD")
+                print("location: " + str(coord.location))
+                print("settlement: " + str(coord.settlement))
+                print("player: " + str(coord.player.player_num))
+                print("roads: " + str(coord.roads))
+                print("available roads: " + str(coord.available_roads))
+                print("")
+
+
         #print("______NEXT PLAYER_______")
         # This should indicate whether a dev card has already been
         # played during this turn. If so, we can't play another one.
@@ -881,17 +913,18 @@ class Player():
         self.avg_moves_round[0] += 1
         while True:
             move = self.decide_move(board, deck, players)
-            move_made = self.make_move(move, board, deck, players)
-            if move_made == 1:
-                self.avg_moves_round[1] += 1
+            if not isinstance(move, int):
+                move_made = self.make_move(move, board, deck, players)
+                if move_made == 1:
+                    self.avg_moves_round[1] += 1
 
-                # Did the move cause us to win?
-                if self.calculate_vp() >= settings.POINTS_TO_WIN:
-                    return 1
+                    # Did the move cause us to win?
+                    if self.calculate_vp() >= settings.POINTS_TO_WIN:
+                        return 1
 
-            if move_made == 0:
-                #print("move type: " + str(move.move_type))
-                break
+                if move_made == 0:
+                    #print("move type: " + str(move.move_type))
+                    break
 
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player
