@@ -43,7 +43,7 @@ class Human(Player):
         return (r, c)
 
     def choose_card(self, string):
-        full_string = "Choose " + string + " card"
+        full_string = "Choose " + string + " card: (w, o, g, b, l)"
         return input(full_string)
 
     def choose_spot_settlement(self, board):
@@ -68,7 +68,6 @@ class Human(Player):
         return move
 
     def decide_move(self, board, deck, players):
-        try:
             if board.round_num == 0 and len(self.settlements) == 0:
                 return self.choose_spot_settlement(board)
             elif board.round_num == 0 and self.total_roads == 0:
@@ -83,7 +82,6 @@ class Human(Player):
                 return Move(Move.END_TURN)
 
             if board.active_player.player_num != self.player_num:
-                print("deciding to accept trade")
                 if self.should_accept_trade(board.pending_trade.give_resource, 
                     board.pending_trade.resource, board, deck, players):
                     return Move(Move.ACCEPT_TRADE)
@@ -149,10 +147,9 @@ class Human(Player):
 
                 elif move_type == Move.PLAY_DEV:
 
-                    new_move = Move(Move.PLAY_DEV, self.playDevCard(board))
-                    dev_card = int(input("Choose dev card to play: (0 for Knight, \
-                        2 for Road Building, 3 for Monopoly, 4 for Year of Plenty)"))
-                    new_move.card_type = dev_card
+                    move = Move(Move.PLAY_DEV)
+                    dev_card = int(input("Choose dev card to play: (0 for Knight, 2 for Road Building, 3 for Monopoly, 4 for Year of Plenty)"))
+                    move.card_type = dev_card
                     if dev_card == Card.KNIGHT:
                         spot = self.choose_robber_position(board, players, deck)
                         victim = self.choose_victim(board, spot)
@@ -167,7 +164,7 @@ class Human(Player):
                     elif dev_card == Card.YEAR_OF_PLENTY:
                         move.resource = self.choose_card("Year of Plenty")
                         move.resource2 = self.choose_card("Year of Plenty")
-                    return new_move
+                    return move
 
                 elif move_type == Move.TRADE_BANK:
                     return self.trade(board)
@@ -181,7 +178,6 @@ class Human(Player):
             else:
                 print("You have already played a dev card in this round or have reached maximum allowed trades")
             return -1
-        except:
             print("The following error was thrown: ", sys.exc_info()[0])
             print("please retry the move")
             return -1
@@ -208,7 +204,7 @@ class Human(Player):
         return move     # Tuple: one coordinate
 
     def playDevCard(self, board):
-        move = input("Which dev card do you want to play (Choose from form: Knight, Road Building, Monopoly, Year of Plenty): ")
+        move = input("Which dev card do you want to play (Choose from: Knight, Road Building, Monopoly, Year of Plenty): ")
         print('Playing dev card ...')
         return move
 
