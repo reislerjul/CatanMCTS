@@ -125,7 +125,6 @@ class Human(Player):
 
             move_type = int(input('Select move: '))
             if not ((move_type == Move.PLAY_DEV and self.dev_played > 0) or (move_type == Move.PROPOSE_TRADE and self.trades_tried > 1)):
-
                 # Let's decide on the specific places to move in this
                 # function so that we can abstract make_move to work for
                 # both AI and human players
@@ -146,7 +145,6 @@ class Human(Player):
                     return Move(Move.BUY_DEV, card_type=card, player=self.player_num)
 
                 elif move_type == Move.PLAY_DEV:
-
                     move = Move(Move.PLAY_DEV)
                     dev_card = int(input("Choose dev card to play: (0 for Knight, 2 for Road Building, 3 for Monopoly, 4 for Year of Plenty)"))
                     move.card_type = dev_card
@@ -156,14 +154,16 @@ class Human(Player):
                         move.coord = spot
                         move.player = victim
                     elif dev_card == Card.ROAD_BUILDING:
-                        move.road = self.choose_road(board, deck, players)
-                        move.road2 = self.choose_road(board, deck, players)
+                        move.road = self.choose_road(board)
+                        move.road2 = self.choose_road(board)
                     elif dev_card == Card.MONOPOLY:
                         card = self.choose_card("Monopoly")
                         move.resource = card
                     elif dev_card == Card.YEAR_OF_PLENTY:
                         move.resource = self.choose_card("Year of Plenty")
                         move.resource2 = self.choose_card("Year of Plenty")
+                    elif dev_card == Card.VICTORY_POINT:
+                        return -1
                     return move
 
                 elif move_type == Move.TRADE_BANK:

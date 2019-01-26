@@ -1,3 +1,5 @@
+import numbers 
+
 class Card():
     '''
     Represents each of the card types
@@ -62,7 +64,10 @@ class Move():
         s += ', road: {}'.format(self.road)
         s += ', road 2: {}'.format(self.road2)
         s += ', coord: {}'.format(self.coord)
-        s += ', player: {}'.format(self.player)
+        if isinstance(self.player, numbers.Number) or self.player == None or isinstance(self.player, tuple):
+            s += ', player: {}'.format(self.player)
+        else:
+            s += ', player: {}'.format(self.player.player_num)
         s += ', num_trade: {}'.format(self.num_trade)
         s += ', give_resource: {}'.format(self.give_resource)
         s += ', resource: {}'.format(self.resource)
