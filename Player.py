@@ -552,7 +552,7 @@ class Player():
             # Dev card available and not a victory point card
 
             if move.card_type in self.dev_cards.keys() \
-                    and self.dev_cards[move.card_type] > 0:
+                    and self.dev_cards[move.card_type] > 0 and self.dev_played == 0:
                 if move.card_type == Card.KNIGHT:
                     spots = {(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0),
                              (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3),
@@ -749,7 +749,6 @@ class Player():
 
         # Play a dev card
         elif move.move_type == Move.PLAY_DEV:
-            self.dev_played += 1
             self.dev_played += 1
             self.dev_cards[move.card_type] -= 1
             self.dev_card_handler(board, deck, players, move)
