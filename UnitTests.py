@@ -99,6 +99,22 @@ class TestPlayDev(unittest.TestCase):
             self.assertEqual(player_list[0].resources['b'], 4)
             self.assertEqual(player_list[0].resources['g'], 2)
 
+    def test_robber_on_spot(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+        player_list[0].settlements.append((0, 0))
+        board.add_settlement(player_list[0], (0, 0))
+        board.move_robber((0, 0))
+        board.allocate_resources(11, player_list)
+        self.assertEqual(player_list[0].resources['w'], 2)
+        self.assertEqual(player_list[0].resources['o'], 0)
+        self.assertEqual(player_list[0].resources['l'], 4)
+        self.assertEqual(player_list[0].resources['b'], 4)
+        self.assertEqual(player_list[0].resources['g'], 2)        
 
 if __name__ == '__main__':
     unittest.main()

@@ -29,8 +29,7 @@ class Deck():
         '''
         if card_index < len(self.cards_left):
             card = self.cards_left[card_index]
-            self.cards_left[card_index] = self.cards_left[-1]
-            del self.cards_left[-1]
+            self.cards_left.pop(card_index)
             return card
         return -1
 

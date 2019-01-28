@@ -855,7 +855,6 @@ class Player():
             print('Cannot build road here...')
         return False
 
-
     # TODO:
     # function in which the player can have a turn. This should be handled
     # differently depending on whether the player is real or is an AI.

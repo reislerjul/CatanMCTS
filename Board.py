@@ -359,7 +359,7 @@ class Board():
         if die_roll in self.r_allocator:
             vals = self.r_allocator[die_roll]
             for player, resource, loc in vals:
-                if self.robber is not loc:
+                if self.robber != loc:
                     self.give_resource(resource, player)
         if die_roll == 7:
             for player in players:
@@ -428,7 +428,7 @@ class Board():
 
         return longest
 
-    def add_settlement(self, player, loc, initial_boost=False):
+    def add_settlement(self, player, loc):
         '''
         adds a settlement at a given coordinate
         '''
@@ -450,8 +450,6 @@ class Board():
                     self.adjacent[hex_loc].append(player)
             else:
                 self.adjacent[hex_loc] = [player]
-            if initial_boost:
-                self.give_resource(ret_resource, player)
 
     def upgrade_settlement(self, player, loc):
         '''

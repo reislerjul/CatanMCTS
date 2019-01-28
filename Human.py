@@ -68,6 +68,7 @@ class Human(Player):
         return move
 
     def decide_move(self, board, deck, players):
+        try:
             if board.round_num == 0 and len(self.settlements) == 0:
                 return self.choose_spot_settlement(board)
             elif board.round_num == 0 and self.total_roads == 0:
@@ -178,6 +179,7 @@ class Human(Player):
             else:
                 print("You have already played a dev card in this round or have reached maximum allowed trades")
             return -1
+        except:
             print("The following error was thrown: ", sys.exc_info()[0])
             print("please retry the move")
             return -1
