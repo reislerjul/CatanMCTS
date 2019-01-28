@@ -27,7 +27,7 @@ class Deck():
         '''
         pulls the dev card from the deck
         '''
-        if card_index < len(self.cards_left):
+        if card_index < len(self.cards_left) and card_index >= 0:
             card = self.cards_left[card_index]
             self.cards_left.pop(card_index)
             return card

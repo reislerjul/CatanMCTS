@@ -114,7 +114,38 @@ class TestPlayDev(unittest.TestCase):
         self.assertEqual(player_list[0].resources['o'], 0)
         self.assertEqual(player_list[0].resources['l'], 4)
         self.assertEqual(player_list[0].resources['b'], 4)
-        self.assertEqual(player_list[0].resources['g'], 2)        
+        self.assertEqual(player_list[0].resources['g'], 2)     
+
+    def test_take_from_deck(self):
+        deck = Deck()
+        deck.initialize_stack()
+        num_knights = 0
+        num_vp = 0
+        num_rb = 0
+        num_mon = 0
+        num_yop = 0
+        num_other = 0
+        for i in range(25):
+            card = deck.take_card(deck.peek())
+            if card == Card.KNIGHT:
+                num_knights += 1
+            elif card == Card.VICTORY_POINT:
+                num_vp += 1
+            elif card == Card.ROAD_BUILDING:
+                num_rb += 1
+            elif card == Card.MONOPOLY:
+                num_mon += 1
+            elif card == Card.YEAR_OF_PLENTY:
+                num_yop += 1
+            else:
+                num_other += 1
+        self.assertEqual(num_knights, 14)
+        self.assertEqual(num_vp, 5)
+        self.assertEqual(num_rb, 2)
+        self.assertEqual(num_mon, 2)
+        self.assertEqual(num_yop, 2)
+        self.assertEqual(num_other, 0)
+        self.assertEqual(deck.take_card(deck.peek()), -1)
 
 if __name__ == '__main__':
     unittest.main()
