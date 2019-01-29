@@ -182,9 +182,11 @@ class TestPlayDev(unittest.TestCase):
         player_list[2].resources = {'w': 1, 'b': 1, 'l': 0, 'g': 1, 'o': 0}
         legal_moves = player_list[0].get_legal_moves(board, deck, 0)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('o', 1)), legal_moves)
-        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3)), legal_moves)
+        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3)), legal_moves)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('b', 1)), legal_moves)
-        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('l', 2)), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('l', 3)), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 2)), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 1)), legal_moves)
 
 if __name__ == '__main__':
     unittest.main()

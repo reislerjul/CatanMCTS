@@ -293,7 +293,7 @@ class Player():
                 for player in board.players:
                     if player != self:
                         for element in resources_out.keys():
-                            resources_out[element] += player.resources[element]
+                            resources_out[element] = max(player.resources[element], resources_out[element])
                 resource_list = self.resources.items()
                 for resource in resource_list:
                     trade_for = ['g', 'w', 'o', 'b', 'l']
