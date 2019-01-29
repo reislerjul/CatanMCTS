@@ -287,6 +287,13 @@ class Player():
                 # For MCTSPlayer and RandomPlayer, this should be a bit different than the real game.
                 # we will assume that the trades they want to try are in the form of 1 type of resource
                 # for another type of resource instead of trading multiple types for 1
+                # Also, it is reasonable for players to know which cards are out in the game, so only ask 
+                # for cards that other players have
+                resources_out = {'w': 0, 'g': 0, 'b': 0, 'l': 0, 'o': 0}
+                for player in board.players:
+                    if player != self:
+                        for element in resources_out.keys():
+                            resources_out[element] += player.resources[element]
                 resource_list = self.resources.items()
                 for resource in resource_list:
                     trade_for = ['g', 'w', 'o', 'b', 'l']
@@ -294,7 +301,7 @@ class Player():
                     for i in range(1, min(resource[1] + 1, 4)):
                         loss = (resource[0], i)
                         for element in trade_for:
-                            for j in range(1, 4):
+                            for j in range(1, resources_out[element] + 1):
                                 gain = (element, j)
                                 possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
 
@@ -324,7 +331,6 @@ class Player():
                 # We now have the possible roads, so lets add those moves!
                 for road in possible_roads:
                     possible_moves.append(Move(Move.BUY_ROAD, road=road))
-
 
             # Can we build a settlement?
             if self.resources['w'] > 0 and self.resources['l'] > 0 and \

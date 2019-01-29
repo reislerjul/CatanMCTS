@@ -8,6 +8,7 @@ from Human import Human
 import settings
 from utils import Card
 from unittest.mock import patch
+from utils import Move
 
 
 class TestPlayDev(unittest.TestCase):
@@ -146,6 +147,44 @@ class TestPlayDev(unittest.TestCase):
         self.assertEqual(num_yop, 2)
         self.assertEqual(num_other, 0)
         self.assertEqual(deck.take_card(deck.peek()), -1)
+
+    def test_places_for_road(self):
+        player_list = [RandomPlayer(1)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+        player_list[0].settlements.append((0, 0))
+        board.add_settlement(player_list[0], (0, 0))
+        player_list[0].add_road(board, frozenset([(0, 0), (1, 0)]))
+        board.build_road((0, 0), (1, 0), player_list[0])
+        board.round_num = 2
+        board.active_player = player_list[0]
+        player_list[0].has_rolled = True
+        player_list[0].resources = {'w': 0, 'b': 1, 'l': 1, 'g': 0, 'o': 0}
+        legal_moves = player_list[0].get_legal_moves(board, deck, 0)
+        self.assertIn(Move(Move.BUY_ROAD, road=frozenset([(2, 0), (1, 0)])), legal_moves)
+        self.assertIn(Move(Move.BUY_ROAD, road=frozenset([(0, 0), (1, 1)])), legal_moves)
+
+    def test_correct_possible_trades(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+        board.round_num = 2
+        board.active_player = player_list[0]
+        player_list[0].has_rolled = True
+        player_list[0].resources = {'w': 0, 'b': 1, 'l': 0, 'g': 0, 'o': 0}
+        player_list[1].resources = {'w': 2, 'b': 3, 'l': 3, 'g': 0, 'o': 0}
+        player_list[2].resources = {'w': 1, 'b': 1, 'l': 0, 'g': 1, 'o': 0}
+        legal_moves = player_list[0].get_legal_moves(board, deck, 0)
+        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('o', 1)), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3)), legal_moves)
+        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('b', 1)), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('l', 2)), legal_moves)
 
 if __name__ == '__main__':
     unittest.main()
