@@ -45,6 +45,7 @@ class Board():
         self.traders = []
         self.trade_step = 0
         self.longest_road_path = ()
+        self.choose_discard_step = 0
 
 
     def init_board(self, debug=False):

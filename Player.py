@@ -166,7 +166,7 @@ class Player():
             # check to see if we must select a trader
             if board.pending_trade:
                 moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
-                if len(moves) < len(self.board.players):
+                if len(moves) < len(board.players):
                     moves.append(Move(Move.CHOOSE_TRADER, player=None))
                 return moves
 
