@@ -10,6 +10,193 @@ from utils import Card
 from unittest.mock import patch
 from utils import Move
 
+class TestLongestRoad(unittest.TestCase):
+
+    def test_longest_path_single_source(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+
+        # One road
+        player_list[0].add_road(board, frozenset([(1, 0), (2, 0)]))
+        board.build_road((1, 0), (2, 0), player_list[0])
+        path, seen, reach = board.DFS((1, 0), player_list[0])
+        self.assertEqual(len(path), 2)
+ 
+        # Branching paths of equal length 
+        player_list[0].add_road(board, frozenset([(2, 0), (3, 0)]))
+        board.build_road((2, 0), (3, 0), player_list[0])
+        player_list[0].add_road(board, frozenset([(2, 0), (3, 1)]))
+        board.build_road((2, 0), (3, 1), player_list[0])
+        path, seen, reach = board.DFS((1, 0), player_list[0])
+        self.assertEqual(len(path), 3)
+      
+        # Branching paths where one is longer than other
+        player_list[0].add_road(board, frozenset([(3, 1), (4, 1)]))
+        board.build_road((3, 1), (4, 1), player_list[0])
+        path, seen, reach = board.DFS((1, 0), player_list[0])
+        self.assertEqual(len(path), 4)
+
+        # A cycle in the paths
+        player_list[0].add_road(board, frozenset([(3, 0), (4, 0)]))
+        board.build_road((3, 0), (4, 0), player_list[0])
+        player_list[0].add_road(board, frozenset([(4, 0), (5, 1)]))
+        board.build_road((4, 0), (5, 1), player_list[0])        
+        player_list[0].add_road(board, frozenset([(4, 1), (5, 1)]))
+        board.build_road((4, 1), (5, 1), player_list[0])
+        player_list[0].add_road(board, frozenset([(4, 0), (5, 0)]))
+        board.build_road((4, 0), (5, 0), player_list[0])        
+        path, seen, reach = board.DFS((1, 0), player_list[0])
+        self.assertEqual(len(path), 8)
+
+        # Another player builds a settlement
+        path, seen, reach = board.longest_road_single_source((2, 0), player_list[0])
+        self.assertEqual(len(path), 8)
+        player_list[1].settlements.append((2, 0))
+        board.add_settlement(player_list[1], (2, 0))
+        path, seen, reach = board.longest_road_single_source((1, 0), player_list[0])
+        self.assertEqual(len(path), 2)
+        path, seen, reach = board.longest_road_single_source((2, 0), player_list[0])   
+        self.assertEqual(len(path), 7)
+        path, seen, reach = board.longest_road_single_source((2, 0), player_list[1])
+        self.assertEqual(len(path), 1)
+        self.assertEqual(reach, {(2, 0)})
+
+    def test_longest_road_building_roads(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+
+        player_list[0].add_road(board, frozenset([(2, 0), (3, 0)]))
+        board.build_road((2, 0), (3, 0), player_list[0])
+        player_list[0].add_road(board, frozenset([(3, 0), (4, 0)]))
+        board.build_road((3, 0), (4, 0), player_list[0])
+        player_list[0].add_road(board, frozenset([(4, 0), (5, 1)]))
+        board.build_road((4, 0), (5, 1), player_list[0])
+        player_list[0].add_road(board, frozenset([(5, 1), (4, 1)]))
+        board.build_road((5, 1), (4, 1), player_list[0])    
+        self.assertEqual(board.longest_road_player, None)
+        self.assertEqual(player_list[0].longest_road, 0)
+        player_list[0].add_road(board, frozenset([(4, 1), (3, 1)]))
+        board.build_road((4, 1), (3, 1), player_list[0]) 
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(player_list[0].longest_road, 2)
+        self.assertEqual(board.longest_road_size, 5)
+        self.assertEqual(board.longest_road_path, 
+            ((2, 0), (3, 0), (4, 0), (5, 1), (4, 1), (3, 1)))
+        player_list[0].add_road(board, frozenset([(3, 1), (2, 0)]))
+        board.build_road((3, 1), (2, 0), player_list[0]) 
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 6)
+
+        # Shouldn't affect longest road
+        player_list[1].settlements.append((3, 1))
+        board.add_settlement(player_list[1], (3, 1))
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 6)
+        self.assertEqual(board.longest_road_path, 
+            ((3, 1), (4, 1), (5, 1), (4, 0), (3, 0), (2, 0), (3, 1)))
+        player_list[1].settlements.append((6, 1))
+        board.add_settlement(player_list[1], (6, 1))        
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 6)
+        self.assertEqual(board.longest_road_path, 
+            ((3, 1), (4, 1), (5, 1), (4, 0), (3, 0), (2, 0), (3, 1)))
+
+        # Test player builds settlements that take away longest road
+        player_list[1].settlements.append((5, 1))
+        board.add_settlement(player_list[1], (5, 1))
+        self.assertEqual(board.longest_road_player, None)
+        self.assertEqual(board.longest_road_size, 4)
+        self.assertEqual(board.longest_road_path, ())
+        self.assertEqual(player_list[0].longest_road, 0)
+        self.assertEqual(player_list[1].longest_road, 0)
+
+        # Player 1 reclaims longest road
+        player_list[0].add_road(board, frozenset([(2, 0), (1, 0)]))
+        board.build_road((2, 0), (1, 0), player_list[0])         
+        player_list[0].add_road(board, frozenset([(1, 0), (0, 0)]))
+        board.build_road((1, 0), (0, 0), player_list[0])     
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 5)
+        self.assertEqual(player_list[0].longest_road, 2)
+        self.assertEqual(player_list[1].longest_road, 0)
+
+    def test_player_takes_longest_road(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+
+        # Longest road
+        player_list[0].add_road(board, frozenset([(1, 1), (0, 0)]))
+        board.build_road((1, 1), (0, 0), player_list[0])            
+        player_list[0].add_road(board, frozenset([(0, 0), (1, 0)]))
+        board.build_road((0, 0), (1, 0), player_list[0])    
+        player_list[0].add_road(board, frozenset([(1, 0), (2, 0)]))
+        board.build_road((1, 0), (2, 0), player_list[0])        
+        player_list[0].add_road(board, frozenset([(2, 0), (3, 0)]))
+        board.build_road((2, 0), (3, 0), player_list[0])
+        player_list[0].add_road(board, frozenset([(3, 0), (4, 0)]))
+        board.build_road((3, 0), (4, 0), player_list[0])
+        player_list[0].add_road(board, frozenset([(4, 0), (5, 0)]))
+        board.build_road((4, 0), (5, 0), player_list[0])
+        
+        # Another long road that is shorter than longest road
+        player_list[0].add_road(board, frozenset([(8, 0), (9, 0)]))
+        board.build_road((8, 0), (9, 0), player_list[0]) 
+        player_list[0].add_road(board, frozenset([(9, 0), (8, 1)]))
+        board.build_road((9, 0), (8, 1), player_list[0])   
+        player_list[0].add_road(board, frozenset([(8, 1), (9, 1)]))
+        board.build_road((8, 1), (9, 1), player_list[0])    
+        player_list[0].add_road(board, frozenset([(9, 1), (8, 2)]))
+        board.build_road((9, 1), (8, 2), player_list[0])
+        player_list[0].add_road(board, frozenset([(8, 2), (9, 2)]))
+        board.build_road((8, 2), (9, 2), player_list[0])
+
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 6)
+        self.assertEqual(player_list[0].longest_road, 2)
+        self.assertEqual(player_list[1].longest_road, 0)        
+
+        # Player 2 breaks player 1's longest road, but player 1 
+        # will still hold longest road from its other road
+        player_list[1].settlements.append((2, 0))
+        board.add_settlement(player_list[1], (2, 0))        
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 5)
+        self.assertEqual(player_list[0].longest_road, 2)
+        self.assertEqual(player_list[1].longest_road, 0)        
+
+        # Player 2 will now take longest road 
+        player_list[1].add_road(board, frozenset([(2, 0), (3, 1)]))
+        board.build_road((2, 0), (3, 1), player_list[1]) 
+        player_list[1].add_road(board, frozenset([(3, 1), (2, 1)]))
+        board.build_road((3, 1), (2, 1), player_list[1])    
+        player_list[1].add_road(board, frozenset([(2, 1), (3, 2)]))
+        board.build_road((2, 1), (3, 2), player_list[1])
+        player_list[1].add_road(board, frozenset([(3, 2), (2, 2)]))
+        board.build_road((3, 2), (2, 2), player_list[1])        
+        player_list[1].add_road(board, frozenset([(2, 2), (3, 3)]))
+        board.build_road((2, 2), (3, 3), player_list[1])    
+        self.assertEqual(board.longest_road_player, player_list[0])
+        self.assertEqual(board.longest_road_size, 5)
+        self.assertEqual(player_list[0].longest_road, 2)
+        self.assertEqual(player_list[1].longest_road, 0)   
+        player_list[1].add_road(board, frozenset([(3, 3), (2, 3)]))
+        board.build_road((3, 3), (2, 3), player_list[1])          
+        self.assertEqual(board.longest_road_player, player_list[1])
+        self.assertEqual(board.longest_road_size, 6)
+        self.assertEqual(player_list[0].longest_road, 0)
+        self.assertEqual(player_list[1].longest_road, 2)   
 
 class TestPlayDev(unittest.TestCase):
 

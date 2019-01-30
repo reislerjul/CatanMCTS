@@ -44,6 +44,7 @@ class Board():
         self.pending_trade = False
         self.traders = []
         self.trade_step = 0
+        self.longest_road_path = ()
 
 
     def init_board(self, debug=False):
@@ -81,7 +82,6 @@ class Board():
         coords[(1, 3)] = Coord((1, 3),
                                resource_locs=[(0, 2)],
                                neighbours=[(0, 2), (2, 3)])
-
         coords[(2, 0)] = Coord((2, 0),
                                resource_locs=[(0, 0), (1, 0)],
                                neighbours=[(3, 0), (1, 0), (3, 1)])
@@ -95,7 +95,6 @@ class Board():
                                resource_locs=[(0, 2), (1, 3)],
                                ports={'3'},
                                neighbours=[(3, 3), (1, 3), (3, 4)])
-
         coords[(3, 0)] = Coord((3, 0),
                                resource_locs=[(1, 0)],
                                ports={'2 o'},
@@ -386,53 +385,108 @@ class Board():
         else:
             player.resources[resource] = 1
 
+    def change_longest_road_owner(self, new_road, new_length, player, decreasing_size=False):
+        if new_length > self.longest_road_size or decreasing_size:
+            if self.longest_road_player != None:
+                self.longest_road_player.longest_road = 0
+            self.longest_road_player = player
+            if player != None:
+                player.longest_road = 2     
+            self.longest_road_path = tuple(new_road)
+            self.longest_road_size = new_length
+
     def build_road(self, loc1, loc2, player):
         '''
         builds a road from loc1 to loc2 (assuming they are adjacent)
         '''
+        # When building a road, the only possibilities are that longest road stays 
+        # the same or increases. We don't have to worry about someone losing their 
+        # longest road. Before we do anything, we should check if loc2 is reachable 
+        # from loc 1. If it is not, the longest path with a road through loc 1 and 2
+        # is 1 + (longest path from loc 1) + (longest path from loc 2)
+        longest_path_1, seen, reachable = self.longest_road_single_source(loc1, player)
+        can_reach = False
+        if loc2 not in reachable:
+            # The return value of longest_road_single_source is a tuple of vertices along
+            # the path. Thus, the road length is the length of the tuple - 1
+            longest_path_2, seen2, reachable2 = self.longest_road_single_source(loc2, player)
+            self.change_longest_road_owner(tuple(longest_path_1[::-1]) + tuple(longest_path_2), 
+                len(longest_path_1) + len(longest_path_2) - 1, player)
+        else:
+            can_reach = True
+
         self.coords[loc1].roads[loc2] = player
         self.coords[loc2].roads[loc1] = player
         self.coords[loc1].available_roads.remove(loc2)
         self.coords[loc2].available_roads.remove(loc1)
 
-        longest_road = self.longest_road({(loc1, loc2)}, loc1, loc2, player, 1)
-        if longest_road > self.longest_road_size:
-            self.longest_road_size = longest_road
+        if can_reach:
+            # Calculate the single source shortest path from every location in reachable. 
+            # Adding the road from loc1 to loc2 does not change the reachable set.
+            longest_road = 0
+            longest_path = ()
+            for coord in reachable:
+                path, seen, reachable = self.longest_road_single_source(coord, player)
+                if len(path) - 1 > longest_road:
+                    longest_path = path
+                    longest_road = len(path) - 1
+            self.change_longest_road_owner(longest_path, longest_road, player)
 
-            if self.longest_road_player is not None:
-                self.longest_road_player.longest_road = 0
-            self.longest_road_player = player
-            player.longest_road = 2
+    def longest_road_single_source(self, source, player):
+        return self.DFS(source, player, tuple([source]))
+ 
+    def DFS(self, v, player, longest_path=(), seen=None, reachable=None, path=None, start=True):
+        if seen == None: 
+            seen = set()
+            reachable = set()
+        if path == None: 
+            path = [v]
+        reachable.add(v)
+        if start or (self.coords[v].player == None or self.coords[v].player == player):
+            for t in self.coords[v].neighbours:
+                if self.coords[v].roads[t] == player and frozenset([t, v]) not in seen:
+                    t_path = path + [t]
+                    if len(t_path) > len(longest_path):
+                        longest_path = t_path
+                    seen.add(frozenset([v, t]))
+                    new_longest, new_seen, reach = self.DFS(t, player, longest_path, 
+                        seen, reachable, t_path, False)
+                    if len(new_longest) > len(longest_path):
+                        longest_path = new_longest
+        return longest_path, seen, reachable
 
-    def longest_road(self, visited, current1, current2, player, length):
-        '''
-        helper function for finding longest road
-        '''
-        longest = length
-
-        for neighbour in self.coords[current1].neighbours:
-            if self.coords[current1].roads[neighbour] == player \
-                    and (current1, neighbour) not in visited \
-                    and (neighbour, current1) not in visited:
-                new_visited = visited | {(current1, neighbour)}
-                new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
-                longest = max(longest, new_longest)
-
-        for neighbour in self.coords[current2].neighbours:
-            if self.coords[current2].roads[neighbour] == player \
-                    and (current2, neighbour) not in visited \
-                    and (neighbour, current2) not in visited:
-                new_visited = visited | {(current2, neighbour)}
-                new_longest = self.longest_road(new_visited, neighbour, current2, player, length + 1)
-                longest = max(longest, new_longest)
-
-        return longest
+    def check_longest_road_cutoff(self, player, loc):
+        try:
+            length = len(self.longest_road_path)
+            if self.longest_road_player != None and self.longest_road_player != player:
+                index = list(self.longest_road_path)[1:].index(loc)
+                if index != length - 2:
+                    # Longest road goes through this coordinate and the coordinate is not 
+                    # an endpoint of the road. Unfortunately, we have to recalculate the 
+                    # longest road by looking at all the players' roads
+                    longest = 0
+                    arg_max_person = 0
+                    arg_max_road = ()
+                    for person in self.players:
+                        for vertex in person.roads.keys():
+                            path, seen, reachable = self.longest_road_single_source(vertex, person)
+                            if len(path) - 1 > longest:
+                                longest = len(path) - 1
+                                arg_max_person = person
+                                arg_max_road = path
+                    if longest > 4:
+                        self.change_longest_road_owner(arg_max_road, longest, arg_max_person, True)
+                    else:
+                        self.change_longest_road_owner((), 4, None, True)
+        except ValueError:
+            return
 
     def add_settlement(self, player, loc):
         '''
         adds a settlement at a given coordinate
         '''
         assert(self.coords[loc].player == None)
+
         self.coords[loc].player = player
         resources = self.coords[loc].resource_locs
         for hex_loc in resources:
@@ -450,6 +504,9 @@ class Board():
                     self.adjacent[hex_loc].append(player)
             else:
                 self.adjacent[hex_loc] = [player]
+
+        # Check to see if we're cutting off the longest road
+        self.check_longest_road_cutoff(player, loc)
 
     def upgrade_settlement(self, player, loc):
         '''

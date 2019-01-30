@@ -506,9 +506,7 @@ class Player():
                             return True
             return False
 
-        if move.move_type == Move.BUY_SETTLEMENT \
-                and move.coord in board.coords.keys() \
-                and len(self.settlements) < 5:
+        if move.move_type == Move.BUY_SETTLEMENT and len(self.settlements) < 5:
             # Resources available to make a settlement
             #print('in check legal move for settlements')
             #print('round number: ' + str(board.round_num))
