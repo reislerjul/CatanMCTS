@@ -14,7 +14,6 @@ class RandomPlayer(Player):
 
     def decide_move(self, board, deck, players):
         possible_moves = self.get_legal_moves(board, deck, 0)
-        #print(possible_moves[0].move_type)
         # We should choose a move randomly from the set of possible moves!
         return possible_moves[random.randint(0, len(possible_moves) - 1)]
 

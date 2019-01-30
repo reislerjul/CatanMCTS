@@ -28,7 +28,7 @@ class Board():
 
     def __init__(self, players):
         self.players = players
-        self.robber = (2,0)
+        self.robber = (2, 0)
         self.resources = self.init_resources()
         self.hex = self.init_hexes()
         self.coords = self.init_board(debug=False)

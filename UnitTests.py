@@ -11,7 +11,6 @@ from unittest.mock import patch
 from utils import Move
 
 class TestLongestRoad(unittest.TestCase):
-
     def test_longest_path_single_source(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
         settings.init()
@@ -199,6 +198,59 @@ class TestLongestRoad(unittest.TestCase):
         self.assertEqual(player_list[1].longest_road, 2)   
 
 class TestPlayDev(unittest.TestCase):
+    def test_draw_dev_play_dev_same_turn(self):
+        player_list = [RandomPlayer(1)]
+        settings.init()
+        deck = Deck()
+        deck.initialize_stack()
+        board = Board(player_list)
+        board.init_board()
+        board.active_player = player_list[0]
+        board.round_num = 2
+        player_list[0].resources = {'w':1, 'b':0, 'l':0, 'g':1, 'o':1}
+        player_list[0].has_rolled = True
+
+        # After buying a dev card, we cannot play it. 
+        move_made = player_list[0].make_move(Move(Move.BUY_DEV, card_type=0, player=1), 
+            board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(player_list[0].dev_drawn, 0)
+        legal_moves = player_list[0].get_legal_moves(board, deck, False)
+        is_legal = player_list[0].check_legal_move(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), board, deck)
+        self.assertEqual(is_legal, False)
+        self.assertEqual(len(legal_moves), 1)
+        self.assertNotEqual(legal_moves[0].move_type, Move.PLAY_DEV)
+        self.assertEqual(player_list[0].dev_cards[0], 1)
+
+        # Check that if we have another dev card that is the same as the one drawn, 
+        # we can play it
+        player_list[0].dev_cards[0] += 1 
+        legal_moves = player_list[0].get_legal_moves(board, deck, False)
+        self.assertGreater(len(legal_moves), 1)
+        self.assertEqual((legal_moves[1].move_type, legal_moves[1].card_type), (Move.PLAY_DEV, 0))
+        is_legal = player_list[0].check_legal_move(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), board, deck)
+        self.assertEqual(is_legal, True)
+        move_made = player_list[0].make_move(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), 
+            board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(player_list[0].dev_cards[0], 1)
+        self.assertEqual(player_list[0].dev_played, 1)
+
+        # Now, end the turn and check that on the next turn, we can play the knight that is left over
+        player_list[0].make_move(Move(Move.END_TURN), board, deck, player_list)
+        legal_moves = player_list[0].get_legal_moves(board, deck, False)
+        self.assertIn(Move(Move.PLAY_DEV, card_type=0, coord=(1, 0)), legal_moves)
+        self.assertNotIn(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), legal_moves)
+        self.assertEqual(player_list[0].dev_drawn, -1)
+        self.assertEqual(player_list[0].dev_played, 0)
+        is_legal = player_list[0].check_legal_move(Move(Move.PLAY_DEV, card_type=0, coord=(1, 0)), board, deck)
+        self.assertEqual(is_legal, True)
+        is_legal = player_list[0].check_legal_move(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), board, deck)
+        self.assertEqual(is_legal, False)
+        move_made = player_list[0].make_move(Move(Move.PLAY_DEV, card_type=0, coord=(1, 0)), 
+            board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(player_list[0].dev_played, 1)
 
     def test_play_dev_human(self):
         user_input = [
@@ -285,9 +337,10 @@ class TestPlayDev(unittest.TestCase):
             self.assertEqual(player_list[0].resources['o'], 2)
             self.assertEqual(player_list[0].resources['l'], 5)
             self.assertEqual(player_list[0].resources['b'], 4)
-            self.assertEqual(player_list[0].resources['g'], 2)
+            self.assertEqual(player_list[0].resources['g'], 2)  
 
-    def test_robber_on_spot(self):
+class TestRobber(unittest.TestCase):
+    def test_robber_prevents_resource_allocation(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
         settings.init()
         deck = Deck()
@@ -302,8 +355,9 @@ class TestPlayDev(unittest.TestCase):
         self.assertEqual(player_list[0].resources['o'], 0)
         self.assertEqual(player_list[0].resources['l'], 4)
         self.assertEqual(player_list[0].resources['b'], 4)
-        self.assertEqual(player_list[0].resources['g'], 2)     
+        self.assertEqual(player_list[0].resources['g'], 2)   
 
+class TestDevCardDeck(unittest.TestCase):
     def test_take_from_deck(self):
         deck = Deck()
         deck.initialize_stack()
@@ -335,6 +389,7 @@ class TestPlayDev(unittest.TestCase):
         self.assertEqual(num_other, 0)
         self.assertEqual(deck.take_card(deck.peek()), -1)
 
+class TestCanBuildRoads(unittest.TestCase):
     def test_places_for_road(self):
         player_list = [RandomPlayer(1)]
         settings.init()
@@ -354,6 +409,7 @@ class TestPlayDev(unittest.TestCase):
         self.assertIn(Move(Move.BUY_ROAD, road=frozenset([(2, 0), (1, 0)])), legal_moves)
         self.assertIn(Move(Move.BUY_ROAD, road=frozenset([(0, 0), (1, 1)])), legal_moves)
 
+class TestTradeBetweenPlayers(unittest.TestCase):
     def test_correct_possible_trades(self):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
         settings.init()

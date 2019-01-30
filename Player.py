@@ -39,6 +39,7 @@ class Player():
         self.move_robber = False
         self.dev_played = 0
         self.trades_tried = 0
+        self.dev_drawn = -1
 
         # This stuff on bottom is used for bookkeeping
         self.num_yop_played = 0
@@ -173,12 +174,13 @@ class Player():
             possible_moves = []
             if self.dev_played == 0:
                 for card in self.dev_cards.keys():
-                    if self.dev_cards[card] > 0:
+                    if self.dev_cards[card] - (1 if self.dev_drawn == card else 0) > 0:
                         if card == Card.KNIGHT:
                             possible_moves = []
                             spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                                      (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
-                                     (3, 1), (0, 0), (2, 2), (0, 1)]
+                                     (3, 1), (0, 0), (2, 2), (0, 1), (2, 0)]
+                            spots.remove(board.robber)
                             for spot in spots:
                                 possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
 
@@ -555,13 +557,15 @@ class Player():
 
         if move.move_type == Move.PLAY_DEV:
             # Dev card available and not a victory point card
-
             if move.card_type in self.dev_cards.keys() \
-                    and self.dev_cards[move.card_type] > 0 and self.dev_played == 0:
+                    and self.dev_cards[move.card_type] - \
+                    (1 if move.card_type == self.dev_drawn else 0) > 0 \
+                    and self.dev_played == 0:
                 if move.card_type == Card.KNIGHT:
                     spots = {(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0),
                              (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3),
-                             (3, 1), (0, 0), (2, 2), (0, 1)}
+                             (3, 1), (0, 0), (2, 2), (0, 1), (2, 0)}
+                    spots.remove(board.robber)
                     return move.coord in spots
                 elif move.card_type == Card.VICTORY_POINT:
                     return False
@@ -745,6 +749,7 @@ class Player():
         # Draw a dev card
         elif move.move_type == Move.BUY_DEV:
             card = deck.take_card(move.card_type)
+            self.dev_drawn = card
             if card != -1:
                 self.devs_bought += 1
                 self.resources['w'] -= 1
@@ -776,6 +781,7 @@ class Player():
             self.dev_played = 0
             self.trades_tried = 0
             self.has_rolled = False
+            self.dev_drawn = -1
             return 0
         return 1
 
