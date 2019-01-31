@@ -10,14 +10,82 @@ from utils import Card
 from unittest.mock import patch
 from utils import Move
 
+class TestBoardInitialization(unittest.TestCase):
+    def test_hexes_created_properly(self):
+        board = Board(None, False)
+        self.assertEqual({2: [(4, 1)], 3: [(2, 1), (3, 3)], 4: [(1, 0), (2, 3)], 5: [(1, 2), (4, 0)],
+                    6: [(1, 1), (4, 2)], 7: [], 8: [(2, 4), (3, 0)], 9: [(0, 2), (3, 2)],
+                    10: [(1, 3), (3, 1)], 11: [(0, 0), (2, 2)], 12: [(0, 1)]}, 
+                    board.hex)
+        board = Board(None, True)
+        self.assertEqual(len(board.hex[2]), 1)
+        self.assertEqual(len(board.hex[3]), 2)
+        self.assertEqual(len(board.hex[4]), 2)
+        self.assertEqual(len(board.hex[5]), 2)
+        self.assertEqual(len(board.hex[6]), 2)
+        self.assertEqual(len(board.hex[7]), 0)
+        self.assertEqual(len(board.hex[8]), 2)
+        self.assertEqual(len(board.hex[9]), 2)
+        self.assertEqual(len(board.hex[10]), 2)
+        self.assertEqual(len(board.hex[11]), 2)
+        self.assertEqual(len(board.hex[12]), 1)
+
+    def test_random_board_correct_number_dice_resources_spots(self):
+        trials = [True, False]
+        for i in range(len(trials)):
+            board = Board(None, trials[i])
+            self.assertIn((0, 0), board.resources)
+            self.assertIn((0, 1), board.resources)
+            self.assertIn((0, 2), board.resources)
+            self.assertIn((1, 0), board.resources)
+            self.assertIn((1, 1), board.resources)
+            self.assertIn((1, 2), board.resources)
+            self.assertIn((1, 3), board.resources)
+            self.assertIn((2, 0), board.resources)
+            self.assertIn((2, 1), board.resources)
+            self.assertIn((2, 2), board.resources)
+            self.assertIn((2, 3), board.resources)
+            self.assertIn((2, 4), board.resources)
+            self.assertIn((3, 0), board.resources)
+            self.assertIn((3, 1), board.resources)
+            self.assertIn((3, 2), board.resources)
+            self.assertIn((3, 3), board.resources)
+            self.assertIn((4, 0), board.resources)
+            self.assertIn((4, 1), board.resources)
+            self.assertIn((4, 2), board.resources)
+            board_items = board.resources.values()
+            resource_count = {"l": 0, "g": 0, "w": 0, "b": 0, "o": 0, "n": 0}
+            number_count = {}
+            for element in board_items:
+                resource_count[element[0]] += 1
+                if (element[1], element[2]) not in number_count:
+                    number_count[(element[1], element[2])] = 1
+                else:
+                    number_count[(element[1], element[2])] += 1
+            self.assertEqual(resource_count["l"], 4)
+            self.assertEqual(resource_count["g"], 4)
+            self.assertEqual(resource_count["w"], 4)
+            self.assertEqual(resource_count["b"], 3)
+            self.assertEqual(resource_count["o"], 3)
+            self.assertEqual(resource_count["n"], 1)
+            self.assertEqual(number_count[(2, 1)], 1)
+            self.assertEqual(number_count[(-1, 0)], 1)
+            self.assertEqual(number_count[(3, 2)], 2)
+            self.assertEqual(number_count[(4, 3)], 2)
+            self.assertEqual(number_count[(5, 4)], 2)
+            self.assertEqual(number_count[(6, 5)], 2)
+            self.assertEqual(number_count[(8, 5)], 2)
+            self.assertEqual(number_count[(9, 4)], 2)
+            self.assertEqual(number_count[(10, 3)], 2)
+            self.assertEqual(number_count[(11, 2)], 2)
+            self.assertEqual(number_count[(12, 1)], 1)
+
 class TestLongestRoad(unittest.TestCase):
     def test_longest_path_single_source(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
 
         # One road
         player_list[0].add_road(board, frozenset([(1, 0), (2, 0)]))
@@ -68,9 +136,7 @@ class TestLongestRoad(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
 
         player_list[0].add_road(board, frozenset([(2, 0), (3, 0)]))
         board.build_road((2, 0), (3, 0), player_list[0])
@@ -131,9 +197,7 @@ class TestLongestRoad(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
 
         # Longest road
         player_list[0].add_road(board, frozenset([(1, 1), (0, 0)]))
@@ -202,9 +266,7 @@ class TestPlayDev(unittest.TestCase):
         player_list = [RandomPlayer(1)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
         board.active_player = player_list[0]
         board.round_num = 2
         player_list[0].resources = {'w':1, 'b':0, 'l':0, 'g':1, 'o':1}
@@ -264,9 +326,7 @@ class TestPlayDev(unittest.TestCase):
             player_list = [Human(1), RandomPlayer(2)]
             settings.init()
             deck = Deck()
-            deck.initialize_stack()
-            board = Board(player_list)
-            board.init_board()
+            board = Board(player_list, False)
             board.round_num = 2
             board.active_player = player_list[0]
             player_list[0].has_rolled = True
@@ -344,9 +404,7 @@ class TestRobber(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
         player_list[0].settlements.append((0, 0))
         board.add_settlement(player_list[0], (0, 0))
         board.move_robber((0, 0))
@@ -360,7 +418,6 @@ class TestRobber(unittest.TestCase):
 class TestDevCardDeck(unittest.TestCase):
     def test_take_from_deck(self):
         deck = Deck()
-        deck.initialize_stack()
         num_knights = 0
         num_vp = 0
         num_rb = 0
@@ -394,9 +451,7 @@ class TestCanBuildRoads(unittest.TestCase):
         player_list = [RandomPlayer(1)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
         player_list[0].settlements.append((0, 0))
         board.add_settlement(player_list[0], (0, 0))
         player_list[0].add_road(board, frozenset([(0, 0), (1, 0)]))
@@ -414,9 +469,7 @@ class TestTradeBetweenPlayers(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
         settings.init()
         deck = Deck()
-        deck.initialize_stack()
-        board = Board(player_list)
-        board.init_board()
+        board = Board(player_list, False)
         board.round_num = 2
         board.active_player = player_list[0]
         player_list[0].has_rolled = True

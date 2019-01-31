@@ -26,12 +26,12 @@ class Coord():
 # are, where the robber is.
 class Board():
 
-    def __init__(self, players):
+    def __init__(self, players, random_board):
         self.players = players
         self.robber = (2, 0)
-        self.resources = self.init_resources()
-        self.hex = self.init_hexes()
-        self.coords = self.init_board(debug=False)
+        self.resources = self.init_resources(random_board)
+        self.hex = self.init_hexes_from_resources()
+        self.coords = self.init_coords(random_board)
         self.r_allocator = {}
         self.adjacent = {}
         self.largest_army_size = 2
@@ -48,7 +48,7 @@ class Board():
         self.choose_discard_step = 0
 
 
-    def init_board(self, debug=False):
+    def init_coords(self, random_board):
         '''
         creates the coordinate system and inits the board
         the coordinate system for settlements and road is defined as
@@ -259,7 +259,8 @@ class Board():
                     except IndexError as e:
                         print(key, e)
         '''
-        return coords
+        if not random_board:
+            return coords
 
     # Print the board state
     def print_board_state(self):
@@ -271,30 +272,64 @@ class Board():
                 print("Coordinates: {}\n\n".format(coordinate))
         print("Robber location: {}".format(self.robber))
 
-    def init_resources(self):
+    def init_resources(self, random_board):
         '''
         this function initializes the nodes of resources in a list like faction
         a resource is given by a tuple with the first element being the resource
         the second element being the number on the die needed to roll that resource
-        and the third element being a 0, 1 value to denote whether a robbber is at that location and
+        and the third element being the dots corresponding to the probability of the number rolling and
         this list of resources is a list of list with each location being a hexagonal thing on the map
         i.e. the top left corner https://www.catan.com/en/download/?SoC_rv_Rules_091907.pdf of
         this is a forestt with 11
         w = wool, b= brick, l = lumber, g= grain, o = ore n = none
         '''
-        return {(0, 0): ('l',11,0), (0, 1): ('w',12,0), (0, 2): ('g', 9,0),
-                (1, 0): ('b', 4,0), (1, 1): ('o', 6,0), (1, 2): ('b', 5,0), (1, 3): ('w',10,0),
-                (2, 0): ('n',-1,1), (2, 1): ('l', 3,0), (2, 2): ('g',11,0), (2, 3): ('l', 4,0), (2, 4): ('g', 8,0),
-                (3, 0): ('b', 8,0), (3, 1): ('w',10,0), (3, 2): ('w', 9,0), (3, 3): ('o', 3,0),
-                (4, 0): ('o', 5,0), (4, 1): ('g', 2,0), (4, 2): ('l', 6,0)}
+        if not random_board:
+            return {(0, 0): ('l', 11, 2), (0, 1): ('w', 12, 1), (0, 2): ('g', 9, 4),
+                    (1, 0): ('b', 4, 3), (1, 1): ('o', 6, 5), (1, 2): ('b', 5, 4), 
+                    (1, 3): ('w', 10, 3),(2, 0): ('n', -1, 0), (2, 1): ('l', 3, 2), 
+                    (2, 2): ('g', 11, 2), (2, 3): ('l', 4, 3), (2, 4): ('g', 8, 5),
+                    (3, 0): ('b', 8, 0), (3, 1): ('w', 10, 0), (3, 2): ('w', 9, 0), 
+                    (3, 3): ('o', 3, 0), (4, 0): ('o', 5, 4), (4, 1): ('g', 2, 1), 
+                    (4, 2): ('l', 6, 5)}
+        else:
+            return self.randomize_resources_helper()
 
-    def init_hexes(self):
-        '''
-        input to hexes is a die roll, output is a list of hex coordinates representing the locations
-        '''
-        return {2: [(4, 1)], 3: [(2, 1), (3, 3)], 4: [(1, 0), (2, 3)], 5: [(1, 2), (4, 0)],
-                6: [(1, 1), (4, 2)], 7: [], 8: [(2, 4), (3, 0)], 9: [(0, 2), (3, 2)],
-                10: [(1, 3), (3, 1)], 11: [(0, 0), (2, 2)], 12: [(0, 1)]}
+    def randomize_resources_helper(self):
+        resource_dict = {}
+        spots = [(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
+                 (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
+                 (3, 1), (0, 0), (2, 2), (0, 1), (2, 0)]
+        resources = ['w'] * 4 + ['g'] * 4 + ['l'] * 4 + ['o'] * 3 + ['b'] * 3 + ['n'] * 1
+        rolls = [(2, 1)] + 2 * [(3, 2)] + 2 * [(4, 3)] + 2 * [(5, 4)] + \
+        2 * [(6, 5)] + 2 * [(8, 5)] + 2 * [(9, 4)] + 2 * [(10, 3)] + 2 * [(11, 2)] + [(12, 1)]
+        random.shuffle(spots)
+        random.shuffle(resources)
+        random.shuffle(rolls)
+        while len(spots) > 0:
+            spot = spots.pop()
+            resource = resources.pop()
+            if resource == 'n':
+                roll = (-1, 0)
+            else:
+                roll = rolls.pop()
+            resource_dict[spot] = tuple(resource) + roll
+        assert(len(spots) == 0 and len(resources) == 0 and len(rolls) == 0)
+        return resource_dict
+
+    # Resources are always initialized first, so we can just use self.resources to initialize the 
+    # hexes. Input to hexes is a die roll, output is a list of hex coordinates representing the locations
+    def init_hexes_from_resources(self):
+        hexes = {}
+        for element in self.resources.items():
+            hex_coord = element[0]
+            dice_roll = element[1][1]
+            if dice_roll != -1:
+                if dice_roll not in hexes:
+                    hexes[dice_roll] = [hex_coord]
+                else:
+                    hexes[dice_roll].append(hex_coord)
+        hexes[7] = []
+        return hexes
 
     def discard_random(self, player):
         '''

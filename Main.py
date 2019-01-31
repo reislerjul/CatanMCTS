@@ -16,13 +16,12 @@ from utils import Card
 
 # This will contain the main method which will be the entry point into
 # playing the Catan game.
-def run_game(player_list):
+def run_game(player_list, random_board):
     # Create the game, board, deck, and settings
     settings.init()
     deck = Deck()
-    deck.initialize_stack()
-    board = Board(player_list)
-    board.init_board()
+    board = Board(player_list, random_board)
+    #board.init_board()
     game = Game(board, deck, player_list)
 
     # Play the game
@@ -108,7 +107,7 @@ if __name__ == '__main__':
                     player_list[j].weighted, player_list[j].thompson)
                 MCTS_player = player_list[j]
 
-        winner, num_rounds, board = run_game(player_list)
+        winner, num_rounds, board = run_game(player_list, bool(int(data["random_board"])))
         if record_file:
             row = []
             row.append(winner.to_string())
