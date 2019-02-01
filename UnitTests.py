@@ -11,6 +11,27 @@ from unittest.mock import patch
 from utils import Move
 
 class TestBoardInitialization(unittest.TestCase):
+    def test_random_ports(self):
+        board = Board(None, True)
+        edge_vertices = []
+        num_ports = 0
+        for coord in board.coords.keys():
+            if len(board.coords[coord].resource_locs) < 3:
+                edge_vertices.append(coord)
+        self.assertEqual(len(edge_vertices), 30)
+        for vertex in edge_vertices:
+            if len(board.coords[vertex].ports) != 0:
+                num_ports += 1
+                self.assertEqual(len(board.coords[vertex].ports), 1)
+                port = list(board.coords[vertex].ports)[0]
+                num_neighbors_with_ports = 0
+                for neighbor in board.coords[vertex].neighbours:
+                    if len(board.coords[neighbor].ports) != 0:
+                        num_neighbors_with_ports += 1
+                        self.assertEqual(port, list(board.coords[neighbor].ports)[0])
+                self.assertEqual(num_neighbors_with_ports, 1)
+        self.assertEqual(num_ports, 18)
+
     def test_hexes_created_properly(self):
         board = Board(None, False)
         self.assertEqual({2: [(4, 1)], 3: [(2, 1), (3, 3)], 4: [(1, 0), (2, 3)], 5: [(1, 2), (4, 0)],

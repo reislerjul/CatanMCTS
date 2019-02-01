@@ -247,20 +247,50 @@ class Board():
                                 resource_locs=[(4, 2)],
                                 neighbours=[(10, 2), (10, 3)])
 
-
-        '''
-        if debug == True:
-            for key, val in coords.items():
-                if val.available_roads != val.neighbours:
-                    print(key)
-                for i in val.resource_locs:
-                    try:
-                        a = self.resources[i]
-                    except IndexError as e:
-                        print(key, e)
-        '''
         if not random_board:
             return coords
+        ports = 4 * ['3'] + ['2 w'] + ['2 l'] + ['2 b'] + ['2 o'] + ['2 g']
+        # Ports are always 2 or 3 roads away from other ports
+        distances = 6 * [2] + 3 * [3]
+        edge_vertices = []
+        for coord in coords.keys():
+            coords[coord].ports = set()
+            if len(coords[coord].resource_locs) < 3:
+                edge_vertices.append(coord)
+        random.shuffle(distances)
+        random.shuffle(ports)
+        random.shuffle(edge_vertices)
+
+        curr = edge_vertices.pop()
+        dist = distances.pop()
+        port = ports.pop()
+        coords[curr].ports.add(port)
+        while len(edge_vertices) > 0:
+            # Find the neighbor that will also share the port
+            for neighbour in coords[curr].neighbours:
+                if neighbour in edge_vertices:
+                    coords[neighbour].ports.add(port)
+                    edge_vertices.remove(neighbour)
+                    curr = neighbour
+                    break 
+
+            # Traverse until we've skipped over 2 or 3 spaces
+            for i in range(dist):
+                for neighbour in coords[curr].neighbours:
+                    if neighbour in edge_vertices:
+                        edge_vertices.remove(neighbour)
+                        curr = neighbour
+                        break
+
+            # After traversing 2 or 3 spaces, we're at the next 
+            # spot for a port! 
+            if len(distances) > 0:
+                dist = distances.pop()
+                port = ports.pop()
+                coords[curr].ports.add(port)
+        assert(len(distances) == 0 and len(ports) == 0 and len(edge_vertices) == 0) 
+        return coords
+
 
     # Print the board state
     def print_board_state(self):
