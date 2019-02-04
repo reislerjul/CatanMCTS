@@ -12,7 +12,8 @@ from utils import Move
 
 class TestBoardInitialization(unittest.TestCase):
     def test_random_ports(self):
-        board = Board(None, True)
+        player_list = [RandomPlayer(1)]
+        board = Board(player_list, True)
         edge_vertices = []
         num_ports = 0
         for coord in board.coords.keys():
@@ -33,12 +34,13 @@ class TestBoardInitialization(unittest.TestCase):
         self.assertEqual(num_ports, 18)
 
     def test_hexes_created_properly(self):
-        board = Board(None, False)
+        player_list = [RandomPlayer(1)]
+        board = Board(player_list, False)
         self.assertEqual({2: [(4, 1)], 3: [(2, 1), (3, 3)], 4: [(1, 0), (2, 3)], 5: [(1, 2), (4, 0)],
                     6: [(1, 1), (4, 2)], 7: [], 8: [(2, 4), (3, 0)], 9: [(0, 2), (3, 2)],
                     10: [(1, 3), (3, 1)], 11: [(0, 0), (2, 2)], 12: [(0, 1)]}, 
                     board.hex)
-        board = Board(None, True)
+        board = Board(player_list, True)
         self.assertEqual(len(board.hex[2]), 1)
         self.assertEqual(len(board.hex[3]), 2)
         self.assertEqual(len(board.hex[4]), 2)
@@ -54,7 +56,8 @@ class TestBoardInitialization(unittest.TestCase):
     def test_random_board_correct_number_dice_resources_spots(self):
         trials = [True, False]
         for i in range(len(trials)):
-            board = Board(None, trials[i])
+            player_list = [RandomPlayer(1)]
+            board = Board(player_list, trials[i])
             self.assertIn((0, 0), board.resources)
             self.assertIn((0, 1), board.resources)
             self.assertIn((0, 2), board.resources)
@@ -434,7 +437,101 @@ class TestRobber(unittest.TestCase):
         self.assertEqual(player_list[0].resources['o'], 0)
         self.assertEqual(player_list[0].resources['l'], 4)
         self.assertEqual(player_list[0].resources['b'], 4)
-        self.assertEqual(player_list[0].resources['g'], 2)   
+        self.assertEqual(player_list[0].resources['g'], 2) 
+
+class TestSevenRolled(unittest.TestCase):
+    def test_less_than_seven_cards(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
+        for player in player_list:
+            player.resources = {'w':0, 'b':0, 'l':3, 'g':2, 'o':0}
+        settings.init()
+        deck = Deck()
+        board = Board(player_list, False)
+        board.round_num = 3
+        board.active_player = player_list[0]
+        move_made = player_list[0].make_move(Move(Move.ROLL_DICE, roll=7), board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, None)
+        self.assertEqual(board.active_player, player_list[0])
+        self.assertEqual(player_list[0].has_rolled, True)
+        self.assertEqual(player_list[0].resources, {'w':0, 'b':0, 'l':3, 'g':2, 'o':0})
+        self.assertEqual(player_list[1].resources, {'w':0, 'b':0, 'l':3, 'g':2, 'o':0})
+        self.assertEqual(player_list[2].resources, {'w':0, 'b':0, 'l':3, 'g':2, 'o':0})
+        legal_moves = player_list[0].get_legal_moves(board, deck, 0)
+        for move in legal_moves:
+            self.assertEqual(move.move_type, Move.MOVE_ROBBER)
+
+    def test_other_player_has_more_than_seven(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
+        for player in player_list:
+            player.resources = {'w':0, 'b':0, 'l':3, 'g':2, 'o':0}
+        settings.init()
+        deck = Deck()
+        board = Board(player_list, False)
+        board.round_num = 3
+        board.active_player = player_list[0]
+        player_list[1].resources = {'w':5, 'b':5, 'l':3, 'g':2, 'o':1}
+        move_made = player_list[0].make_move(Move(Move.ROLL_DICE, roll=7), board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, player_list[0])
+        self.assertEqual(board.active_player, player_list[1])
+        legal_moves = board.active_player.get_legal_moves(board, deck, 0)
+        for move in legal_moves:
+            self.assertEqual(move.move_type, Move.DISCARD_HALF)
+        decided = board.active_player.decide_move(board, deck, player_list)
+        self.assertEqual(decided.move_type, Move.DISCARD_HALF)
+        move_made = board.active_player.make_move(decided, board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, None)
+        self.assertEqual(board.active_player, player_list[0])
+        self.assertNotEqual(player_list[1].resources, {'w':5, 'b':5, 'l':3, 'g':2, 'o':1})
+        self.assertEqual(sum(player_list[1].resources.values()), 8)
+
+    def test_all_players_more_than_seven(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
+        for player in player_list:
+            player.resources = {'w':5, 'b':5, 'l':3, 'g':2, 'o':1}
+        settings.init()
+        deck = Deck()
+        board = Board(player_list, False)
+        board.round_num = 3
+        board.active_player = player_list[0]
+        move_made = player_list[0].make_move(Move(Move.ROLL_DICE, roll=7), board, deck, player_list)
+
+        # Player 1 now needs to discard half
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, player_list[0])
+        self.assertEqual(board.active_player, player_list[0])
+        decided = board.active_player.decide_move(board, deck, player_list)
+        self.assertEqual(decided.move_type, Move.DISCARD_HALF)
+        move_made = board.active_player.make_move(decided, board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, player_list[0])
+        self.assertEqual(board.active_player, player_list[1])
+
+        # Player 2 needs to discard half
+        decided = board.active_player.decide_move(board, deck, player_list)
+        self.assertEqual(decided.move_type, Move.DISCARD_HALF)
+        move_made = board.active_player.make_move(decided, board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, player_list[0])
+        self.assertEqual(board.active_player, player_list[2])
+
+        # Player 3 needs to discard half
+        decided = board.active_player.decide_move(board, deck, player_list)
+        self.assertEqual(decided.move_type, Move.DISCARD_HALF)
+        move_made = board.active_player.make_move(decided, board, deck, player_list)
+        self.assertEqual(move_made, 1)
+        self.assertEqual(board.seven_roller, None)
+        self.assertEqual(board.active_player, player_list[0])    
+
+        for player in player_list: 
+            self.assertEqual(sum(player.resources.values()), 8)
+
+        # Make sure were at player 1 and they now need to move the robber
+        legal_moves = board.active_player.get_legal_moves(board, deck, 0)
+        for move in legal_moves:
+            self.assertEqual(move.move_type, Move.MOVE_ROBBER)
 
 class TestDevCardDeck(unittest.TestCase):
     def test_take_from_deck(self):
@@ -498,12 +595,18 @@ class TestTradeBetweenPlayers(unittest.TestCase):
         player_list[1].resources = {'w': 2, 'b': 3, 'l': 3, 'g': 0, 'o': 0}
         player_list[2].resources = {'w': 1, 'b': 1, 'l': 0, 'g': 1, 'o': 0}
         legal_moves = player_list[0].get_legal_moves(board, deck, 0)
-        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('o', 1)), legal_moves)
-        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3)), legal_moves)
-        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('b', 1)), legal_moves)
-        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('l', 3)), legal_moves)
-        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 2)), legal_moves)
-        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 1)), legal_moves)
+        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('o', 1), 
+            player=player_list[0]), legal_moves)
+        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3), 
+            player=player_list[0]), legal_moves)
+        self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('b', 1), 
+            player=player_list[0]), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('l', 3), 
+            player=player_list[0]), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 2), 
+            player=player_list[0]), legal_moves)
+        self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 1), 
+            player=player_list[0]), legal_moves)
 
 if __name__ == '__main__':
     unittest.main()

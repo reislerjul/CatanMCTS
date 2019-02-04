@@ -44,6 +44,7 @@ class Board():
         self.pending_trade = False
         self.traders = []
         self.longest_road_path = ()
+        self.seven_roller = None
 
 
     def init_coords(self, random_board):
@@ -424,15 +425,6 @@ class Board():
             for player, resource, loc in vals:
                 if self.robber != loc:
                     self.give_resource(resource, player)
-        if die_roll == 7:
-            for player in players:
-                total_resources = sum(player.resources[r] for r in self.resource_list)
-
-                if total_resources >= 8:
-                    discard = total_resources // 2
-                    for _ in range(discard):
-                        self.discard_random(player)
-
         # In debug mode, print the resources that each player now has
         if settings.DEBUG:
             for player in self.players:
@@ -638,7 +630,26 @@ class Board():
                         print("")
 
         elif move.move_type == Move.ROLL_DICE:
-          self.allocate_resources(move.roll, self.players)
+            self.allocate_resources(move.roll, self.players)
+            if move.roll == 7:
+                for person in self.players:
+                    total_resources = sum(person.resources[r] for r in self.resource_list)
+                    if total_resources >= 8:
+                        self.seven_roller = player
+                        self.active_player = person
+                        break
+
+        elif move.move_type == Move.DISCARD_HALF:
+            for i in range(player.player_num, len(self.players)):
+                person = self.players[i]
+                total_resources = sum(person.resources[r] for r in self.resource_list)
+                if total_resources >= 8:
+                    self.active_player = person
+                    break
+            # Everyone has discarded!
+            if self.active_player == player:
+                self.active_player = self.seven_roller
+                self.seven_roller = None
 
         # Build a road
         elif move.move_type == Move.BUY_ROAD:

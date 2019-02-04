@@ -2,6 +2,7 @@ import copy
 import random
 import settings
 from utils import Card, Move
+import itertools
 
 
 # The player class. Each player should keep track of their roads, cities,
@@ -156,6 +157,24 @@ class Player():
                 if self.can_accept_trade(board.pending_trade.resource):
                     return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE)]
                 return [Move(Move.DECLINE_TRADE)]
+
+            if board.seven_roller:
+                possible_moves = []
+                resource_list = self.resources['w'] * ['w'] + self.resources['o'] * ['o'] + \
+                self.resources['l'] * ['l'] + self.resources['b'] * ['b'] + \
+                self.resources['g'] * ['g']
+                total_resources = sum(self.resources[r] for r in self.resources.keys())
+                discard = total_resources // 2
+                combos = list(set(itertools.combinations(resource_list, discard)))
+                for combo in combos:
+                    combo_dict = {}
+                    for element in combo:
+                        if element not in combo_dict:
+                            combo_dict[element] = 1
+                        else:
+                            combo_dict[element] += 1
+                    possible_moves.append(Move(Move.DISCARD_HALF, resource=combo_dict))
+                return possible_moves
 
             # Can we play a dev card?
             possible_moves = []
@@ -473,6 +492,16 @@ class Player():
                 return self.can_accept_trade(board.pending_trade.resource)
             return (move.move_type == Move.DECLINE_TRADE)
 
+        if board.seven_roller:
+            if move.move_type == Move.DISCARD_HALF:
+                total_resources = sum(self.resources[r] for r in self.resources.keys())
+                if total_resources > 7:
+                    for resource in move.resource.keys():
+                        if move.resource[resource] > self.resources[resource]:
+                            return False
+                    return True
+            return False
+
         if (not self.has_rolled and (move.move_type != move.ROLL_DICE and 
             move.move_type != move.PLAY_DEV)) and board.round_num > 1:
             #print('shouldnt be here')
@@ -687,6 +716,10 @@ class Player():
                 gain = board.pending_trade.resource
                 chosen.resources[gain[0]] -= int(gain[1])
                 self.resources[gain[0]] += int(gain[1])
+                
+        elif move.move_type == Move.DISCARD_HALF:
+            for resource in move.resource.keys():
+                self.resources[resource] -= move.resource[resource]
 
         # For now, all players should randomly choose the
         # player to trade with from the list of players
