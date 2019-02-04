@@ -15,11 +15,13 @@ class Game():
     # This function is called from the main method and is used to 
     # play the game. The function calls the round function until 
     # a player has won. 
-    def play_game(self):        
+    def play_game(self): 
+        print("*** ROUND 0 ***")     
+        print("_____PLAYER 1 TURN_____")  
         while True:
             move = self.board.active_player.decide_move(self.board, self.deck, self.players)
             if not isinstance(move, int):
-                self.board.active_player.make_move(move, board, deck, players)
+                self.board.active_player.make_move(move, self.board, self.deck, self.players)
                 if self.board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
                     return self.board.active_player
 

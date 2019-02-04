@@ -23,15 +23,15 @@ def run_game(player_list, random_board):
     board = Board(player_list, random_board)
     game = Game(board, deck, player_list)
 
-
-    for element in board.resources.items():
-        print("printing hexes")
-        print(element)
-    for coord in board.coords.items():
-        if coord[1].ports != set():
-            print("printing port coordinates")
-            print(coord[0])
-            print(coord[1].ports)
+    if settings.DEBUG:
+        for element in board.resources.items():
+            print("printing hexes")
+            print(element)
+        for coord in board.coords.items():
+            if coord[1].ports != set():
+                print("printing port coordinates")
+                print(coord[0])
+                print(coord[1].ports)
 
     # Play the game
     print("Starting Game.")
@@ -49,9 +49,9 @@ def run_game(player_list, random_board):
         print("player 3 roads: " + str(player_list[2].roads))
 
 
-    print("Total Rounds: " + str(game.num_rounds))
+    print("Total Rounds: " + str(board.round_num))
     print("Game Over. Player " + str(winner.player_num) + " won.")
-    return(winner, game.num_rounds, board)
+    return(winner, board.round_num, board)
 
 
 if __name__ == '__main__':

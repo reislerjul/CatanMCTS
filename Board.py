@@ -39,7 +39,7 @@ class Board():
         self.longest_road_size = 4
         self.longest_road_player = None
         self.resource_list = ['w', 'b', 'l', 'g', 'o']
-        self.active_player = None
+        self.active_player = players[0]
         self.round_num = 0
         self.pending_trade = False
         self.traders = []
@@ -598,6 +598,7 @@ class Board():
             if self.round_num != 1:
                 if player.player_num == len(self.players):
                     self.round_num += 1
+                    print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
                 if self.round_num != 1:
                     self.active_player = self.players[player.player_num % len(self.players)]
             else:
@@ -605,7 +606,7 @@ class Board():
                     self.round_num += 1
                 else:
                     self.active_player = self.players[player.player_num - 2]
-                    if settings.DEBUG:
+            print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
             if settings.DEBUG:
                 print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
                 print("STATE OF BOARD BEFORE TURN")
@@ -685,9 +686,10 @@ class Board():
             self.pending_trade = move
             self.active_player = self.players[player.player_num % len(self.players)]
 
-        elif move.move_type == Move.ACCEPT_TRADE:
-            if player not in self.traders:
+        elif move.move_type == Move.ACCEPT_TRADE or move.move_type == Move.DECLINE_TRADE:
+            if move.move_type == Move.ACCEPT_TRADE and player not in self.traders:
                 self.traders.append(player)
+            self.active_player = self.players[player.player_num % len(self.players)]
 
         elif move.move_type == Move.CHOOSE_TRADER:
             self.pending_trade = False

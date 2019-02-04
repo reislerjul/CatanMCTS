@@ -292,7 +292,7 @@ class Player():
                         for element in trade_for:
                             for j in range(1, resources_out[element] + 1):
                                 gain = (element, j)
-                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain, player=player))
+                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain, player=self))
 
             # Can we build a city?
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
@@ -536,10 +536,10 @@ class Player():
 
         if move.move_type == Move.BUY_DEV:
             # Resources available to draw a dev card and enough dev cards in deck
-            return self.resources['o'] >= 1 \
-                    and self.resources['g'] >=1 \
-                    and self.resources['w'] >=1 \
-                    and move.card_type != -1:
+            return (self.resources['o'] >= 1 \
+                    and self.resources['g'] >= 1 \
+                    and self.resources['w'] >= 1 \
+                    and move.card_type != -1)
 
         if move.move_type == Move.PLAY_DEV:
             # Dev card available and not a victory point card
@@ -628,9 +628,8 @@ class Player():
         # For propose trade, we check elsewhere that these are legal moves
         return (move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE)
 
-    # TODO: this should represent a single move within a turn. Return
-    # 0 if we are passing our turn, 1 if the move is a valid move,
-    # -1 if the move is not legal
+    # This represents a single move within a turn. Return
+    # 1 if the move is a valid move, -1 if the move is not legal
     def make_move(self, move, board, deck, players):
         #print("move type: " + str(move.move_type))
         # Play corresponds to the information that the board may
@@ -647,10 +646,12 @@ class Player():
             #print("round: " + str(board.round_num))
             #print(self.resources)
             #print(len(self.settlements))
+            print("illegal move. move type: " + str(move.move_type) + ". active player: " + str(self.player_num))
             if self.player_type == Player.HUMAN:
                 print("Illegal move!")
             return -1
 
+        print("Move. move type: " + str(move.move_type) + ". active player: " + str(self.player_num))
         # This is a legal move so if we're in debug mode, we should
         # print the move out!
         '''if settings.DEBUG:
