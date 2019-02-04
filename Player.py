@@ -145,30 +145,17 @@ class Player():
 
             # We are trying to decide whether to accept a trade. The two options are
             # aceept a trade or don't accept a trade
-            if board.active_player.player_num != self.player_num:
+            if board.pending_trade:
                 #print("trading active player: " + str(board.active_player.player_num) + 
                 #    ", turn player: " + str(self.player_num))
+                if board.pending_trade.player.player_num == self.player_num:
+                    moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
+                    if len(moves) < len(board.players):
+                        moves.append(Move(Move.CHOOSE_TRADER, player=None))
+                    return moves
                 if self.can_accept_trade(board.pending_trade.resource):
                     return [Move(Move.DECLINE_TRADE), Move(Move.ACCEPT_TRADE)]
                 return [Move(Move.DECLINE_TRADE)]
-
-            # We've proposed a trade and now we need to ask other players to accept
-            if board.trade_step > 0 and board.trade_step < 1 + len(board.players):
-                trade_player_index = self.player_num % len(board.players)
-                trade_player = board.players[trade_player_index]
-                while trade_player != self:
-                    trade_move = trade_player.decide_move(board, deck, board.players)
-                    move_made = trade_player.make_move(trade_move, board, deck, board.players)
-                    trade_player_index = (trade_player_index + 1) % len(board.players)
-                    trade_player = board.players[trade_player_index]
-                return [Move(Move.ASK_TRADE, player=tuple(board.traders))]
-
-            # check to see if we must select a trader
-            if board.pending_trade:
-                moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
-                if len(moves) < len(board.players):
-                    moves.append(Move(Move.CHOOSE_TRADER, player=None))
-                return moves
 
             # Can we play a dev card?
             possible_moves = []
@@ -305,7 +292,7 @@ class Player():
                         for element in trade_for:
                             for j in range(1, resources_out[element] + 1):
                                 gain = (element, j)
-                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain))
+                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain, player=player))
 
             # Can we build a city?
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
@@ -477,22 +464,22 @@ class Player():
     # General: Make sure the player can only play the move if they have the
     # required resources
     def check_legal_move(self, move, board, deck):
-        if board.active_player != self:
+        if board.pending_trade:
+            if move.move_type == Move.CHOOSE_TRADER and board.pending_trade.player.player_num == self.player_num:
+                return True
+            if board.pending_trade.player.player_num == self.player_num:
+                return False
             if move.move_type == Move.ACCEPT_TRADE:
                 return self.can_accept_trade(board.pending_trade.resource)
-            if move.move_type == Move.DECLINE_TRADE:
-                return True
-            return False
-
-        # This means that every other player should've been asked for the trade
-        if move.move_type == Move.ASK_TRADE and board.trade_step >= len(board.players):
-            return True
+            return (move.move_type == Move.DECLINE_TRADE)
 
         if (not self.has_rolled and (move.move_type != move.ROLL_DICE and 
             move.move_type != move.PLAY_DEV)) and board.round_num > 1:
             #print('shouldnt be here')
             return False
             
+        if move.move_type == Move.ROLL_DICE:
+            return not self.has_rolled
         if move.move_type == Move.BUY_ROAD:
             road_coords = list(move.road)
             if (road_coords[0] in board.coords
@@ -538,22 +525,21 @@ class Player():
                         or board.round_num == 0
                         or board.round_num == 1):
                         return True
+            return False
 
         # Have a settlement at that spot
         if move.move_type == Move.BUY_CITY \
                 and move.coord in self.settlements \
                 and len(self.cities) < 4:
             # Resources available to make a city
-            if self.resources['o'] >= 3 and self.resources['g'] >=2:
-                return True
+            return (self.resources['o'] >= 3 and self.resources['g'] >= 2)
 
         if move.move_type == Move.BUY_DEV:
             # Resources available to draw a dev card and enough dev cards in deck
-            if self.resources['o'] >= 1 \
+            return self.resources['o'] >= 1 \
                     and self.resources['g'] >=1 \
                     and self.resources['w'] >=1 \
                     and move.card_type != -1:
-                return True
 
         if move.move_type == Move.PLAY_DEV:
             # Dev card available and not a victory point card
@@ -639,13 +625,8 @@ class Player():
             if move.coord in spots:
                 return True
 
-        # For propose and accept trade, we check elsewhere that these are legal moves
-        if move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE or \
-        move.move_type == Move.CHOOSE_TRADER or move.move_type == Move.ROLL_DICE:
-            return True
-
-        return False
-
+        # For propose trade, we check elsewhere that these are legal moves
+        return (move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE)
 
     # TODO: this should represent a single move within a turn. Return
     # 0 if we are passing our turn, 1 if the move is a valid move,
@@ -678,9 +659,12 @@ class Player():
             print("Move: " + str(move))
         '''
         #print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
-        print("")
-        print("printing move:")
-        print(str(move))
+        if settings.DEBUG:
+            print("")
+            print("printing move:")
+            print(str(move))
+
+        self.avg_moves_round[1] += 1
         if move.move_type == Move.ROLL_DICE:
             self.has_rolled = True
             if move.roll == 7:
@@ -772,17 +756,14 @@ class Player():
         elif move.move_type == Move.MOVE_ROBBER:
             self.move_robber = False
 
-        # Apply the changes to the board
-        board.update_board(self, move)
-
-        # End turn
-        if move.move_type == Move.END_TURN:
-            #print("ending turn")
+        elif move.move_type == Move.END_TURN:
             self.dev_played = 0
             self.trades_tried = 0
             self.has_rolled = False
             self.dev_drawn = -1
-            return 0
+
+        # Apply the changes to the board
+        board.update_board(self, move)
         return 1
 
     # A helper function to handle playing dev cards
@@ -865,75 +846,6 @@ class Player():
         if self.print_invalid_move():
             print('Cannot build road here...')
         return False
-
-    # TODO:
-    # function in which the player can have a turn. This should be handled
-    # differently depending on whether the player is real or is an AI.
-    # If the player is real, the make_move function should prompt the player
-    # to enter moves from the command line, check if they are legal, and update
-    # the board state if they are legal. The function returns when the player
-    # has entered a command to end their turn. For an AI, we should first code
-    # a basis random AI. This AI will consider the set of legal moves that they
-    # can make and choose one at random. This will occur until they randomly
-    # choose to end their turn. If a player makes a move that causes their
-    # victory points to be greater than or equal to 10, the function should
-    # immediately return 1. Otherwise, return 0 when the turn is over.
-    # Don't update dev cards till end of turn
-    # note i added players here because the MCTSAI needs info to make decisions
-    # for what the other players might have.
-    def make_turn(self, board, deck, players):
-        print("_____PLAYER " + str(self.player_num) + " TURN_____")
-        print("STATE OF BOARD BEFORE TURN")
-        print("PLAYERS")
-        for player in board.players:
-            print("Player {} has resources and devs:".format(player.player_num))
-            for r in board.resource_list:
-                print('    {}: {}'.format(r, player.resources[r]))
-            for dev in player.dev_cards.items():
-                print('    {}: {}'.format(dev[0], dev[1]))
-        print("settlements: " + str(self.settlements))
-        print("cities: " + str(self.cities))
-        print("ports: " + str(self.ports))
-        print("roads: " + str(self.roads))
-        print("BOARD")
-        print("robber: " + str(board.robber))
-        if board.largest_army_player != None:
-            print("largest army player: " + str(board.largest_army_player.player_num))
-        if board.longest_road_player != None:
-            print("longest road player: " + str(board.longest_road_player.player_num))
-        for coord in board.coords.values():
-            if coord.player != None:
-                print("COORD")
-                print("location: " + str(coord.location))
-                print("settlement: " + str(coord.settlement))
-                print("player: " + str(coord.player.player_num))
-                print("roads: " + str(coord.roads))
-                print("available roads: " + str(coord.available_roads))
-                print("")
-
-
-        #print("______NEXT PLAYER_______")
-        # This should indicate whether a dev card has already been
-        # played during this turn. If so, we can't play another one.
-
-        # This should indicate the number of trades proposed. We will limit
-        # players to proposing 2 trades per turn
-        #print("__________NEXT TURN__________")
-        self.avg_moves_round[0] += 1
-        while True:
-            move = self.decide_move(board, deck, players)
-            if not isinstance(move, int):
-                move_made = self.make_move(move, board, deck, players)
-                if move_made == 1:
-                    self.avg_moves_round[1] += 1
-
-                    # Did the move cause us to win?
-                    if self.calculate_vp() >= settings.POINTS_TO_WIN:
-                        return 1
-
-                if move_made == 0:
-                    #print("move type: " + str(move.move_type))
-                    break
 
     # Can the player accept the trade? trade_map is a map of the resources
     # that another player is asking for from this player

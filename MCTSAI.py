@@ -17,23 +17,22 @@ class State():
         self.winner = 0
 
 class Node():
-    def __init__(self, _id, parent_id, active_player_num, curr_player_num, state, depth):
+    def __init__(self, _id, parent_id, active_player_num, state, depth):
         self.wins = 1
         self.plays = 2
         self.id = _id
         self.parent_id = parent_id
         self.children = {}
         self.active_player_num = active_player_num
-        self.curr_player_num = curr_player_num
         self.state = state
         self.depth = depth
 
 class MCTSAI():
 
-    def __init__(self, board, time, players, deck, active_player_num, curr_player_num, weighted, thompson):
+    def __init__(self, board, time, players, deck, active_player_num, weighted, thompson):
         # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
-        self.nodes = [Node(0, -1, active_player_num, curr_player_num, State(players, board, deck), 0)]
+        self.nodes = [Node(0, -1, active_player_num, State(players, board, deck), 0)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -43,8 +42,7 @@ class MCTSAI():
 
 
     def thompson_sample(self, node):
-        active_player = node.state.players[node.curr_player_num - 1]
-
+        active_player = node.state.players[node.active_player_num - 1]
         legal = active_player.get_legal_moves(node.state.board,
                                               node.state.deck,
                                               self.weighted)
@@ -77,7 +75,7 @@ class MCTSAI():
         board = state.board
         deck = state.deck
 
-        active_player = self.nodes[0].state.players[self.nodes[0].curr_player_num - 1]
+        active_player = self.nodes[0].state.players[self.nodes[0].active_player_num - 1]
         legal = active_player.get_legal_moves(board,
                                               deck,
                                               self.weighted)
@@ -168,8 +166,6 @@ class MCTSAI():
         #print("selected move: " + str(move.move_type))
         #print("node active player: " + str(node.state.board.active_player.player_num))
         #print("node turn player: " + str(node.curr_player_num))
-
-
         if not move:
             # winner has already been found
             winner = node.state.winner
@@ -179,17 +175,14 @@ class MCTSAI():
             winner = self.run_simulation(new_node)
             self.run_backpropogation(new_node, winner)
 
-
     def run_selection(self):
         #print("start of selection")
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
-
         # TODO: fix this part later
         #print('____starting new loop_____')
         while current_node.state.winner == 0 and move in current_node.children:
             current_node = self.nodes[current_node.children[move]]
-
             #print('active player num')
             #print(current_node.active_player_num)
             #print('round num')
@@ -197,7 +190,6 @@ class MCTSAI():
             move = self.thompson_sample(current_node)
             #print("move type: " + str(move.move_type))
         #print('after loop move: ' + str(move.move_type))
-
         if current_node.state.winner == 0:
             return current_node, move
         else:
@@ -206,46 +198,18 @@ class MCTSAI():
     def run_expansion(self, node, move):
         #print("start of expansion")
         state_copy = copy.deepcopy(node.state)
-        player = state_copy.players[node.curr_player_num - 1]
-        turn_player = node.curr_player_num
-        active_player = node.active_player_num
-        if move.move_type != Move.END_TURN:
-            player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
-            #print("expansion move: " + str(move.move_type))
-            #print("active player: " + str(state_copy.board.active_player.player_num))
-            if move.move_type == move.ROLL_DICE:
-                player.has_rolled = True
-            elif move.move_type in {Move.ACCEPT_TRADE, Move.DECLINE_TRADE}:
-                turn_player = (node.curr_player_num % len(state_copy.players)) + 1
-        else:
-            # Update the round number. Also, on the second round, the order of play is reverse
-            if state_copy.board.round_num != 1:
-                turn_player = node.active_player_num + 1
-                active_player = node.active_player_num + 1
-            else:
-                turn_player = node.active_player_num - 1
-                active_player = node.active_player_num - 1
-
-            # If the turn player/active player are out of range, its the end of a round
-            if turn_player not in range(1, len(state_copy.players) + 1):
-                # End of rounds except for first round
-                if turn_player < 1 or state_copy.board.round_num > 1:
-                    turn_player = 1
-                    active_player = 1
-                else:
-                    turn_player = len(state_copy.players)
-                    active_player = len(state_copy.players)
-                state_copy.board.round_num += 1
-        state_copy.board.active_player = state_copy.players[active_player - 1]
-        new_node = Node(len(self.nodes), node.id, active_player, turn_player, 
-            state_copy, node.depth + 1)
+        player = state_copy.players[node.active_player_num - 1]
+        player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
+        new_node = Node(len(self.nodes), node.id, state_copy.board.active_player, state_copy, node.depth + 1)
         self.nodes.append(new_node)
         node.children[move] = new_node.id
-        if node.state.players[node.active_player_num - 1].calculate_vp() >= settings.POINTS_TO_WIN:
-            node.state.winner = node.active_player_num
+        if new_node.state.players[new_node.active_player_num - 1].calculate_vp() >= settings.POINTS_TO_WIN:
+            new_node.state.winner = new_node.active_player_num
         return new_node
 
     def run_simulation(self, node):
+        if new_node.state.winner != 0:
+            return new_node.state.winner
         state_copy = copy.deepcopy(node.state)
         new_players = []
         for p in state_copy.players:
@@ -271,15 +235,13 @@ class MCTSAI():
                 state_copy.board.longest_road_player = new_player
             new_players.append(new_player)
         state_copy.board.players = new_players
-        new_game = Game(state_copy.board, state_copy.deck, new_players, 
-            start_player=state_copy.board.active_player.player_num - 1, verbose=False)
-        new_game.num_rounds = state_copy.board.round_num
+        new_game = Game(state_copy.board, state_copy.deck, new_players, verbose=False)
         winner = new_game.play_game()
-        return winner
+        return winner.player_num
 
     def run_backpropogation(self, node, winner):
         while node.id > 0:
             self.nodes[node.id].plays += 1
-            if winner == node.curr_player_num:
+            if winner == node.active_player_num:
                 self.nodes[node.id].wins += 1
             node = self.nodes[node.parent_id]

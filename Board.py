@@ -43,9 +43,7 @@ class Board():
         self.round_num = 0
         self.pending_trade = False
         self.traders = []
-        self.trade_step = 0
         self.longest_road_path = ()
-        self.choose_discard_step = 0
 
 
     def init_coords(self, random_board):
@@ -597,10 +595,46 @@ class Board():
         '''
         # End turn
         if move.move_type == Move.END_TURN:
-            current_player_num = player.player_num
-            next_player_index = current_player_num % len(self.players)
-            self.active_player = self.players[next_player_index]
-            return 0
+            if self.round_num != 1:
+                if player.player_num == len(self.players):
+                    self.round_num += 1
+                if self.round_num != 1:
+                    self.active_player = self.players[player.player_num % len(self.players)]
+            else:
+                if player.player_num == 1:
+                    self.round_num += 1
+                else:
+                    self.active_player = self.players[player.player_num - 2]
+                    if settings.DEBUG:
+            if settings.DEBUG:
+                print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
+                print("STATE OF BOARD BEFORE TURN")
+                print("PLAYERS")
+                for player in self.players:
+                    print("Player {} has resources and devs:".format(player.player_num))
+                    for r in self.resource_list:
+                        print('    {}: {}'.format(r, player.resources[r]))
+                    for dev in player.dev_cards.items():
+                        print('    {}: {}'.format(dev[0], dev[1]))
+                print("settlements: " + str(self.settlements))
+                print("cities: " + str(self.cities))
+                print("ports: " + str(self.ports))
+                print("roads: " + str(self.roads))
+                print("BOARD")
+                print("robber: " + str(self.robber))
+                if self.largest_army_player != None:
+                    print("largest army player: " + str(self.largest_army_player.player_num))
+                if self.longest_road_player != None:
+                    print("longest road player: " + str(self.longest_road_player.player_num))
+                for coord in self.coords.values():
+                    if coord.player != None:
+                        print("COORD")
+                        print("location: " + str(coord.location))
+                        print("settlement: " + str(coord.settlement))
+                        print("player: " + str(coord.player.player_num))
+                        print("roads: " + str(coord.roads))
+                        print("available roads: " + str(coord.available_roads))
+                        print("")
 
         elif move.move_type == Move.ROLL_DICE:
           self.allocate_resources(move.roll, self.players)
@@ -649,14 +683,11 @@ class Board():
         elif move.move_type == Move.PROPOSE_TRADE:
             self.traders = []
             self.pending_trade = move
-            self.trade_step = 1
+            self.active_player = self.players[player.player_num % len(self.players)]
 
-        elif move.move_type == Move.ASK_TRADE or move.move_type == Move.ACCEPT_TRADE or move.move_type == Move.DECLINE_TRADE:
-            self.trade_step += 1
-            if move.move_type == Move.ACCEPT_TRADE:
-                if player not in self.traders:
-                    self.traders.append(player)
+        elif move.move_type == Move.ACCEPT_TRADE:
+            if player not in self.traders:
+                self.traders.append(player)
 
         elif move.move_type == Move.CHOOSE_TRADER:
             self.pending_trade = False
-            self.trade_step = 0

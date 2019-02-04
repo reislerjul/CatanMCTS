@@ -100,16 +100,6 @@ class Human(Player):
                 victim = self.choose_victim(board, spot)
                 return Move(Move.MOVE_ROBBER, coord=spot, player=victim)
 
-            if board.trade_step == 1:
-                trade_player_index = self.player_num % len(board.players)
-                trade_player = board.players[trade_player_index]
-                while trade_player != self:
-                    trade_move = trade_player.decide_move(board, deck, board.players)
-                    move_made = trade_player.make_move(trade_move, board, deck, board.players)
-                    trade_player_index = (trade_player_index + 1) % len(board.players)
-                    trade_player = board.players[trade_player_index]
-                return Move(Move.ASK_TRADE, player=tuple(board.traders))
-
             if board.pending_trade:
                 return self.choose_trader(board.traders)
 
@@ -173,7 +163,7 @@ class Human(Player):
                 elif move_type == Move.PROPOSE_TRADE:
                     maps = self.trade_other_players()
                     if maps != None:
-                        move = Move(Move.PROPOSE_TRADE, give_resource=maps[0], resource=maps[1])
+                        move = Move(Move.PROPOSE_TRADE, give_resource=maps[0], resource=maps[1], player=self)
                         return move
                 return -1
             else:

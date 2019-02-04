@@ -21,8 +21,17 @@ def run_game(player_list, random_board):
     settings.init()
     deck = Deck()
     board = Board(player_list, random_board)
-    #board.init_board()
     game = Game(board, deck, player_list)
+
+
+    for element in board.resources.items():
+        print("printing hexes")
+        print(element)
+    for coord in board.coords.items():
+        if coord[1].ports != set():
+            print("printing port coordinates")
+            print(coord[0])
+            print(coord[1].ports)
 
     # Play the game
     print("Starting Game.")

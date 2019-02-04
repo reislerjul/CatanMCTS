@@ -18,7 +18,6 @@ class MCTSPlayer(Player):
 
     def decide_move(self, board, deck, players):
         AI = MCTSAI(board, self.time, players, deck, 
-            board.active_player.player_num, 
             self.player_num, self.weighted, self.thompson)
         move = AI.get_play()
         return move
