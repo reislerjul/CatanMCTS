@@ -26,7 +26,7 @@ class Coord():
 # are, where the robber is.
 class Board():
 
-    def __init__(self, players, random_board):
+    def __init__(self, players, random_board, verbose=False):
         self.players = players
         self.robber = (2, 0)
         self.resources = self.init_resources(random_board)
@@ -45,7 +45,7 @@ class Board():
         self.traders = []
         self.longest_road_path = ()
         self.seven_roller = None
-
+        self.verbose = verbose
 
     def init_coords(self, random_board):
         '''
@@ -590,7 +590,8 @@ class Board():
             if self.round_num != 1:
                 if player.player_num == len(self.players):
                     self.round_num += 1
-                    print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+                    if self.verbose:
+                        print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
                 if self.round_num != 1:
                     self.active_player = self.players[player.player_num % len(self.players)]
             else:
@@ -598,7 +599,10 @@ class Board():
                     self.round_num += 1
                 else:
                     self.active_player = self.players[player.player_num - 2]
-            print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
+            self.active_player.avg_moves_round[0] += 1
+
+            if self.verbose:
+                print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
             if settings.DEBUG:
                 print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
                 print("STATE OF BOARD BEFORE TURN")

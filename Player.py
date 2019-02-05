@@ -53,7 +53,7 @@ class Player():
         self.bank_trades = 0
 
         # Keep track of the total rounds the player has had and the total number of moves. 
-        # This doesn't include invalid moves or ending the turn 
+        # This doesn't include invalid moves 
         self.avg_moves_round = [0, 0]
 
 
@@ -680,7 +680,7 @@ class Player():
                 print("Illegal move!")
             return -1
 
-        print("Move. move type: " + str(move.move_type) + ". active player: " + str(self.player_num))
+        #print("Move. move type: " + str(move.move_type) + ". active player: " + str(self.player_num))
         # This is a legal move so if we're in debug mode, we should
         # print the move out!
         '''if settings.DEBUG:
@@ -716,7 +716,7 @@ class Player():
                 gain = board.pending_trade.resource
                 chosen.resources[gain[0]] -= int(gain[1])
                 self.resources[gain[0]] += int(gain[1])
-                
+
         elif move.move_type == Move.DISCARD_HALF:
             for resource in move.resource.keys():
                 self.resources[resource] -= move.resource[resource]

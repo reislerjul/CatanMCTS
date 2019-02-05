@@ -39,6 +39,8 @@ class MCTSAI():
         #factor to see how much to explore and expand we should test
         #values of this parameter.
         self.C = 1.0
+        self.num_cycles_run = 0
+        self.num_moves_from_root = 0
 
 
     def thompson_sample(self, node):
@@ -79,18 +81,19 @@ class MCTSAI():
         legal = active_player.get_legal_moves(board,
                                               deck,
                                               self.weighted)
-
+        self.num_moves_from_root = len(legal)
         if len(legal) == 1:
             return legal[0]
 
         start = datetime.datetime.utcnow()
         while datetime.datetime.utcnow() - start < self.timer:
             #print('running cycle')
+            self.num_cycles_run += 1
             self.run_cycle()
         #print('finished running cycles!')
         #print("____CYCLE STARTING____")
         #self.run_cycle()
-        #print("____CYCLE ENDING____")
+        #print("____DONE RUNNING CYCLES____")
 
         root = self.nodes[0]
 
@@ -155,11 +158,18 @@ class MCTSAI():
                 move = move_made
         return move
         '''
-        return max([(self.nodes[root.children[move_made]].plays, move_made)
+
+        # We want to choose the node that's had the most simulations played, which is plays.
+        # If there are several that've had the same simulations, to differentiate, we choose 
+        # the one with the most wins. Thus, by multiplying wins by a factor of 0.0001, nodes
+        # with equal moves should have the same value to the left of the decimal point, 
+        # but nodes with more wins will have larger values to the right. 
+        return max([(self.nodes[root.children[move_made]].plays, move_made, 
+                     self.nodes[root.children[move_made]].wins)
                     if move_made in root.children
-                    else (2, move_made)
+                    else (0, move_made, 0)
                     for move_made in legal],
-                   key=lambda x: x[0] + random.uniform(0, 1))[1]
+                   key=lambda x: x[0] + 0.00001 * x[2])[1]
 
     def run_cycle(self):
         node, move = self.run_selection()
@@ -179,6 +189,7 @@ class MCTSAI():
         #print("start of selection")
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
+        #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
         # TODO: fix this part later
         #print('____starting new loop_____')
         while current_node.state.winner == 0 and move in current_node.children:
@@ -188,6 +199,7 @@ class MCTSAI():
             #print('round num')
             #print(current_node.state.board.round_num)
             move = self.thompson_sample(current_node)
+            #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
             #print("move type: " + str(move.move_type))
         #print('after loop move: ' + str(move.move_type))
         if current_node.state.winner == 0:
@@ -200,7 +212,7 @@ class MCTSAI():
         state_copy = copy.deepcopy(node.state)
         player = state_copy.players[node.active_player_num - 1]
         player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
-        new_node = Node(len(self.nodes), node.id, state_copy.board.active_player, state_copy, node.depth + 1)
+        new_node = Node(len(self.nodes), node.id, state_copy.board.active_player.player_num, state_copy, node.depth + 1)
         self.nodes.append(new_node)
         node.children[move] = new_node.id
         if new_node.state.players[new_node.active_player_num - 1].calculate_vp() >= settings.POINTS_TO_WIN:
@@ -208,8 +220,8 @@ class MCTSAI():
         return new_node
 
     def run_simulation(self, node):
-        if new_node.state.winner != 0:
-            return new_node.state.winner
+        if node.state.winner != 0:
+            return node.state.winner
         state_copy = copy.deepcopy(node.state)
         new_players = []
         for p in state_copy.players:

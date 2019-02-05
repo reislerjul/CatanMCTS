@@ -16,10 +16,25 @@ class MCTSPlayer(Player):
         self.weighted = weighted
         self.thompson = thompson
 
+        # These are used for bookkeeping. avg_legal_moves keeps track 
+        # of the amount of legal moves considered from the state at 
+        # which we call the MCTS algorithm. If the size of the legal
+        # move set is greater than 1, we run cycles. In this case, we 
+        # keep track of the number of cycles run and the number of legal
+        # moves. We don't count cases where no cycles are run and there is 
+        # only one possible move.
+        self.avg_cycles_per_move = [0, 0]
+        self.avg_legal_moves = [0, 0]
+
     def decide_move(self, board, deck, players):
         AI = MCTSAI(board, self.time, players, deck, 
             self.player_num, self.weighted, self.thompson)
         move = AI.get_play()
+        if AI.num_moves_from_root > 1:
+            self.avg_legal_moves[0] += 1
+            self.avg_legal_moves[1] += AI.num_moves_from_root
+            self.avg_cycles_per_move[0] += 1
+            self.avg_cycles_per_move[1] += AI.num_cycles_run
         return move
 
     def to_string(self):

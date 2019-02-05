@@ -92,7 +92,8 @@ if __name__ == '__main__':
             'MCTS Num VP Dev Cards', 'MCTS Num Devs Bought', 
             'MCTS Total Trades Accepted', 'MCTS Total Trades Proposed', 
             'MCTS Trades Proposed Successfully', 'Total Trades with Bank', 
-            'Average Move per Turn']
+            'Average Move per Turn', 'Average Number of Moves Considered by MCTS Algorithm', 
+            'Average Number of Cycles Run by MCTS Algorithm per Decided Move']
 
         with open(r'catan_results.csv', 'w') as f:
             writer = csv.writer(f)
@@ -156,6 +157,8 @@ if __name__ == '__main__':
                 row.append(MCTS_player.trades_proposed_successfully)
                 row.append(MCTS_player.bank_trades)
                 row.append(float(MCTS_player.avg_moves_round[1]) / MCTS_player.avg_moves_round[0])
+                row.append(float(MCTS_player.avg_cycles_per_move[1]) / MCTS_player.avg_cycles_per_move[0])
+                row.append(float(MCTS_player.avg_legal_moves[1]) / MCTS_player.avg_legal_moves[0])
             with open(r'catan_results.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(row)

@@ -10,6 +10,17 @@ from utils import Card
 from unittest.mock import patch
 from utils import Move
 
+
+# Use this class to check that cycles are run correctly. Print statements will need 
+# to be added to the MCTSAI class
+class TestMCTS(unittest.TestCase):
+    def test_cycles_work(self):
+        player_list = [MCTSPlayer(1, 10, 0, 1), RandomPlayer(2), RandomPlayer(3)]
+        settings.init()
+        deck = Deck()
+        board = Board(player_list, False)
+        move = board.active_player.decide_move(board, deck, player_list)
+
 class TestBoardInitialization(unittest.TestCase):
     def test_random_ports(self):
         player_list = [RandomPlayer(1)]
