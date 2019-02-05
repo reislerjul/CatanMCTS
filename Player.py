@@ -41,6 +41,7 @@ class Player(object):
         self.dev_played = 0
         self.trades_tried = 0
         self.dev_drawn = -1
+        self.random = False
 
         # This stuff on bottom is used for bookkeeping
         self.num_yop_played = 0
@@ -51,6 +52,7 @@ class Player(object):
         self.trades_proposed_successfully = 0
         self.trades_accepted = 0 
         self.bank_trades = 0
+        self.num_dots_initial_spots = 0
 
         # Keep track of the total rounds the player has had and the total number of moves. 
         # This doesn't include invalid moves 
@@ -149,8 +151,8 @@ class Player(object):
             if board.pending_trade:
                 #print("trading active player: " + str(board.active_player.player_num) + 
                 #    ", turn player: " + str(self.player_num))
-                if board.pending_trade.player.player_num == self.player_num:
-                    moves = [Move(Move.CHOOSE_TRADER, player=p) for p in board.traders]
+                if board.pending_trade.player == self.player_num:
+                    moves = [Move(Move.CHOOSE_TRADER, player=p.player_num) for p in board.traders]
                     if len(moves) < len(board.players):
                         moves.append(Move(Move.CHOOSE_TRADER, player=None))
                     return moves
@@ -182,15 +184,15 @@ class Player(object):
                                      (3, 1), (0, 0), (2, 2), (0, 1), (2, 0)]
                             spots.remove(board.robber)
                             for spot in spots:
-                                possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
+                                possible_players = [p for p in board.players_adjacent_to_hex(spot) if self.player_num != p.player_num]
 
                                 if possible_players != []:
                                     for p in possible_players:
                                         if weighted:
                                             for i in range(10):
-                                                possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p))
+                                                possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p.player_num))
                                         else:
-                                            possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p))
+                                            possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p.player_num))
                                 else:
                                     if weighted:
                                         for i in range(10):
@@ -201,14 +203,11 @@ class Player(object):
                             if self.total_roads < 15:
                                 # Get the set of possible places we can build a road
                                 possible_roads = set()
-
                                 for road_source in self.roads:
                                     possible_sinks = board.coords[road_source].available_roads
-
                                     for sink in possible_sinks:
                                         if frozenset([road_source, sink]) not in possible_roads:
                                             possible_roads.add(frozenset([road_source, sink]))
-
                                 if self.total_roads == 14:
                                     # We now have the possible single roads, so lets add those moves!
                                     for road in possible_roads:
@@ -250,7 +249,7 @@ class Player(object):
             # We need to roll at the beginning of the turn
             if not self.has_rolled:
                 roll = random.randint(1, 6) + random.randint(1, 6)
-                return possible_moves + [Move(Move.ROLL_DICE, roll=roll, player=self)]
+                return possible_moves + [Move(Move.ROLL_DICE, roll=roll, player=self.player_num)]
 
             if self.move_robber:
                 possible_moves = []
@@ -258,14 +257,13 @@ class Player(object):
                          (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
                          (3, 1), (0, 0), (2, 2), (0, 1)]
                 for spot in spots:
-                    possible_players = [p for p in board.players_adjacent_to_hex(spot) if self is not p]
+                    possible_players = [p for p in board.players_adjacent_to_hex(spot) if self.player_num != p.player_num]
 
                     if possible_players != []:
                         for p in possible_players:
-                            possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p))
+                            possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot, player=p.player_num))
                     else:
                         possible_moves.append(Move(Move.MOVE_ROBBER, coord=spot))
-                self.move_robber = False
                 return possible_moves
 
             # We can always end our turn
@@ -293,7 +291,7 @@ class Player(object):
                 # for cards that other players have
                 resources_out = {'w': 0, 'g': 0, 'b': 0, 'l': 0, 'o': 0}
                 for player in board.players:
-                    if player != self:
+                    if player.player_num != self.player_num:
                         for element in resources_out.keys():
                             resources_out[element] = max(player.resources[element], resources_out[element])
                 resource_list = self.resources.items()
@@ -305,7 +303,7 @@ class Player(object):
                         for element in trade_for:
                             for j in range(1, resources_out[element] + 1):
                                 gain = (element, j)
-                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain, player=self))
+                                possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain, player=self.player_num))
 
             # Can we build a city?
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
@@ -415,13 +413,9 @@ class Player(object):
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='b'))
                 possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='l'))
             
+            if len(possible_moves) == 0:
+                print("no possible moves")
             return possible_moves
-
-
-    # A getter function to return the player's hand of dev cards
-    def get_dev_cards(self):
-        return self.dev_cards
-
 
     # Allows the game to access the number of victory points that a player has
     def calculate_vp(self):
@@ -430,18 +424,6 @@ class Player(object):
               + len(self.settlements)
               + self.longest_road
               + self.largest_army)
-
-    def add_settlement(self, board, loc, idx):
-        # Add the settlement to the board and update player fields
-        self.settlements.append(loc)
-        state = board.coords[loc]
-        for p in state.ports:
-            self.ports.append(p)
-        if idx == 2:
-            board.add_settlement(self, loc, True)
-        else:
-            board.add_settlement(self, loc)
-
 
     def add_road(self, board, road):
         coords = list(road)
@@ -454,7 +436,6 @@ class Player(object):
         else:
             self.roads[coords[1]] = [coords[0]]
         self.total_roads += 1
-
 
     # TODO: this function should check that the move made is a legal move.
     # Consider making one of these for each move type.
@@ -478,9 +459,9 @@ class Player(object):
     # required resources
     def check_legal_move(self, move, board, deck):
         if board.pending_trade:
-            if move.move_type == Move.CHOOSE_TRADER and board.pending_trade.player.player_num == self.player_num:
+            if move.move_type == Move.CHOOSE_TRADER and board.pending_trade.player == self.player_num:
                 return True
-            if board.pending_trade.player.player_num == self.player_num:
+            if board.pending_trade.player == self.player_num:
                 return False
             if move.move_type == Move.ACCEPT_TRADE:
                 return self.can_accept_trade(board.pending_trade.resource)
@@ -506,7 +487,7 @@ class Player(object):
             move.move_type != move.PLAY_DEV)) and board.round_num > 1:
             #print('shouldnt be here')
             return False
-            
+
         if move.move_type == Move.ROLL_DICE:
             return not self.has_rolled
         if move.move_type == Move.BUY_ROAD:
@@ -668,7 +649,6 @@ class Player(object):
         #print('move: ' + str(move.move_type) + ', round: ' + str(board.round_num) + 
         #    ', player: ' + str(self.player_num) + ', has rolled: ' + str(self.has_rolled) + 
         #    ', active player: ' + str(board.active_player.player_num))
-        play = None
         if not self.check_legal_move(move, board, deck):
             #print(move.move_type)
             #print("card: " + str(move.card_type))
@@ -688,7 +668,7 @@ class Player(object):
             print("Move type: " + str(move_type))
             print("Move: " + str(move))
         '''
-        #print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
+        print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
         if settings.DEBUG:
             print("")
             print("printing move:")
@@ -705,7 +685,7 @@ class Player(object):
 
         elif move.move_type == Move.CHOOSE_TRADER:
             #print("choosing traders")
-            chosen = move.player
+            chosen = players[move.player - 1] if move.player != None else None
 
             if chosen != None:
                 self.trades_proposed_successfully += 1
@@ -742,9 +722,14 @@ class Player(object):
 
             # after playing a second settlement, players
             # get the resources surrounding that settlement
+            if board.round_num == 0:
+                hexes = board.coords[move.coord].resource_locs
+                for loc in hexes:
+                    self.num_dots_initial_spots += board.resources[loc][2]
             if board.round_num == 1:
                 resources = board.coords[move.coord].resource_locs
                 for hex_loc in resources:
+                    self.num_dots_initial_spots += board.resources[hex_loc][2]
                     vals = board.resources[hex_loc]
                     if vals[0] in self.resources:
                         self.resources[vals[0]] += 1

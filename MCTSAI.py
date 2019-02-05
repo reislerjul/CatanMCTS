@@ -224,31 +224,9 @@ class MCTSAI():
         if node.state.winner != 0:
             return node.state.winner
         state_copy = copy.deepcopy(node.state)
-        new_players = []
         for p in state_copy.players:
-            new_player = RandomPlayer(p.player_num)
-            new_player.resources = p.resources
-            new_player.dev_cards = p.dev_cards
-            new_player.num_knights_played = p.num_knights_played
-            new_player.longest_road = p.longest_road
-            new_player.largest_army = p.largest_army
-            new_player.ports = p.ports
-            new_player.cities = p.cities
-            new_player.settlements = p.settlements
-            new_player.roads = p.roads
-            new_player.total_roads = p.total_roads
-            new_player.has_rolled = p.has_rolled
-            new_player.dev_played = p.dev_played
-            new_player.trades_tried = p.trades_tried
-            if p.player_num == state_copy.board.active_player.player_num:
-                state_copy.board.active_player = new_player
-            if p.player_num == state_copy.board.largest_army_player:
-                state_copy.board.largest_army_player = new_player
-            if p.player_num == state_copy.board.longest_road_player:
-                state_copy.board.longest_road_player = new_player
-            new_players.append(new_player)
-        state_copy.board.players = new_players
-        new_game = Game(state_copy.board, state_copy.deck, new_players, verbose=False)
+            p.random = True
+        new_game = Game(state_copy.board, state_copy.deck, state_copy.players, verbose=False)
         winner = new_game.play_game()
         return winner.player_num
 

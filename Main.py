@@ -86,6 +86,8 @@ if __name__ == '__main__':
             'Third Player Type', 'Third Player VP', 'Fourth Player Type', 
             'Fourth Player VP', 'Number Rounds', 'Largest Army Player', 
             'Largest Army Size', 'Longest Road Player', 'Longest Road Size', 
+            'Num Initial Dots Player 1', 'Num Initial Dots Player 2', 
+            'Num Initial Dots Player 3', 'Num Initial Dots Player 4',
             'MCTS Num Ports', 'MCTS Num Cities', 'MCTS Num Settlements', 
             'MCTS Num Roads', 'MCTS Num Knights Played', 'MCTS Num YOP Played',
             'MCTS Num Monopoly Played', 'MCTS Num Road Builder Played', 
@@ -141,6 +143,8 @@ if __name__ == '__main__':
             else:
                 row.append("")
                 row.append("")
+            for player in player_list:
+                row.append(player.num_dots_initial_spots)
             if MCTS_player != None:
                 row.append(len(MCTS_player.ports))
                 row.append(len(MCTS_player.cities))

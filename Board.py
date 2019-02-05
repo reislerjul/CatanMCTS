@@ -290,10 +290,7 @@ class Board():
         assert(len(distances) == 0 and len(ports) == 0 and len(edge_vertices) == 0) 
         return coords
 
-
-    # Print the board state
     def print_board_state(self):
-
         # Print the coordinates if there is a settlement or city there.
         board_items = self.coords.items()
         for coordinate in board_items:
@@ -383,11 +380,11 @@ class Board():
 
         # There is a case where robber is moved and nobody is stolen from
         if victim_player:
-            resource = self.discard_random(victim_player)
+            resource = self.discard_random(self.players[victim_player - 1])
 
             # If the player doesn't have a resource, nothing should happen
             if resource:
-                self.give_resource(resource, thief_player)
+                thief_player.resources[resource] += 1
 
     def players_adjacent_to_hex(self, loc):
         '''
@@ -407,14 +404,13 @@ class Board():
             if player.num_knights_played > self.largest_army_size:
                 # update army size
                 self.largest_army_size = player.num_knights_played
-
                 # move largest army card
                 if self.largest_army_player:
                     self.largest_army_player.largest_army = 0
                 self.largest_army_player = player
                 player.largest_army = 2
 
-    def allocate_resources(self, die_roll, players):
+    def allocate_resources(self, die_roll):
         '''
         given a die roll, gives the resources to the appropriate players
         if the die roll is 7, instead, all players with more than 7 resources will discard half of their
@@ -424,22 +420,13 @@ class Board():
             vals = self.r_allocator[die_roll]
             for player, resource, loc in vals:
                 if self.robber != loc:
-                    self.give_resource(resource, player)
+                    player.resources[resource] += 1
         # In debug mode, print the resources that each player now has
         if settings.DEBUG:
             for player in self.players:
                 print("Player {} has resources:".format(player.player_num))
                 for r in self.resource_list:
                     print('    {}: {}'.format(r, player.resources[r]))
-
-    def give_resource(self, resource, player):
-        '''
-        helper function to give a resource to a player
-        '''
-        if resource in player.resources:
-            player.resources[resource] += 1
-        else:
-            player.resources[resource] = 1
 
     def change_longest_road_owner(self, new_road, new_length, player, decreasing_size=False):
         if new_length > self.longest_road_size or decreasing_size:
@@ -592,6 +579,8 @@ class Board():
                     self.round_num += 1
                     if self.verbose:
                         print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+                    else:
+                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 if self.round_num != 1:
                     self.active_player = self.players[player.player_num % len(self.players)]
             else:
@@ -599,12 +588,16 @@ class Board():
                     self.round_num += 1
                     if self.verbose:
                         print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+                    else:
+                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 else:
                     self.active_player = self.players[player.player_num - 2]
             self.active_player.avg_moves_round[0] += 1
 
             if self.verbose:
                 print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
+            else:
+                print("_____PLAYER " + str(self.active_player.player_num) + " TURN IN MCTS PLAYOUT_____")
             if settings.DEBUG:
                 print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
                 print("STATE OF BOARD BEFORE TURN")
@@ -636,7 +629,7 @@ class Board():
                         print("")
 
         elif move.move_type == Move.ROLL_DICE:
-            self.allocate_resources(move.roll, self.players)
+            self.allocate_resources(move.roll)
             if move.roll == 7:
                 for person in self.players:
                     total_resources = sum(person.resources[r] for r in self.resource_list)

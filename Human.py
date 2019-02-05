@@ -30,12 +30,11 @@ class Human(Player):
                 num = int(input("Who do you want to steal from? (give player number)"))
 
                 if num in player_nums:
-                    victim = possible_players[player_nums.index(num)]
                     break
                 else:
                     print("Invalid victim. Please enter a valid player to steal from.")
 
-        return victim
+        return num
 
     # Three arguments aren't used, but we have them here because they're used for MCTSPlayer
     def choose_robber_position(self, board, players, deck):
@@ -82,6 +81,10 @@ class Human(Player):
                 print("Invalid move! Try again.")
 
     def decide_move(self, board, deck, players):
+        if self.random:
+            possible_moves = self.get_legal_moves(board, deck, 0)
+            # We should choose a move randomly from the set of possible moves!
+            return possible_moves[random.randint(0, len(possible_moves) - 1)]
         try:
             if board.round_num == 0 and len(self.settlements) == 0:
                 return self.choose_spot_settlement(board)
@@ -112,7 +115,7 @@ class Human(Player):
                 roll = random.randint(1, 6) + random.randint(1, 6)
                 if roll == 7:
                     self.move_robber = True
-                return Move(Move.ROLL_DICE, roll=roll, player=self)
+                return Move(Move.ROLL_DICE, roll=roll, player=self.player_num)
 
             if self.move_robber:
                 r,c = map(int, input("Where are you moving the robber? (Input form: row# col#): ").split())
@@ -180,7 +183,7 @@ class Human(Player):
                 elif move_type == Move.PROPOSE_TRADE:
                     maps = self.trade_other_players()
                     if maps != None:
-                        move = Move(Move.PROPOSE_TRADE, give_resource=maps[0], resource=maps[1], player=self)
+                        move = Move(Move.PROPOSE_TRADE, give_resource=maps[0], resource=maps[1], player=self.player_num)
                         return move
                 return -1
             else:
@@ -255,8 +258,8 @@ class Human(Player):
                 return Move(Move.CHOOSE_TRADER, player=None)
             for trader in traders:
                 if trader.player_num == choice:
-                    return Move(Move.CHOOSE_TRADER, player=trader)
-            print("That player is not available to trade! Choose another player.")
+                    return Move(Move.CHOOSE_TRADER, player=choice)
+            print("invalid choice!")
 
     def to_string(self):
         return "Human"
