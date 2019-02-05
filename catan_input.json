@@ -1,0 +1,23 @@
+{
+    "players": [
+        {
+            "type": "random"
+        },
+        {
+            "type": "random"
+        },
+        {
+            "type": "MCTS",
+            "time": "5", 
+            "weighted": "0",
+            "thompson": "1"
+        }, 
+        {
+            "type": "None"
+        }
+    ],
+    "num_games": "100",
+    "shuffle_order": "1",
+    "record_data": "1", 
+    "random_board": "1"
+}
