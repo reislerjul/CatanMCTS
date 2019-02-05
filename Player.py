@@ -649,7 +649,8 @@ class Player(object):
         #print('move: ' + str(move.move_type) + ', round: ' + str(board.round_num) + 
         #    ', player: ' + str(self.player_num) + ', has rolled: ' + str(self.has_rolled) + 
         #    ', active player: ' + str(board.active_player.player_num))
-        if not self.check_legal_move(move, board, deck):
+        # Only check for legal move if a human is playing
+        if self.player_type == Player.HUMAN and not self.random and not self.check_legal_move(move, board, deck):
             #print(move.move_type)
             #print("card: " + str(move.card_type))
             #print("round: " + str(board.round_num))
@@ -668,7 +669,7 @@ class Player(object):
             print("Move type: " + str(move_type))
             print("Move: " + str(move))
         '''
-        print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
+        #print("active player: " + str(self.player_num) + ", move type: " + str(move.move_type))
         if settings.DEBUG:
             print("")
             print("printing move:")

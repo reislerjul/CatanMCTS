@@ -202,6 +202,7 @@ class MCTSAI():
             #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
             #print("move type: " + str(move.move_type))
         #print('after loop move: ' + str(move.move_type))
+        #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
         if current_node.state.winner == 0:
             return current_node, move
         else:
@@ -221,12 +222,13 @@ class MCTSAI():
         return new_node
 
     def run_simulation(self, node):
+        #print("start of simulation")
         if node.state.winner != 0:
             return node.state.winner
         state_copy = copy.deepcopy(node.state)
         for p in state_copy.players:
             p.random = True
-        new_game = Game(state_copy.board, state_copy.deck, state_copy.players, verbose=False)
+        new_game = Game(state_copy.board, state_copy.deck, state_copy.players, 100, verbose=False)
         winner = new_game.play_game()
         return winner.player_num
 

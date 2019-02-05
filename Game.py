@@ -5,12 +5,13 @@ import settings
 # This class takes care of the game state of the Catan game 
 class Game():
 
-    def __init__(self, board, deck, players, verbose=True):
+    def __init__(self, board, deck, players, round_threshold, verbose=True):
         self.board = board
         self.deck = deck
         self.num_players = len(players)
         self.players = players
         self.verbose = verbose
+        self.round_threshold = round_threshold
 
     # This function is called from the main method and is used to 
     # play the game. The function calls the round function until 
@@ -29,12 +30,6 @@ class Game():
 
             # The other win condition will occur when 500 turns are played. 
             # Take the player with the highest number of points.
-            if self.board.round_num >= 500:
-                winner = self.players[0]
-                max_points = self.players[0].calculate_vp()
-                for player in self.players[1:]:
-                    curr_vp = player.calculate_vp()
-                    if curr_vp > max_points:
-                        max_points = curr_vp
-                        winner = player
-                return winner
+            if self.board.round_num >= self.round_threshold:
+                return max([(player, player.calculate_vp()) for player in self.players], 
+                    key=lambda x: x[1])[0]
