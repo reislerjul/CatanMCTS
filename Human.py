@@ -19,11 +19,12 @@ class Human(Player):
         victim = None
 
         # Determine the players adjacent to the robber
-        possible_players = [p for p in board.players_adjacent_to_hex(move) if p is not self]
+        possible_players = [p for p in board.players_adjacent_to_hex(move) if p != self]
 
         # Get a list of the player numbers
         player_nums = [p.player_num for p in possible_players]
 
+        num = None
         if len(possible_players) > 0:
             # Keep prompting the person until they enter a valid victim
             while True:

@@ -165,12 +165,13 @@ class Player(object):
                 resource_list = self.resources['w'] * ['w'] + self.resources['o'] * ['o'] + \
                 self.resources['l'] * ['l'] + self.resources['b'] * ['b'] + \
                 self.resources['g'] * ['g']
-                total_resources = sum(self.resources[r] for r in self.resources.keys())
+                total_resources = len(resource_list)
                 discard = total_resources // 2
-                combos = list(set(itertools.combinations(resource_list, discard)))
-                for combo in combos:
-                    possible_moves.append(Move(Move.DISCARD_HALF, resource=combo))
-                return possible_moves
+                combo = ()
+                for i in range(discard):
+                    res = resource_list.pop(random.randint(0, len(resource_list) - 1))
+                    combo = combo + tuple(res)
+                return [Move(Move.DISCARD_HALF, resource=combo)]
 
             # Can we play a dev card?
             possible_moves = []

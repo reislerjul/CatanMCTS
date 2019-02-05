@@ -351,11 +351,11 @@ class TestPlayDev(unittest.TestCase):
 
     def test_play_dev_human(self):
         user_input = [
-            '5', '0', '0 0', # Knight
-            '5', '1', # Victory Point
-            '5', '2', '0 0', '1 0', '0 0', '1 1', # Road Building
-            '5', '3', 'w', # Monopoly
-            '5', '4', 'o', 'o', '5', '4', 'w', 'l' # Year of Plenty
+            Move.PLAY_DEV, Card.KNIGHT, '0 0', # Knight
+            Move.PLAY_DEV, Card.VICTORY_POINT, # Victory Point
+            Move.PLAY_DEV, Card.ROAD_BUILDING, '0 0', '1 0', '0 0', '1 1', # Road Building
+            Move.PLAY_DEV, Card.MONOPOLY, 'w', # Monopoly
+            Move.PLAY_DEV, Card.YEAR_OF_PLENTY, 'o', 'o', '5', '4', 'w', 'l' # Year of Plenty
         ]
         with patch('builtins.input', side_effect=user_input):
             player_list = [Human(1), RandomPlayer(2)]
@@ -443,7 +443,7 @@ class TestRobber(unittest.TestCase):
         player_list[0].settlements.append((0, 0))
         board.add_settlement(player_list[0], (0, 0))
         board.move_robber((0, 0))
-        board.allocate_resources(11, player_list)
+        board.allocate_resources(11)
         self.assertEqual(player_list[0].resources['w'], 2)
         self.assertEqual(player_list[0].resources['o'], 0)
         self.assertEqual(player_list[0].resources['l'], 4)
@@ -607,17 +607,17 @@ class TestTradeBetweenPlayers(unittest.TestCase):
         player_list[2].resources = {'w': 1, 'b': 1, 'l': 0, 'g': 1, 'o': 0}
         legal_moves = player_list[0].get_legal_moves(board, deck, 0)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('o', 1), 
-            player=player_list[0]), legal_moves)
+            player=player_list[0].player_num), legal_moves)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3), 
-            player=player_list[0]), legal_moves)
+            player=player_list[0].player_num), legal_moves)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('b', 1), 
-            player=player_list[0]), legal_moves)
+            player=player_list[0].player_num), legal_moves)
         self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('l', 3), 
-            player=player_list[0]), legal_moves)
+            player=player_list[0].player_num), legal_moves)
         self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 2), 
-            player=player_list[0]), legal_moves)
+            player=player_list[0].player_num), legal_moves)
         self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 1), 
-            player=player_list[0]), legal_moves)
+            player=player_list[0].player_num), legal_moves)
 
 if __name__ == '__main__':
     unittest.main()
