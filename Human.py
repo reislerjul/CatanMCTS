@@ -67,6 +67,20 @@ class Human(Player):
                 print("Not a legal road! Try again.")
         return move
 
+    def choose_resources_to_discard(self, board, deck):
+        discard = total_resources // 2
+        while True:
+            print("Choose " + str(discard) + " cards to discard.")
+            cards = ()
+            for i in range(discard):
+                card = input("Card " + str(i + 1) + " (Input form: l, o, w, b, g)? ")
+                cards = cards + tuple(card)
+            move = Move(Move.DISCARD_HALF, resource=cards)
+            if self.check_legal_move(move, board, deck):
+                return move 
+            else:
+                print("Invalid move! Try again.")
+
     def decide_move(self, board, deck, players):
         try:
             if board.round_num == 0 and len(self.settlements) == 0:
@@ -82,11 +96,17 @@ class Human(Player):
             elif board.round_num == 1:
                 return Move(Move.END_TURN)
 
-            if board.active_player.player_num != self.player_num:
+            if board.pending_trade:
+                if board.pending_trade.player.player_num == self.player_num:
+                    return self.choose_trader(board.traders)
                 if self.should_accept_trade(board.pending_trade.give_resource, 
                     board.pending_trade.resource, board, deck, players):
                     return Move(Move.ACCEPT_TRADE)
                 return Move(Move.DECLINE_TRADE)
+
+            if board.seven_roller: 
+                return self.choose_resources_to_discard(board, deck)    
+                # TODO: complete this            
 
             if not self.has_rolled:
                 roll = random.randint(1, 6) + random.randint(1, 6)
@@ -99,9 +119,6 @@ class Human(Player):
                 spot = (r, c)
                 victim = self.choose_victim(board, spot)
                 return Move(Move.MOVE_ROBBER, coord=spot, player=victim)
-
-            if board.pending_trade:
-                return self.choose_trader(board.traders)
 
             self.printResources()
             print('Moves available:')

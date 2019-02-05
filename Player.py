@@ -167,13 +167,7 @@ class Player():
                 discard = total_resources // 2
                 combos = list(set(itertools.combinations(resource_list, discard)))
                 for combo in combos:
-                    combo_dict = {}
-                    for element in combo:
-                        if element not in combo_dict:
-                            combo_dict[element] = 1
-                        else:
-                            combo_dict[element] += 1
-                    possible_moves.append(Move(Move.DISCARD_HALF, resource=combo_dict))
+                    possible_moves.append(Move(Move.DISCARD_HALF, resource=combo))
                 return possible_moves
 
             # Can we play a dev card?
@@ -496,8 +490,14 @@ class Player():
             if move.move_type == Move.DISCARD_HALF:
                 total_resources = sum(self.resources[r] for r in self.resources.keys())
                 if total_resources > 7:
-                    for resource in move.resource.keys():
-                        if move.resource[resource] > self.resources[resource]:
+                    combo_dict = {}
+                    for resource in move.resource:
+                        if resource not in combo_dict:
+                            combo_dict[resource] = 1
+                        else:
+                            combo_dict[resource] += 1
+                    for resource in combo_dict.keys():
+                        if combo_dict[resource] > self.resources[resource]:
                             return False
                     return True
             return False
@@ -718,8 +718,8 @@ class Player():
                 self.resources[gain[0]] += int(gain[1])
 
         elif move.move_type == Move.DISCARD_HALF:
-            for resource in move.resource.keys():
-                self.resources[resource] -= move.resource[resource]
+            for resource in move.resource:
+                self.resources[resource] -= 1
 
         # For now, all players should randomly choose the
         # player to trade with from the list of players
