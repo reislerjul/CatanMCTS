@@ -11,7 +11,7 @@ class MCTSPlayer(Player):
 
 
     def __init__(self, player_num, time, weighted, thompson):
-        super().__init__(Player.MCTS_AI, player_num)
+        super(MCTSPlayer, self).__init__(Player.MCTS_AI, player_num)
         self.time = time
         self.weighted = weighted
         self.thompson = thompson

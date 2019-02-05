@@ -597,6 +597,8 @@ class Board():
             else:
                 if player.player_num == 1:
                     self.round_num += 1
+                    if self.verbose:
+                        print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
                 else:
                     self.active_player = self.players[player.player_num - 2]
             self.active_player.avg_moves_round[0] += 1

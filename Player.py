@@ -8,7 +8,7 @@ import itertools
 # The player class. Each player should keep track of their roads, cities,
 # settlements, dev cards, whether they're on a port, number of victory
 # points, and resource cards.
-class Player():
+class Player(object):
     HUMAN = 0
     RANDOM_AI = 1
     MCTS_AI = 2

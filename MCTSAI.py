@@ -210,6 +210,7 @@ class MCTSAI():
     def run_expansion(self, node, move):
         #print("start of expansion")
         state_copy = copy.deepcopy(node.state)
+        state_copy.board.verbose = False
         player = state_copy.players[node.active_player_num - 1]
         player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
         new_node = Node(len(self.nodes), node.id, state_copy.board.active_player.player_num, state_copy, node.depth + 1)

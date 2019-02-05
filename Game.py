@@ -16,8 +16,9 @@ class Game():
     # play the game. The function calls the round function until 
     # a player has won. 
     def play_game(self): 
-        #print("*** ROUND 0 ***")     
-        #print("_____PLAYER 1 TURN_____")  
+        if self.verbose:
+            print("*** ROUND 0 ***")     
+            print("_____PLAYER 1 TURN_____")  
         self.board.verbose = self.verbose
         while True:
             move = self.board.active_player.decide_move(self.board, self.deck, self.players)

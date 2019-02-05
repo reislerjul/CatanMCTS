@@ -21,7 +21,7 @@ def run_game(player_list, random_board):
     settings.init()
     deck = Deck()
     board = Board(player_list, random_board)
-    game = Game(board, deck, player_list)
+    game = Game(board, deck, player_list, verbose=True)
 
     if settings.DEBUG:
         for element in board.resources.items():

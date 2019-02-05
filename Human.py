@@ -10,7 +10,7 @@ import sys
 
 class Human(Player):
     def __init__(self, player_num):
-        super().__init__(Player.HUMAN, player_num)
+        super(Human, self).__init__(Player.HUMAN, player_num)
 
     def print_invalid_move(self):
         return True
