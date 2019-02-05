@@ -579,8 +579,8 @@ class Board():
                     self.round_num += 1
                     if self.verbose:
                         print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
-                    else:
-                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
+#                    else:
+#                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 if self.round_num != 1:
                     self.active_player = self.players[player.player_num % len(self.players)]
             else:
@@ -588,16 +588,16 @@ class Board():
                     self.round_num += 1
                     if self.verbose:
                         print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
-                    else:
-                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
+ #                   else:
+ #                       print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 else:
                     self.active_player = self.players[player.player_num - 2]
             self.active_player.avg_moves_round[0] += 1
 
             if self.verbose:
                 print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
-            else:
-                print("_____PLAYER " + str(self.active_player.player_num) + " TURN IN MCTS PLAYOUT_____")
+ #           else:
+ #               print("_____PLAYER " + str(self.active_player.player_num) + " TURN IN MCTS PLAYOUT_____")
             if settings.DEBUG:
                 print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
                 print("STATE OF BOARD BEFORE TURN")
