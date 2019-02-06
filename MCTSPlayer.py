@@ -31,7 +31,7 @@ class MCTSPlayer(Player):
             possible_moves = self.get_legal_moves(board, deck, 0)
             # We should choose a move randomly from the set of possible moves!
             return possible_moves[random.randint(0, len(possible_moves) - 1)]
-        AI = MCTSAI(board, self.time, players, deck, 
+        AI = MCTSAI(board, self.time, deck, 
             self.player_num, self.weighted, self.thompson)
         move = AI.get_play()
         if AI.num_moves_from_root > 1:

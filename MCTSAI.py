@@ -10,8 +10,7 @@ from RandomPlayer import RandomPlayer
 # A class to represent the Monte Carlo Tree Search AI
 
 class State():
-    def __init__(self, players, board, deck):
-        self.players = players
+    def __init__(self, board, deck):
         self.board = board
         self.deck = deck
         self.winner = 0
@@ -29,10 +28,10 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, players, deck, active_player_num, weighted, thompson):
+    def __init__(self, board, time, deck, active_player_num, weighted, thompson):
         # class that initialize a MCTSAI, works to figure
         self.timer = datetime.timedelta(seconds=time)
-        self.nodes = [Node(0, -1, active_player_num, State(players, board, deck), 0)]
+        self.nodes = [Node(0, -1, active_player_num, State(board, deck), 0)]
         self.max_depth = 0
         self.weighted = weighted
         self.thompson = thompson
@@ -42,10 +41,8 @@ class MCTSAI():
         self.num_cycles_run = 0
         self.num_moves_from_root = 0
 
-
     def thompson_sample(self, node):
-        active_player = node.state.players[node.active_player_num - 1]
-        legal = active_player.get_legal_moves(node.state.board,
+        legal = node.state.board.active_player.get_legal_moves(node.state.board,
                                               node.state.deck,
                                               self.weighted)
         # Pick a move with thompson sampling
@@ -73,12 +70,10 @@ class MCTSAI():
     def get_play(self):
         #print("__________________STARTING AI CALL__________________")
         state = self.nodes[0].state
-        players = state.players
         board = state.board
         deck = state.deck
 
-        active_player = self.nodes[0].state.players[self.nodes[0].active_player_num - 1]
-        legal = active_player.get_legal_moves(board,
+        legal = self.nodes[0].state.board.active_player.get_legal_moves(board,
                                               deck,
                                               self.weighted)
         self.num_moves_from_root = len(legal)
@@ -94,10 +89,7 @@ class MCTSAI():
         #print("____CYCLE STARTING____")
         #self.run_cycle()
         #print("____DONE RUNNING CYCLES____")
-
         root = self.nodes[0]
-
-
         # Breadth first traversal of the created MCTS tree
         '''
         queue = [root]        
@@ -212,12 +204,11 @@ class MCTSAI():
         #print("start of expansion")
         state_copy = copy.deepcopy(node.state)
         state_copy.board.verbose = False
-        player = state_copy.players[node.active_player_num - 1]
-        player.make_move(move, state_copy.board, state_copy.deck, state_copy.players)
+        state_copy.board.active_player.make_move(move, state_copy.board, state_copy.deck, state_copy.board.players)
         new_node = Node(len(self.nodes), node.id, state_copy.board.active_player.player_num, state_copy, node.depth + 1)
         self.nodes.append(new_node)
         node.children[move] = new_node.id
-        if new_node.state.players[new_node.active_player_num - 1].calculate_vp() >= settings.POINTS_TO_WIN:
+        if new_node.state.board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
             new_node.state.winner = new_node.active_player_num
         return new_node
 
@@ -226,9 +217,10 @@ class MCTSAI():
         if node.state.winner != 0:
             return node.state.winner
         state_copy = copy.deepcopy(node.state)
-        for p in state_copy.players:
+        for p in state_copy.board.players:
             p.random = True
-        new_game = Game(state_copy.board, state_copy.deck, state_copy.players, 100, verbose=False)
+        round_thresh = max(100, state_copy.board.round_num + 10)
+        new_game = Game(state_copy.board, state_copy.deck, state_copy.board.players, round_thresh, verbose=False)
         winner = new_game.play_game()
         return winner.player_num
 
