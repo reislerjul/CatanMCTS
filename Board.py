@@ -634,8 +634,8 @@ class Board():
                 for person in self.players:
                     total_resources = sum(person.resources[r] for r in self.resource_list)
                     if total_resources >= 8:
-                        if self.verbose:
-                            print("someone has more than 7 resources")
+                        #if self.verbose:
+                        #    print("someone has more than 7 resources")
                         self.seven_roller = player
                         self.active_player = person
                         break

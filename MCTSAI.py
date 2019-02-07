@@ -80,8 +80,8 @@ class MCTSAI():
         if len(legal) == 1:
             return legal[0]
 
-        start = datetime.datetime.utcnow()
-        while datetime.datetime.utcnow() - start < self.timer:
+        #start = datetime.datetime.utcnow()
+        for i in range(100):
             #print('running cycle')
             self.num_cycles_run += 1
             self.run_cycle()
