@@ -97,7 +97,7 @@ if __name__ == '__main__':
             'Average Move per Turn', 'Average Number of Moves Considered by MCTS Algorithm', 
             'Average Number of Cycles Run by MCTS Algorithm per Decided Move']
 
-        with open(r'catan_results_cycle_100_mompc.csv', 'w') as f:
+        with open(r'catan_results_cycle_100_mommac.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerow(fields)
 
@@ -165,6 +165,6 @@ if __name__ == '__main__':
                 row.append(float(MCTS_player.avg_moves_round[1]) / MCTS_player.avg_moves_round[0])
                 row.append(float(MCTS_player.avg_cycles_per_move[1]) / MCTS_player.avg_cycles_per_move[0])
                 row.append(float(MCTS_player.avg_legal_moves[1]) / MCTS_player.avg_legal_moves[0])
-            with open(r'catan_results_cycle_100_mompc.csv', 'a') as f:
+            with open(r'catan_results_cycle_100_mommac.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(row)
