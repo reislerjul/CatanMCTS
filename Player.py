@@ -2,8 +2,6 @@ import copy
 import random
 import settings
 from utils import Card, Move
-import itertools
-
 
 # The player class. Each player should keep track of their roads, cities,
 # settlements, dev cards, whether they're on a port, number of victory
@@ -34,7 +32,7 @@ class Player(object):
         self.ports = []         # {}
         self.cities = []        # [(0,0), (1,1)...]
         self.settlements = []   #[(0,0), (1,1)...]
-        self.roads = {}         # {(0,0):(1,1),(1,1):(0,0), ...}
+        self.roads = {}         # {(0,0):[(1,1)],(1,1):[(0,0)], ...}
         self.total_roads = 0
         self.has_rolled = False
         self.move_robber = False
@@ -302,7 +300,7 @@ class Player(object):
                     for i in range(1, min(resource[1] + 1, 4)):
                         loss = (resource[0], i)
                         for element in trade_for:
-                            for j in range(1, resources_out[element] + 1):
+                            for j in range(1, min(resources_out[element] + 1, 4)):
                                 gain = (element, j)
                                 possible_moves.append(Move(Move.PROPOSE_TRADE, give_resource=loss, resource=gain, player=self.player_num))
 
