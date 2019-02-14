@@ -19,7 +19,6 @@ class Coord():
         self.roads = {n: 0 for n in neighbours}
         self.available_roads = self.neighbours[:]
 
-
 # This represents the catan board. The board should essentially have a
 # coordinate system that keeps track of where the ports are, where each
 # resource is, the number that is on each hexagon, where cities/settlements
@@ -553,7 +552,7 @@ class Board():
 
     def upgrade_settlement(self, player, loc):
         '''
-        upgrades a settlement to a city
+        upgrades a to a city
         '''
         assert(self.coords[loc].player.player_num == player.player_num)
         assert(self.coords[loc].settlement)
@@ -705,3 +704,4 @@ class Board():
 
         elif move.move_type == Move.CHOOSE_TRADER:
             self.pending_trade = False
+            self.traders = []
