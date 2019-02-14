@@ -9,6 +9,7 @@ import settings
 from utils import Card
 from unittest.mock import patch
 from utils import Move
+import StateToFeatures
 
 
 # Use this class to check that cycles are run correctly. Print statements will need 
@@ -20,6 +21,131 @@ class TestMCTS(unittest.TestCase):
         deck = Deck()
         board = Board(player_list, False)
         move = board.active_player.decide_move(board, deck, player_list)
+
+class TestStateToVector(unittest.TestCase):
+    def test_board_in_vector_mode(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
+        settings.init()
+        deck = Deck()
+        board = Board(player_list, False)
+        player_list[0].add_road(board, ((0, 0), (1, 0)))
+        board.add_settlement(player_list[2], (2, 0))
+        board.active_player = player_list[1]
+        board.round_num = 50
+        player_list[0].resources = {'w':10, 'b':10, 'l':10, 'g':10, 'o':10}
+        player_list[1].resources = {'w':5, 'b':5, 'l':5, 'g':5, 'o':5}
+        board_vect = StateToFeatures.board_to_vector(board, deck)
+
+        # Check a couple spots to make sure they're encoded correctly
+
+        # (2, 0) has no resource
+        start = 7 * 18
+        for i in range(5):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        # (2, 0) has no dice value
+        for i in range(2, 13):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        # (2, 0) should have 0 for dots
+        self.assertEqual(board_vect[start], 0)
+        start += 1
+        # (2, 0) should have 1 for robber
+        self.assertEqual(board_vect[start], 1)
+
+        # (0, 2) has grain
+        start = 2 * 18
+        for i in range(5):
+            if i == 4:
+                self.assertEqual(board_vect[start], 1)
+            else:
+                self.assertEqual(board_vect[start], 0)
+            start += 1
+        # (0, 2) has dice value 9
+        for i in range(2, 13):
+            if i == 9:
+                self.assertEqual(board_vect[start], 1)
+            else:
+                self.assertEqual(board_vect[start], 0)
+            start += 1
+        # dots should be 4
+        self.assertEqual(board_vect[start], 4)
+        start += 1 
+        # no robber
+        self.assertEqual(board_vect[start], 0)
+
+        self.assertEqual(board_vect[-1], len(deck.cards_left))
+        self.assertEqual(board_vect[-2], 0)
+        self.assertEqual(board_vect[-3], 50)
+
+        # Since this is from player 2's perspective, so order should be 
+        # [player2, player3, player1]
+        start = 668
+        for i in range(9):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        for i in range(len(settings.roads)):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        for i in range(len(settings.vertices)):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        # player 2 has 5 of each resource
+        for i in range(len(settings.resources)):
+            self.assertEqual(board_vect[start], 5)
+            start += 1
+        for i in range(10):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        for i in range(4):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+
+        # player 3 should be next. they have one settlement at (2, 0)
+        for i in range(9):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        for i in range(len(settings.roads)):
+            self.assertEqual(board_vect[start], 0)
+            start += 1      
+        for i in range(len(settings.vertices)):
+            # corresponds to (2, 0)
+            if i == 7:
+                self.assertEqual(board_vect[start], 1)
+            else:
+                self.assertEqual(board_vect[start], 0)
+            start += 1
+        # the number of dev cards the player has
+        self.assertEqual(board_vect[start], 0)
+        start += 1
+        self.assertEqual(board_vect[start], sum(player_list[2].resources.values()))
+        start += 1
+        self.assertEqual(board_vect[start], sum(player_list[2].dev_cards.values()))
+        start += 1
+
+        # player 1 should be next. They have 1 road and 50 resources (0,0)(1,0)
+        for i in range(9):
+            if i == 4:
+                self.assertEqual(board_vect[start], 1)
+            else:
+                self.assertEqual(board_vect[start], 0)
+            start += 1
+        for i in range(len(settings.roads)):
+            if i == 0:
+                self.assertEqual(board_vect[start], 1)
+            else:
+                self.assertEqual(board_vect[start], 0)
+            start += 1  
+        for i in range(len(settings.vertices)):
+            self.assertEqual(board_vect[start], 0)
+            start += 1
+        self.assertEqual(board_vect[start], 0)
+        start += 1
+        self.assertEqual(board_vect[start], sum(player_list[0].resources.values()))
+        start += 1
+        self.assertEqual(board_vect[start], sum(player_list[0].dev_cards.values()))
+        start += 1                        
+        self.assertEqual(len(board_vect), 1101)
 
 class TestBoardInitialization(unittest.TestCase):
     def test_random_ports(self):

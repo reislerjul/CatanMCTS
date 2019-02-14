@@ -6,7 +6,7 @@ def init():
     global hexes
     global vertices
     global resources
-    global port
+    global ports
     global roads
     DEBUG = 0
     POINTS_TO_WIN = 10
