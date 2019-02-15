@@ -40,11 +40,15 @@ class MCTSAI():
         self.C = 1.0
         self.num_cycles_run = 0
         self.num_moves_from_root = 0
+        self.legal = None
 
     def thompson_sample(self, node):
-        legal = node.state.board.active_player.get_legal_moves(node.state.board,
-                                              node.state.deck,
-                                              self.weighted)
+        if node.id == 0:
+            legal = self.legal
+        else:
+            legal = node.state.board.active_player.get_legal_moves(node.state.board,
+                                                  node.state.deck,
+                                                  self.weighted)
         # Pick a move with thompson sampling
         '''
         max_sample = 0
@@ -79,6 +83,7 @@ class MCTSAI():
         self.num_moves_from_root = len(legal)
         if len(legal) == 1:
             return legal[0]
+        self.legal = legal
 
         #start = datetime.datetime.utcnow()
         for i in range(100):
