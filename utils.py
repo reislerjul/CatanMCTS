@@ -40,7 +40,6 @@ class Move():
                  road2=None,
                  coord=None,
                  player=None,
-                 num_trade=None,
                  give_resource=None,
                  resource=None,
                  resource2=None,
@@ -51,7 +50,6 @@ class Move():
         self.road2 = road2
         self.coord = coord
         self.player = player
-        self.num_trade = num_trade
         self.give_resource = give_resource
         self.resource = resource
         self.resource2 = resource2
@@ -67,7 +65,6 @@ class Move():
             s += ', player: {}'.format(self.player)
         else:
             s += ', player: {}'.format(self.player.player_num)
-        s += ', num_trade: {}'.format(self.num_trade)
         s += ', give_resource: {}'.format(self.give_resource)
         s += ', resource: {}'.format(self.resource)
         s += ', resource 2: {}'.format(self.resource2)
@@ -82,7 +79,6 @@ class Move():
                      self.road2,
                      self.coord,
                      self.player,
-                     self.num_trade,
                      self.give_resource,
                      self.resource,
                      self.resource2,
@@ -95,7 +91,6 @@ class Move():
                  self.road2,
                  self.coord,
                  self.player,
-                 self.num_trade,
                  self.give_resource,
                  self.resource,
                  self.resource2,
@@ -106,7 +101,6 @@ class Move():
                  other.road2,
                  other.coord,
                  other.player,
-                 other.num_trade,
                  other.give_resource,
                  other.resource,
                  other.resource2,

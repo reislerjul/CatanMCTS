@@ -1,4 +1,3 @@
-import copy
 import random
 import settings
 
@@ -8,8 +7,6 @@ from utils import Card, Move
 
 
 class MCTSPlayer(Player):
-
-
     def __init__(self, player_num, num_simulations):
         super(MCTSPlayer, self).__init__(Player.MCTS_AI, player_num)
         self.num_simulations = num_simulations

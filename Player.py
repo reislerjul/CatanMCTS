@@ -10,6 +10,7 @@ class Player(object):
     HUMAN = 0
     RANDOM_AI = 1
     MCTS_AI = 2
+    MCTSNN_AI = 3
 
     # TODO: Complete this constructor. player_type should be 0 if the player is
     # human, 1 if the player is the random AI, and 2 if the player is the
@@ -311,78 +312,19 @@ class Player(object):
             if self.resources['w'] > 0 and self.resources['l'] > 0 and \
             self.resources['b'] > 0 and self.resources['g'] > 0 and \
             len(self.settlements) < 5:
-
                 # Check the possible places for us to build a settlement
                 for source in self.roads:
                     if self.can_build_settlement(source, board):
                         possible_moves.append(Move(Move.BUY_SETTLEMENT, coord=source))
 
             # Should we trade in resources? Try cases for the 5 different resources
-            if (self.resources['w'] >= 2 and '2 w' in self.ports) or \
-            (self.resources['w'] >= 3 and '3' in self.ports) or (self.resources['w'] >= 4):
-                if (self.resources['w'] >= 2 and '2 w' in self.ports):
-                    numTrade = 2
-                elif (self.resources['w'] >= 3 and '3' in self.ports):
-                    numTrade = 3
-                else:
-                    numTrade = 4
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='o'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='l'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='g'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='w', resource='b'))
-
-            if (self.resources['o'] >= 2 and '2 o' in self.ports) or \
-            (self.resources['o'] >= 3 and '3' in self.ports) or (self.resources['o'] >= 4):
-                if (self.resources['o'] >= 2 and '2 o' in self.ports):
-                    numTrade = 2
-                elif (self.resources['o'] >= 3 and '3' in self.ports):
-                    numTrade = 3
-                else:
-                    numTrade = 4
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='w'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='l'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='g'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='o', resource='b'))
-
-            if (self.resources['l'] >= 2 and '2 l' in self.ports) or \
-            (self.resources['l'] >= 3 and '3' in self.ports) or (self.resources['l'] >= 4):
-                if (self.resources['l'] >= 2 and '2 l' in self.ports):
-                    numTrade = 2
-                elif (self.resources['l'] >= 3 and '3' in self.ports):
-                    numTrade = 3
-                else:
-                    numTrade = 4
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='w'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='o'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='g'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='l', resource='b'))
-
-            if (self.resources['b'] >= 2 and '2 b' in self.ports) or \
-            (self.resources['b'] >= 3 and '3' in self.ports) or (self.resources['b'] >= 4):
-                if (self.resources['b'] >= 2 and '2 b' in self.ports):
-                    numTrade = 2
-                elif (self.resources['b'] >= 3 and '3' in self.ports):
-                    numTrade = 3
-                else:
-                    numTrade = 4
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='w'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='o'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='g'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='b', resource='l'))
-
-            if (self.resources['g'] >= 2 and '2 g' in self.ports) or \
-            (self.resources['g'] >= 3 and '3' in self.ports) or (self.resources['g'] >= 4):
-                if (self.resources['g'] >= 2 and '2 g' in self.ports):
-                    numTrade = 2
-                elif (self.resources['g'] >= 3 and '3' in self.ports):
-                    numTrade = 3
-                else:
-                    numTrade = 4
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='w'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='o'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='b'))
-                possible_moves.append(Move(Move.TRADE_BANK, num_trade=numTrade, give_resource='g', resource='l'))
-            
+            for give in board.resource_list:
+                if (self.resources[give] >= 4) or \
+                (self.resources[give] >= 3 and '3' in self.ports) or \
+                (self.resources[give] >= 2 and '2 ' + give in self.ports):
+                    for receive in board.resource_list:
+                        if give != receive:
+                            possible_moves.append(Move(Move.TRADE_BANK, give_resource=give, resource=receive))
             if len(possible_moves) == 0:
                 print("no possible moves")
             return possible_moves
@@ -587,23 +529,21 @@ class Player(object):
 
         if move.move_type == Move.TRADE_BANK:
             old_res = move.give_resource
-            if move.num_trade == 4 and self.resources[old_res] >= 4:
+            num_trade = 4
+            if '2 ' + old_res in self.ports:
+                num_trade = 2
+            elif '3' in self.ports:
+                num_trade = 3            
+            if self.resources[old_res] >= num_trade:
                 return True
-            elif (move.num_trade == 3
-                  and self.resources[old_res] >= 3
-                  and ('3' in self.ports)):
-                return True
-            elif (move.num_trade == 2
-                  and self.resources[old_res] >= 2
-                  and ('2 {}'.format(old_res) in self.ports)):
-                return True
-
+            return False
         if move.move_type == Move.MOVE_ROBBER:
             spots = {(4, 1), (2, 1), (3, 3), (1, 0), (2, 3), (1, 2), (4, 0), \
                      (1, 1), (4, 2), (2, 4), (3, 0), (0, 2), (3, 2), (1, 3), \
                      (3, 1), (0, 0), (2, 2), (0, 1)}
             if move.coord in spots:
                 return True
+            return False
 
         # For propose trade, we check elsewhere that these are legal moves
         return (move.move_type == Move.END_TURN or move.move_type == Move.PROPOSE_TRADE)

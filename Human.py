@@ -222,10 +222,9 @@ class Human(Player):
         return move
 
     def trade(self, board):
-        numCards = int(input("How many cards do you want to trade?"))
         card = input("Lumber, Ore, Wool, Brick, or Grain? (Input form: l, o, w, b, g)")
         newRes = input("Which resource would you like in exchange? (Input form: l, o, w, b, g)")
-        return Move(Move.TRADE_BANK, num_trade=numCards, give_resource=card, resource=newRes)    
+        return Move(Move.TRADE_BANK, give_resource=card, resource=newRes)    
 
     def trade_other_players(self):
         while True:

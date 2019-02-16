@@ -1,6 +1,38 @@
 from utils import Card
 import settings
 from utils import Move
+import random
+
+
+# TODO: finish this 
+def action_to_move(index, move_array, current_player, total_players):
+    move = move_array[index]
+
+    if move.move_type == move.BUY_DEV:
+        move.card_type = deck.peek()
+        move.player = current_player.player_num
+    elif move.card_type == Card.KNIGHT or move.move_type == move.MOVE_ROBBER or \
+    move.move_type == move.CHOOSE_TRADER:
+        victim = current_player.player_num + move.player - 1 \
+        if current_player.player_num + move.player - 1 <= total_players \
+        else (current_player.player_num + move.player - 1) % total_players
+        move.player = victim
+    elif move.move_type == Move.PROPOSE_TRADE:
+        move.player = current_player.player_num
+    elif move.move_type == Move.ROLL_DICE:
+        move.roll = random.randint(1, 6) + random.randint(1, 6)
+    elif move.move_type == Move.DISCARD_HALF:
+        resource_list = current_player.resources['w'] * ['w'] + current_player.resources['o'] * ['o'] + \
+        current_player.resources['l'] * ['l'] + current_player.resources['b'] * ['b'] + \
+        current_player.resources['g'] * ['g']
+        total_resources = len(resource_list)
+        discard = total_resources // 2
+        combo = ()
+        for i in range(discard):
+            res = resource_list.pop(random.randint(0, len(resource_list) - 1))
+            combo = combo + tuple(res)
+        move.resource = combo
+    return move
 
 # Legal moves should be a list of legal moves that the player can make
 def possible_actions_to_vector(legal_moves, current_player_num, total_players, move_to_index):
@@ -12,12 +44,11 @@ def possible_actions_to_vector(legal_moves, current_player_num, total_players, m
     # In these cases, we will reconstruct the right moves.
     for move in legal_moves:
         if move in move_to_index:
-            #print("printing index")
-            #print(move_to_index[move])
             legal_vect[move_to_index[move]] = 1
         elif move.move_type == move.BUY_DEV:
             legal_vect[move_to_index[Move(Move.BUY_DEV)]] = 1
-        elif move.card_type == Card.KNIGHT or move.move_type == move.MOVE_ROBBER:
+        elif move.card_type == Card.KNIGHT or move.move_type == move.MOVE_ROBBER or \
+        move.move_type == move.CHOOSE_TRADER:
             victim = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
             else total_players - current_player_num + move.player + 1
             legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
@@ -25,18 +56,11 @@ def possible_actions_to_vector(legal_moves, current_player_num, total_players, m
         elif move.card_type == Card.ROAD_BUILDING:
             legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
                 road=move.road2, road2=move.road)]]
-        elif move.move_type == Move.TRADE_BANK:
-            legal_vect[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
-                resource=move.resource)]] = 1
         elif move.move_type == Move.PROPOSE_TRADE:
             legal_vect[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
                 resource=move.resource)]] = 1
         elif move.move_type == Move.ROLL_DICE:
             legal_vect[move_to_index[Move(move.move_type)]] = 1
-        elif move.move_type == Move.CHOOSE_TRADER:
-            trader = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
-            else total_players - current_player_num + move.player + 1
-            legal_vect[move_to_index[Move(move.move_type, player=trader)]] = 1
         elif move.move_type == Move.DISCARD_HALF:
             legal_vect[move_to_index[Move(move.move_type)]] = 1
         elif move.card_type == Card.YEAR_OF_PLENTY:
