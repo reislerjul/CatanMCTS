@@ -79,7 +79,6 @@ class MCTSAI():
             return legal[0]
         self.legal = legal
 
-        print("num simulations: " + str(self.num_simulations))
         for i in range(self.num_simulations):
             self.num_cycles_run += 1
             self.run_cycle()

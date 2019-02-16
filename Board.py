@@ -576,8 +576,8 @@ class Board():
             if self.round_num != 1:
                 if player.player_num == len(self.players):
                     self.round_num += 1
-                    #if self.verbose:
-                    #    print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+                    if self.verbose:
+                        print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
 #                    else:
 #                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 if self.round_num != 1:
@@ -585,10 +585,10 @@ class Board():
             else:
                 if player.player_num == 1:
                     self.round_num += 1
-                    #if self.verbose:
-                    #    print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
- #                   else:
- #                       print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
+                    if self.verbose:
+                        print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+#                    else:
+#                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 else:
                     self.active_player = self.players[player.player_num - 2]
             self.active_player.avg_moves_round[0] += 1
