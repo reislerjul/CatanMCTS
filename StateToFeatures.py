@@ -1,7 +1,53 @@
 from utils import Card
 import settings
 from utils import Move
-import pickle
+
+# Legal moves should be a list of legal moves that the player can make
+def possible_actions_to_vector(legal_moves, current_player_num, total_players, move_to_index):
+    # There are 3151 moves in Catan
+    legal_vect = [0 for i in range(3151)]
+    
+    # Go through each move in legal moves and find its corresponding index. Note that 
+    # some of the moves might not be exactly the same as what's stored in the dictionary.
+    # In these cases, we will reconstruct the right moves.
+    for move in legal_moves:
+        if move in move_to_index:
+            #print("printing index")
+            #print(move_to_index[move])
+            legal_vect[move_to_index[move]] = 1
+        elif move.move_type == move.BUY_DEV:
+            legal_vect[move_to_index[Move(Move.BUY_DEV)]] = 1
+        elif move.card_type == Card.KNIGHT or move.move_type == move.MOVE_ROBBER:
+            victim = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
+            else total_players - current_player_num + move.player + 1
+            legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
+                coord=move.coord, player=victim)]] = 1
+        elif move.card_type == Card.ROAD_BUILDING:
+            legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
+                road=move.road2, road2=move.road)]]
+        elif move.move_type == Move.TRADE_BANK:
+            legal_vect[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
+                resource=move.resource)]] = 1
+        elif move.move_type == Move.PROPOSE_TRADE:
+            legal_vect[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
+                resource=move.resource)]] = 1
+        elif move.move_type == Move.ROLL_DICE:
+            legal_vect[move_to_index[Move(move.move_type)]] = 1
+        elif move.move_type == Move.CHOOSE_TRADER:
+            trader = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
+            else total_players - current_player_num + move.player + 1
+            legal_vect[move_to_index[Move(move.move_type, player=trader)]] = 1
+        elif move.move_type == Move.DISCARD_HALF:
+            legal_vect[move_to_index[Move(move.move_type)]] = 1
+        elif move.card_type == Card.YEAR_OF_PLENTY:
+            legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
+                resource=move.resource2, resource2=move.resource)]] = 1
+        else:
+            print("Cannot find index for this move: ")
+            print(move)
+    return legal_vect
+
+
 
 # This function converts a current board state to a matrix representation of its features
 def board_to_vector(board, deck):

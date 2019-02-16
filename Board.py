@@ -37,7 +37,7 @@ class Board():
         self.largest_army_player = None
         self.longest_road_size = 4
         self.longest_road_player = None
-        self.resource_list = ['w', 'b', 'l', 'g', 'o']
+        self.resource_list = ['w', 'o', 'l', 'b', 'g']
         self.active_player = players[0]
         self.round_num = 0
         self.pending_trade = False
@@ -576,8 +576,8 @@ class Board():
             if self.round_num != 1:
                 if player.player_num == len(self.players):
                     self.round_num += 1
-                    if self.verbose:
-                        print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+                    #if self.verbose:
+                    #    print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
 #                    else:
 #                        print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 if self.round_num != 1:
@@ -585,16 +585,16 @@ class Board():
             else:
                 if player.player_num == 1:
                     self.round_num += 1
-                    if self.verbose:
-                        print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
+                    #if self.verbose:
+                    #    print("*** CHANGE TO ROUND " + str(self.round_num) + " ***")
  #                   else:
  #                       print("*** CHANGE TO ROUND " + str(self.round_num) + " IN MCTS PLAYOUT ***")
                 else:
                     self.active_player = self.players[player.player_num - 2]
             self.active_player.avg_moves_round[0] += 1
 
-            if self.verbose:
-                print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
+            #if self.verbose:
+            #    print("_____PLAYER " + str(self.active_player.player_num) + " TURN_____")
  #           else:
  #               print("_____PLAYER " + str(self.active_player.player_num) + " TURN IN MCTS PLAYOUT_____")
             if settings.DEBUG:

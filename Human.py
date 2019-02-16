@@ -83,7 +83,7 @@ class Human(Player):
 
     def decide_move(self, board, deck, players):
         if self.random:
-            possible_moves = self.get_legal_moves(board, deck, 0)
+            possible_moves = self.get_legal_moves(board, deck)
             # We should choose a move randomly from the set of possible moves!
             return possible_moves[random.randint(0, len(possible_moves) - 1)]
         try:

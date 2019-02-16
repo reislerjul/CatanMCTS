@@ -129,7 +129,7 @@ class Player(object):
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.
     # give_resource and get_resource should be None or maps of resources to their quanities
-    def get_legal_moves(self, board, deck, weighted):
+    def get_legal_moves(self, board, deck):
 
             # Determine moves we can play and add them to the list.
             if board.round_num in [0, 1]:
@@ -187,17 +187,9 @@ class Player(object):
 
                                 if possible_players != []:
                                     for p in possible_players:
-                                        if weighted:
-                                            for i in range(10):
-                                                possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p.player_num))
-                                        else:
-                                            possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p.player_num))
+                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot, player=p.player_num))
                                 else:
-                                    if weighted:
-                                        for i in range(10):
-                                            possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot))
-                                    else:
-                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot))
+                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, coord=spot))
                         elif card == Card.ROAD_BUILDING:
                             if self.total_roads < 15:
                                 # Get the set of possible places we can build a road
@@ -231,19 +223,12 @@ class Player(object):
                                                                        road2=frozenset([road_source, sink])))
                         elif card == Card.MONOPOLY:
                             for r in board.resource_list:
-                                if weighted:
-                                    for i in range(10):
-                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r))
-                                else:
-                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r))
+                                possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r))
                         elif card == Card.YEAR_OF_PLENTY:
-                            for r in board.resource_list:
-                                for r2 in board.resource_list:
-                                    if weighted:
-                                        for i in range(10):
-                                            possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r, resource2=r2))
-                                    else:
-                                        possible_moves.append(Move(Move.PLAY_DEV, card_type=card, resource=r, resource2=r2))
+                            for i in range(len(board.resource_list)):
+                                for j in range(i, len(board.resource_list)):
+                                    possible_moves.append(Move(Move.PLAY_DEV, card_type=card, \
+                                        resource=board.resource_list[i], resource2=board.resource_list[j]))
 
             # We need to roll at the beginning of the turn
             if not self.has_rolled:
@@ -274,11 +259,7 @@ class Player(object):
                 and self.resources['w'] > 0
                 and self.resources['o'] > 0
                 and card != -1):
-                if weighted:
-                    for i in range(10):
-                        possible_moves.append(Move(Move.BUY_DEV, card_type=card, player=self.player_num))
-                else:
-                    possible_moves.append(Move(Move.BUY_DEV, card_type=card, player=self.player_num))
+                possible_moves.append(Move(Move.BUY_DEV, card_type=card, player=self.player_num))
             
 
             # Can we ask for a trade?
@@ -308,12 +289,7 @@ class Player(object):
             if self.resources['g'] >= 2 and self.resources['o'] >= 3 and \
             len(self.cities) < 4:
                 for settlement in self.settlements:
-
-                    if weighted:
-                        for i in range(1000):
-                            possible_moves.append(Move(Move.BUY_CITY, coord=settlement))
-                    else:
-                        possible_moves.append(Move(Move.BUY_CITY, coord=settlement))
+                    possible_moves.append(Move(Move.BUY_CITY, coord=settlement))
 
             # Can we build a road?
             if self.resources['b'] > 0 and self.resources['l'] > 0 and self.total_roads < 15:
@@ -339,12 +315,7 @@ class Player(object):
                 # Check the possible places for us to build a settlement
                 for source in self.roads:
                     if self.can_build_settlement(source, board):
-
-                        if weighted:
-                            for i in range(1000):
-                                possible_moves.append(Move(Move.BUY_SETTLEMENT, coord=source))
-                        else:
-                            possible_moves.append(Move(Move.BUY_SETTLEMENT, coord=source))
+                        possible_moves.append(Move(Move.BUY_SETTLEMENT, coord=source))
 
             # Should we trade in resources? Try cases for the 5 different resources
             if (self.resources['w'] >= 2 and '2 w' in self.ports) or \

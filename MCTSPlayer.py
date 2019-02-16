@@ -10,11 +10,9 @@ from utils import Card, Move
 class MCTSPlayer(Player):
 
 
-    def __init__(self, player_num, time, weighted, thompson):
+    def __init__(self, player_num, num_simulations):
         super(MCTSPlayer, self).__init__(Player.MCTS_AI, player_num)
-        self.time = time
-        self.weighted = weighted
-        self.thompson = thompson
+        self.num_simulations = num_simulations
 
         # These are used for bookkeeping. avg_legal_moves keeps track 
         # of the amount of legal moves considered from the state at 
@@ -28,11 +26,10 @@ class MCTSPlayer(Player):
 
     def decide_move(self, board, deck, players):
         if self.random:
-            possible_moves = self.get_legal_moves(board, deck, 0)
+            possible_moves = self.get_legal_moves(board, deck)
             # We should choose a move randomly from the set of possible moves!
             return possible_moves[random.randint(0, len(possible_moves) - 1)]
-        AI = MCTSAI(board, self.time, deck, 
-            self.player_num, self.weighted, self.thompson)
+        AI = MCTSAI(board, self.num_simulations, deck, self.player_num)
         move = AI.get_play()
         if AI.num_moves_from_root > 1:
             self.avg_legal_moves[0] += 1

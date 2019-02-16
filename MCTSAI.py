@@ -1,5 +1,4 @@
 import copy
-import datetime
 import random
 import settings
 
@@ -28,13 +27,11 @@ class Node():
 
 class MCTSAI():
 
-    def __init__(self, board, time, deck, active_player_num, weighted, thompson):
+    def __init__(self, board, num_simulations, deck, active_player_num):
         # class that initialize a MCTSAI, works to figure
-        self.timer = datetime.timedelta(seconds=time)
+        self.num_simulations = num_simulations
         self.nodes = [Node(0, -1, active_player_num, State(board, deck), 0)]
         self.max_depth = 0
-        self.weighted = weighted
-        self.thompson = thompson
         #factor to see how much to explore and expand we should test
         #values of this parameter.
         self.C = 1.0
@@ -47,8 +44,7 @@ class MCTSAI():
             legal = self.legal
         else:
             legal = node.state.board.active_player.get_legal_moves(node.state.board,
-                                                  node.state.deck,
-                                                  self.weighted)
+                                                  node.state.deck)
         # Pick a move with thompson sampling
         '''
         max_sample = 0
@@ -72,28 +68,21 @@ class MCTSAI():
                     key=lambda x: random.betavariate(x[0], x[1] - x[0]))[2]
 
     def get_play(self):
-        #print("__________________STARTING AI CALL__________________")
         state = self.nodes[0].state
         board = state.board
         deck = state.deck
 
         legal = self.nodes[0].state.board.active_player.get_legal_moves(board,
-                                              deck,
-                                              self.weighted)
+                                              deck)
         self.num_moves_from_root = len(legal)
         if len(legal) == 1:
             return legal[0]
         self.legal = legal
 
-        #start = datetime.datetime.utcnow()
-        for i in range(100):
-            #print('running cycle')
+        print("num simulations: " + str(self.num_simulations))
+        for i in range(self.num_simulations):
             self.num_cycles_run += 1
             self.run_cycle()
-        #print('finished running cycles!')
-        #print("____CYCLE STARTING____")
-        #self.run_cycle()
-        #print("____DONE RUNNING CYCLES____")
         root = self.nodes[0]
         # Breadth first traversal of the created MCTS tree
         '''
@@ -170,9 +159,6 @@ class MCTSAI():
 
     def run_cycle(self):
         node, move = self.run_selection()
-        #print("selected move: " + str(move.move_type))
-        #print("node active player: " + str(node.state.board.active_player.player_num))
-        #print("node turn player: " + str(node.curr_player_num))
         if not move:
             # winner has already been found
             winner = node.state.winner
@@ -183,23 +169,11 @@ class MCTSAI():
             self.run_backpropogation(new_node, winner)
 
     def run_selection(self):
-        #print("start of selection")
         current_node = self.nodes[0]
         move = self.thompson_sample(current_node)
-        #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
-        # TODO: fix this part later
-        #print('____starting new loop_____')
         while current_node.state.winner == 0 and move in current_node.children:
             current_node = self.nodes[current_node.children[move]]
-            #print('active player num')
-            #print(current_node.active_player_num)
-            #print('round num')
-            #print(current_node.state.board.round_num)
             move = self.thompson_sample(current_node)
-            #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
-            #print("move type: " + str(move.move_type))
-        #print('after loop move: ' + str(move.move_type))
-        #print("move: " + str(move.move_type) + " ; active player: " + str(current_node.active_player_num))
         if current_node.state.winner == 0:
             return current_node, move
         else:
@@ -218,7 +192,6 @@ class MCTSAI():
         return new_node
 
     def run_simulation(self, node):
-        #print("start of simulation")
         if node.state.winner != 0:
             return node.state.winner
         state_copy = copy.deepcopy(node.state)

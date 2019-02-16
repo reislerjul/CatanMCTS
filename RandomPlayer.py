@@ -1,6 +1,7 @@
 import copy
 import random
 import settings
+import StateToFeatures
 
 from Player import Player
 from utils import Card, Move
@@ -13,7 +14,7 @@ class RandomPlayer(Player):
         super(RandomPlayer, self).__init__(Player.RANDOM_AI, player_num)
 
     def decide_move(self, board, deck, players):
-        possible_moves = self.get_legal_moves(board, deck, 0)
+        possible_moves = self.get_legal_moves(board, deck)
         # We should choose a move randomly from the set of possible moves!
         return possible_moves[random.randint(0, len(possible_moves) - 1)]
 
