@@ -1,9 +1,6 @@
 import random
-
 from MCTSAI import MCTSAI
 from Player import Player
-from utils import Card, Move
-
 
 class MCTSPlayer(Player):
     def __init__(self, player_num, num_simulations):
