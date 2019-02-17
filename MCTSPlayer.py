@@ -1,5 +1,4 @@
 import random
-import settings
 
 from MCTSAI import MCTSAI
 from Player import Player

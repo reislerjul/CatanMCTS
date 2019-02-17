@@ -1,8 +1,4 @@
-import copy
 import random
-import settings
-
-from MCTSAI import MCTSAI
 from Player import Player
 from utils import Card, Move
 import sys
