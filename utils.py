@@ -55,6 +55,13 @@ class Move():
         self.resource2 = resource2
         self.roll = roll
 
+    def copy_move(self):
+        new_move = Move(self.move_type, card_type=self.card_type, road=self.road, \
+            road2=self.road2, coord=self.coord, player=self.player, \
+            give_resource=self.give_resource, resource=self.resource, \
+            resource2=self.resource2, roll=self.roll)
+        return new_move
+
     def __str__(self):
         s = 'Move(move_type: {}'.format(self.move_type)
         s += ', card_type: {}'.format(self.card_type)

@@ -11,12 +11,11 @@ from unittest.mock import patch
 from utils import Move
 import StateToFeatures
 
-
 # Use this class to check that cycles are run correctly. Print statements will need 
 # to be added to the MCTSAI class
 class TestMCTS(unittest.TestCase):
     def test_cycles_work(self):
-        player_list = [MCTSPlayer(1, 10, 0, 1), RandomPlayer(2), RandomPlayer(3)]
+        player_list = [MCTSPlayer(1, 10), RandomPlayer(2), RandomPlayer(3)]
         settings.init()
         deck = Deck()
         board = Board(player_list, False)
@@ -438,7 +437,7 @@ class TestPlayDev(unittest.TestCase):
             board, deck, player_list)
         self.assertEqual(move_made, 1)
         self.assertEqual(player_list[0].dev_drawn, 0)
-        legal_moves = player_list[0].get_legal_moves(board, deck, False)
+        legal_moves = player_list[0].get_legal_moves(board, deck)
         is_legal = player_list[0].check_legal_move(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), board, deck)
         self.assertEqual(is_legal, False)
         self.assertEqual(len(legal_moves), 1)
@@ -448,7 +447,7 @@ class TestPlayDev(unittest.TestCase):
         # Check that if we have another dev card that is the same as the one drawn, 
         # we can play it
         player_list[0].dev_cards[0] += 1 
-        legal_moves = player_list[0].get_legal_moves(board, deck, False)
+        legal_moves = player_list[0].get_legal_moves(board, deck)
         self.assertGreater(len(legal_moves), 1)
         self.assertEqual((legal_moves[1].move_type, legal_moves[1].card_type), (Move.PLAY_DEV, 0))
         is_legal = player_list[0].check_legal_move(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), board, deck)
@@ -461,7 +460,7 @@ class TestPlayDev(unittest.TestCase):
 
         # Now, end the turn and check that on the next turn, we can play the knight that is left over
         player_list[0].make_move(Move(Move.END_TURN), board, deck, player_list)
-        legal_moves = player_list[0].get_legal_moves(board, deck, False)
+        legal_moves = player_list[0].get_legal_moves(board, deck)
         self.assertIn(Move(Move.PLAY_DEV, card_type=0, coord=(1, 0)), legal_moves)
         self.assertNotIn(Move(Move.PLAY_DEV, card_type=0, coord=(0, 0)), legal_moves)
         self.assertEqual(player_list[0].dev_drawn, -1)
@@ -594,7 +593,7 @@ class TestSevenRolled(unittest.TestCase):
         self.assertEqual(player_list[0].resources, {'w':0, 'b':0, 'l':3, 'g':2, 'o':0})
         self.assertEqual(player_list[1].resources, {'w':0, 'b':0, 'l':3, 'g':2, 'o':0})
         self.assertEqual(player_list[2].resources, {'w':0, 'b':0, 'l':3, 'g':2, 'o':0})
-        legal_moves = player_list[0].get_legal_moves(board, deck, 0)
+        legal_moves = player_list[0].get_legal_moves(board, deck)
         for move in legal_moves:
             self.assertEqual(move.move_type, Move.MOVE_ROBBER)
 
@@ -612,7 +611,7 @@ class TestSevenRolled(unittest.TestCase):
         self.assertEqual(move_made, 1)
         self.assertEqual(board.seven_roller, player_list[0])
         self.assertEqual(board.active_player, player_list[1])
-        legal_moves = board.active_player.get_legal_moves(board, deck, 0)
+        legal_moves = board.active_player.get_legal_moves(board, deck)
         for move in legal_moves:
             self.assertEqual(move.move_type, Move.DISCARD_HALF)
         decided = board.active_player.decide_move(board, deck, player_list)
@@ -666,7 +665,7 @@ class TestSevenRolled(unittest.TestCase):
             self.assertEqual(sum(player.resources.values()), 8)
 
         # Make sure were at player 1 and they now need to move the robber
-        legal_moves = board.active_player.get_legal_moves(board, deck, 0)
+        legal_moves = board.active_player.get_legal_moves(board, deck)
         for move in legal_moves:
             self.assertEqual(move.move_type, Move.MOVE_ROBBER)
 
@@ -715,7 +714,7 @@ class TestCanBuildRoads(unittest.TestCase):
         board.active_player = player_list[0]
         player_list[0].has_rolled = True
         player_list[0].resources = {'w': 0, 'b': 1, 'l': 1, 'g': 0, 'o': 0}
-        legal_moves = player_list[0].get_legal_moves(board, deck, 0)
+        legal_moves = player_list[0].get_legal_moves(board, deck)
         self.assertIn(Move(Move.BUY_ROAD, road=frozenset([(2, 0), (1, 0)])), legal_moves)
         self.assertIn(Move(Move.BUY_ROAD, road=frozenset([(0, 0), (1, 1)])), legal_moves)
 
@@ -731,7 +730,7 @@ class TestTradeBetweenPlayers(unittest.TestCase):
         player_list[0].resources = {'w': 0, 'b': 1, 'l': 0, 'g': 0, 'o': 0}
         player_list[1].resources = {'w': 2, 'b': 3, 'l': 3, 'g': 0, 'o': 0}
         player_list[2].resources = {'w': 1, 'b': 1, 'l': 0, 'g': 1, 'o': 0}
-        legal_moves = player_list[0].get_legal_moves(board, deck, 0)
+        legal_moves = player_list[0].get_legal_moves(board, deck)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('o', 1), 
             player=player_list[0].player_num), legal_moves)
         self.assertNotIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 3), 
@@ -744,6 +743,90 @@ class TestTradeBetweenPlayers(unittest.TestCase):
             player=player_list[0].player_num), legal_moves)
         self.assertIn(Move(Move.PROPOSE_TRADE, give_resource=('b', 1), resource=('w', 1), 
             player=player_list[0].player_num), legal_moves)
+
+class TestTradeWithBank(unittest.TestCase):
+    def test_trade_bank(self):
+        player_list = [RandomPlayer(1)]
+        settings.init()
+        deck = Deck()
+        board = Board(player_list, False)
+        board.active_player = player_list[0]
+        board.round_num = 2
+        player_list[0].resources = {'w':2, 'b':2, 'l':3, 'g':3, 'o':3}
+        player_list[0].has_rolled = True
+
+        # Cannot trade
+        legal_moves = player_list[0].get_legal_moves(board, deck)
+        for move in legal_moves:
+            self.assertNotEqual(move.move_type, Move.TRADE_BANK)
+
+        # Can only trade w 
+        player_list[0].ports.append('2 w')
+        legal_moves = player_list[0].get_legal_moves(board, deck)
+        for move in legal_moves:
+            if move.move_type == Move.TRADE_BANK:
+                self.assertEqual(player_list[0].check_legal_move(move, board, deck), True)
+                self.assertEqual(move.give_resource, 'w')
+        self.assertIn(Move(Move.TRADE_BANK, give_resource='w', resource='b'), legal_moves)
+        self.assertIn(Move(Move.TRADE_BANK, give_resource='w', resource='l'), legal_moves)
+        self.assertIn(Move(Move.TRADE_BANK, give_resource='w', resource='g'), legal_moves)
+        self.assertIn(Move(Move.TRADE_BANK, give_resource='w', resource='o'), legal_moves)
+        self.assertNotIn(Move(Move.TRADE_BANK, give_resource='w', resource='w'), legal_moves)
+
+        # can trade things with 2, 3, and 4
+        trades_l = 0
+        trades_g = 0
+        trades_o = 0
+        player_list[0].ports = ['3', '2 l']
+        player_list[0].resources = {'w':0, 'b':0, 'l':2, 'g':3, 'o':4}
+        legal_moves = player_list[0].get_legal_moves(board, deck)
+        for move in legal_moves:
+            if move.move_type == Move.TRADE_BANK:
+                self.assertEqual(player_list[0].check_legal_move(move, board, deck), True)
+                self.assertIn(move.give_resource, ['l', 'g', 'o'])
+                if move.give_resource == 'l':
+                    trades_l += 1
+                    self.assertIn(move.resource, ['w', 'b', 'g', 'o'])
+                elif move.give_resource == 'g':
+                    trades_g += 1
+                    self.assertIn(move.resource, ['w', 'b', 'l', 'o'])
+                elif move.give_resource == 'o':
+                    trades_o += 1
+                    self.assertIn(move.resource, ['w', 'b', 'l', 'g'])
+        self.assertEqual(trades_l, 4)
+        self.assertEqual(trades_o, 4)
+        self.assertEqual(trades_g, 4)
+        player_list[0].make_move(Move(Move.TRADE_BANK, give_resource='l', resource='w'), 
+            board, deck, player_list)
+        self.assertEqual(player_list[0].resources['w'], 1)
+        self.assertEqual(player_list[0].resources['l'], 0)
+        player_list[0].make_move(Move(Move.TRADE_BANK, give_resource='g', resource='w'), 
+            board, deck, player_list)
+        self.assertEqual(player_list[0].resources['w'], 2)
+        self.assertEqual(player_list[0].resources['g'], 0)
+        player_list[0].make_move(Move(Move.TRADE_BANK, give_resource='o', resource='w'), 
+            board, deck, player_list)        
+        self.assertEqual(player_list[0].resources['w'], 3)
+        self.assertEqual(player_list[0].resources['o'], 1)
+
+        # Test trading 4
+        player_list[0].ports = ['2 b']
+        player_list[0].trades_tried = 0
+        player_list[0].resources = {'w':0, 'b':0, 'l':2, 'g':3, 'o':5} 
+        trades = 0  
+        legal_moves = player_list[0].get_legal_moves(board, deck)
+        for move in legal_moves:
+            if move.move_type == Move.TRADE_BANK:
+                self.assertEqual(player_list[0].check_legal_move(move, board, deck), True)
+                self.assertEqual(move.give_resource, 'o')      
+                trades += 1
+        self.assertEqual(trades, 4)
+        player_list[0].make_move(Move(Move.TRADE_BANK, give_resource='o', resource='w'), 
+            board, deck, player_list)            
+        self.assertEqual(player_list[0].resources['w'], 1)
+        self.assertEqual(player_list[0].resources['o'], 1)   
+        self.assertEqual(player_list[0].check_legal_move(Move(Move.TRADE_BANK, 
+            give_resource='b', resource='w'), board, deck), False)              
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,16 +3,14 @@ import settings
 from utils import Move
 import random
 
-
-# TODO: finish this 
-def action_to_move(index, move_array, current_player, total_players):
-    move = move_array[index]
-
+def action_to_move(index, move_array, current_player, total_players, deck):
+    move = move_array[index].copy_move()
     if move.move_type == move.BUY_DEV:
         move.card_type = deck.peek()
         move.player = current_player.player_num
-    elif move.card_type == Card.KNIGHT or move.move_type == move.MOVE_ROBBER or \
-    move.move_type == move.CHOOSE_TRADER:
+    elif ((move.card_type == Card.KNIGHT and move.move_type == move.PLAY_DEV) \
+                or move.move_type == move.MOVE_ROBBER or \
+                move.move_type == move.CHOOSE_TRADER) and move.player != None:
         victim = current_player.player_num + move.player - 1 \
         if current_player.player_num + move.player - 1 <= total_players \
         else (current_player.player_num + move.player - 1) % total_players
@@ -21,6 +19,7 @@ def action_to_move(index, move_array, current_player, total_players):
         move.player = current_player.player_num
     elif move.move_type == Move.ROLL_DICE:
         move.roll = random.randint(1, 6) + random.randint(1, 6)
+        move.player = current_player.player_num
     elif move.move_type == Move.DISCARD_HALF:
         resource_list = current_player.resources['w'] * ['w'] + current_player.resources['o'] * ['o'] + \
         current_player.resources['l'] * ['l'] + current_player.resources['b'] * ['b'] + \
@@ -43,19 +42,20 @@ def possible_actions_to_vector(legal_moves, current_player_num, total_players, m
     # some of the moves might not be exactly the same as what's stored in the dictionary.
     # In these cases, we will reconstruct the right moves.
     for move in legal_moves:
-        if move in move_to_index:
-            legal_vect[move_to_index[move]] = 1
-        elif move.move_type == move.BUY_DEV:
-            legal_vect[move_to_index[Move(Move.BUY_DEV)]] = 1
-        elif move.card_type == Card.KNIGHT or move.move_type == move.MOVE_ROBBER or \
-        move.move_type == move.CHOOSE_TRADER:
+        if ((move.card_type == Card.KNIGHT and move.move_type == move.PLAY_DEV) \
+            or move.move_type == move.MOVE_ROBBER or \
+            move.move_type == move.CHOOSE_TRADER) and move.player != None:
             victim = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
             else total_players - current_player_num + move.player + 1
             legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
-                coord=move.coord, player=victim)]] = 1
+                coord=move.coord, player=victim)]] = 1        
+        elif move in move_to_index:
+            legal_vect[move_to_index[move]] = 1
+        elif move.move_type == move.BUY_DEV:
+            legal_vect[move_to_index[Move(Move.BUY_DEV)]] = 1
         elif move.card_type == Card.ROAD_BUILDING:
             legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
-                road=move.road2, road2=move.road)]]
+                road=move.road2, road2=move.road)]] = 1
         elif move.move_type == Move.PROPOSE_TRADE:
             legal_vect[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
                 resource=move.resource)]] = 1
@@ -69,6 +69,7 @@ def possible_actions_to_vector(legal_moves, current_player_num, total_players, m
         else:
             print("Cannot find index for this move: ")
             print(move)
+            raise(Exception("move not in all possible move array!"))
     return legal_vect
 
 
