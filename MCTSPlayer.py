@@ -1,6 +1,7 @@
 import random
 from MCTSAI import MCTSAI
 from Player import Player
+from utils import Move
 
 class MCTSPlayer(Player):
     def __init__(self, player_num, num_simulations):
@@ -29,6 +30,10 @@ class MCTSPlayer(Player):
             self.avg_legal_moves[1] += AI.num_moves_from_root
             self.avg_cycles_per_move[0] += 1
             self.avg_cycles_per_move[1] += AI.num_cycles_run
+        if move.move_type == move.ROLL_DICE:
+            move.roll = random.randint(1, 6) + random.randint(1, 6)
+        elif move.move_type == move.BUY_DEV:
+            move.card_type = deck.peek()
         return move
 
     def to_string(self):
