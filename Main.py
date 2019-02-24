@@ -77,7 +77,7 @@ if __name__ == '__main__':
             MCTS_player = MCTSPlayer(index, int(player["num_simulations"]))
             player_list.append(MCTS_player)
         elif player["type"] == "MCTSNN":
-            player_list.append(MCTSNNPlayer(index, int(player["num_simulations"]), None))
+            player_list.append(MCTSNNPlayer(index, int(player["num_simulations"])))
             nn = CurrentNN()
             current_nn = nn.currentNN
         elif player["type"] == "NN":
@@ -124,7 +124,7 @@ if __name__ == '__main__':
                 MCTS_player = player_list[j]
             elif player_list[j].player_type == Player.MCTSNN_AI:
                 # TODO: neural net; right now it does a nn with random weights
-                player_list[j] = MCTSNNPlayer(j + 1, player_list[j].num_simulations, 1)
+                player_list[j] = MCTSNNPlayer(j + 1, player_list[j].num_simulations)
             elif player_list[j].player_type == Player.NNET:
                 player_list[j] = (NNetPlayer(j + 1))
 

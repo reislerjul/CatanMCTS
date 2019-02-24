@@ -1,7 +1,6 @@
 import random
 import settings
 
-
 # This class takes care of the game state of the Catan game 
 class Game():
 

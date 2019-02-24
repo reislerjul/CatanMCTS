@@ -6,15 +6,11 @@ import StateToFeatures
 import numpy as np
 
 class MCTSNNPlayer(Player):
-    def __init__(self, player_num, num_simulations, nnet_type):
+    def __init__(self, player_num, num_simulations):
         super(MCTSNNPlayer, self).__init__(Player.MCTSNN_AI, player_num)
         self.num_simulations = num_simulations
         self.move_to_index = pickle.load(open("AllPossibleActionDict.p", "rb"))
         self.move_array = pickle.load(open("AllPossibleActionVector.p", "rb"))
-
-        # This should be 1 if we are using the most recently trained NN and 
-        # 0 if we are using the previous version in training.
-        self.nnet_type = nnet_type
 
     def decide_move(self, board, deck, players, nn):
         if self.random:
@@ -29,7 +25,6 @@ class MCTSNNPlayer(Player):
     # We put this in a helper function to use it for training
     def getActionProb(self, AI):
         return AI.getActionProb()
-
 
     def to_string(self):
         return "MCTSNN"

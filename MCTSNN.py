@@ -51,8 +51,8 @@ class MCTSNN():
             Ps, self.nodes[0].value = self.nnet.predict(self.canonicalBoard)
             self.Ps.append(Ps)
 
-            valids = StateToFeatures.possible_actions_to_vector(self.nodes[0].legals, \
-            self.nodes[0].active_player_num, len(nodes[0].state.board.players), self.move_to_index)
+            valids = StateToFeatures.possible_actions_to_vector(self.nodes[0].legal, \
+            self.nodes[0].active_player_num, len(self.nodes[0].state.board.players), self.move_to_index)
             self.Ps[0] = self.Ps[0] * valids
             sum_Ps_s = np.sum(self.Ps[0])
             if sum_Ps_s <= 0:

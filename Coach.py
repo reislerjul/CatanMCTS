@@ -2,112 +2,16 @@ from MCTSNN import MCTSNN
 import numpy as np
 import os, sys
 from pickle import Pickler, Unpickler
+import pickle
 from random import shuffle
 from Deck import Deck
 from Board import Board
-from MCTSNNPlayer import MCTSNNPlayer
 from RandomPlayer import RandomPlayer
 from Game import Game
 import StateToFeatures
 import settings
-import multiprocessing as mp
 from NNet import NNetWrapper as nn
-from CurrentNN import CurrentNN
-
-
-def executeEpisode(iteration):
-    """
-    This function executes one episode of self-play, starting with player 1.
-    As the game is played, each turn is added as a training example to
-    trainExamples. The game is played till the game ends. After the game
-    ends, the outcome of the game is used to assign values to each example
-    in trainExamples. We use a game threshold of 100 rounds
-    Returns:
-        trainExamples: a list of examples of the form (canonicalBoard,pi,v)
-                       pi is the MCTS informed policy vector, v is +1 if
-                       the player eventually won the game, else -1.
-    """
-    print("STARTING EPISODE " + str(iteration))
-
-    trainExamples = []
-    deck = Deck()
-    players = [MCTSNNPlayer(1, 20, None), \
-    MCTSNNPlayer(2, 20, None), \
-    MCTSNNPlayer(3, 20, None)]
-    board = Board(players, True)
-    winner = None
-    new_nn = CurrentNN()
-    nnet = new_nn.currentNN 
-    counter = 0
-    while True:
-        counter += 1
-        if counter == 10:
-            print(board.round_num)
-            count = 0
-        AI = MCTSNN(board, 20, deck, board.active_player.player_num, \
-            nnet, board.active_player.move_to_index)
-        pi = board.active_player.getActionProb(AI)
-        trainExamples.append([AI.canonicalBoard, \
-            board.active_player.player_num, pi])
-        action = np.random.choice(len(pi), p=pi)
-        move = StateToFeatures.action_to_move(action, board.active_player.move_array, \
-            board.active_player, len(board.players), deck)
-        board.active_player.make_move(move, board, deck, players)        
-        if board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
-            winner = board.active_player.player_num
-        if board.round_num >= 50:
-            winner = max([(player, player.calculate_vp()) for player in players], 
-                key=lambda x: x[1])[0].player_num
-        if winner:
-            return [[x[0], x[2], (-1) ** int(x[1] != winner)] for x in trainExamples]
-
-def versus_mode(iteration):
-    '''
-    Use this function for pitting the current neural network against the old one.
-    '''
-    # Initialize each player in a random spot
-    print("STARTING VERSUS MODE " + str(iteration))
-    nnet = nn()
-    nnet.load_checkpoint(folder='trainExamples/', filename='best.pth.tar')
-    pnet = nn()
-    pnet.load_checkpoint(folder='trainExamples/', filename='temp.pth.tar')
-    players = [RandomPlayer(1), MCTSNNPlayer(2, 1), \
-    MCTSNNPlayer(3, 1)]
-    pnet_num = 0
-    nnet_num = 0
-    shuffle(players)
-    for j in range(len(players)):
-        if players[j].player_num == 2:
-            nnet_num = j + 1
-        elif players[j].player_num == 3:
-            pnet_num = j + 1
-        players[j].player_num = j + 1
-
-    # Play the game!
-    deck = Deck()
-    board = Board(players, True)
-
-    while True:
-        print(board.round_num)
-        if board.active_player.player_num == pnet_num:
-            move = self.board.active_player.decide_move(board, deck, players, pnet)
-        elif board.active_player.player_num == nnet_num:
-            move = self.board.active_player.decide_move(board, deck, players, nnet)
-        else:
-            move = self.board.active_player.decide_move(board, deck, players, None)
-        self.board.active_player.make_move(move, board, deck, players)
-        if self.board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
-            if self.board.active_player.player_num == pnet_num:
-                return 0
-            if self.board.active_player.player_num == nnet_num:
-                return 1
-            return -1
-        if self.board.round_num >= 3:
-            if self.board.active_player.player_num == pnet_num:
-                return 0
-            if self.board.active_player.player_num == nnet_num:
-                return 1
-            return -1  
+from MCTSNNPlayer import MCTSNNPlayer
 
 class Coach():
     """
@@ -116,11 +20,56 @@ class Coach():
     """
     def __init__(self, args):
         #self.nnet = nnet
-        self.pnet = nn()  # the competitor network
         self.nnet = nn()
         self.args = args
         self.trainExamplesHistory = []    # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False # can be overriden in loadTrainExamples()
+        self.move_to_index = pickle.load(open("AllPossibleActionDict.p", "rb"))
+
+    def executeEpisode(self, iteration):
+        """
+        This function executes one episode of self-play, starting with player 1.
+        As the game is played, each turn is added as a training example to
+        trainExamples. The game is played until the game ends. After the game
+        ends, the outcome of the game is used to assign values to each example
+        in trainExamples. We use a game threshold of 100 rounds
+        Only collect data every few moves because otherwise, the data is too large to 
+        be stored.
+        Returns:
+            trainExamples: a list of examples of the form (canonicalBoard,pi,v)
+                           pi is the MCTS informed policy vector, v is +1 if
+                           the player eventually won the game, else -1.
+        """
+        print("EXECUTING EPISODE" + str(iteration))
+        trainExamples = []
+        counter = 0
+        deck = Deck()
+        players = [MCTSNNPlayer(1, self.args['num_simulations']), \
+        MCTSNNPlayer(2, self.args['num_simulations']), MCTSNNPlayer(3, self.args['num_simulations'])]
+        board = Board(players, True)
+        winner = None
+
+        while True:
+            AI = MCTSNN(board, self.args['num_simulations'], deck, \
+                board.active_player.player_num, self.nnet, self.move_to_index)
+            pi = AI.getActionProb(temp=1)
+            action = np.random.choice(len(pi), p=pi)
+            canonicalBoard = AI.canonicalBoard
+            if counter % 5 == 0:
+                trainExamples.append([canonicalBoard, \
+                    board.active_player.player_num, pi])
+            move = StateToFeatures.action_to_move(action, board.active_player.move_array, \
+                board.active_player, len(board.players), deck)
+            board.active_player.make_move(move, board, deck, players)    
+
+            if board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
+                winner = board.active_player.player_num
+            if board.round_num >= self.args['round_threshold']:
+                winner = max([(player, player.calculate_vp()) for player in players], 
+                    key=lambda x: x[1])[0].player_num
+            if winner:
+                return [[x[0], x[2], (-1) ** int(x[1] != winner)] for x in trainExamples]
+            counter += 1
 
     def learn(self):
         """
@@ -130,60 +79,41 @@ class Coach():
         It then pits the new neural network against the old one and a random player
         and accepts it if there is at least a marginal improvement in the win rate.
         """
-
         for i in range(1, self.args['numIters'] + 1):
             # bookkeeping
             print('------ITER ' + str(i) + '------')
             # examples of the iteration
+            trainExamples = []
 
             if not self.skipFirstSelfPlay or i > 1:
-                iterationTrainExamples = []
-    
-                # Run the episodes in parallel
-                #eps = [(self.nnet) for i in range(self.args['numEps'])]
-                eps = [i for i in range(self.args['numEps'])]
-                num_workers = mp.cpu_count()
-                with mp.Pool(num_workers) as p:
-                    iterationTrainExamples = p.map(executeEpisode, eps)
+                # Run the episodes
+                for j in range(self.args['numEps']):
+                    trainExamples.extend(self.executeEpisode(j + 1))
 
-                iterationExamples = []
-                for element in iterationTrainExamples:
-                    iterationExamples.extend(element)
-    
-                # save the iteration examples to the history 
-                self.trainExamplesHistory.append(iterationExamples)
-               
+            self.saveTrainExamples(i - 1, trainExamples)
+            self.trainExamplesHistory.append(trainExamples)
             if len(self.trainExamplesHistory) > self.args['numItersForTrainExamplesHistory']:
-                print("len(trainExamplesHistory) =", len(self.trainExamplesHistory), " => remove the oldest trainExamples")
-                self.trainExamplesHistory.pop(0)
-            
-            # backup history to a file
-            # NB! the examples were collected using the model from the previous iteration, so (i-1)  
-            self.saveTrainExamples(i - 1)
-            
-            trainExamples = []
-            for e in self.trainExamplesHistory:
-                trainExamples.extend(e)
-            shuffle(trainExamples)
+                self.trainExamplesHistory.pop()
+            examples = []
+            for example in self.trainExamplesHistory:
+                examples.extend(example)    
+            shuffle(examples)            
 
             # training new network, keeping a copy of the old one
             self.nnet.save_checkpoint(folder=self.args['checkpoint'], filename='temp.pth.tar')
-            #self.pnet.load_checkpoint(folder=self.args['checkpoint'], filename='temp.pth.tar')
-            
-            self.nnet.train(trainExamples)
-            self.nnet.save_checkpoint(folder=self.args['checkpoint'], filename='best.pth.tar')
 
+            self.nnet.train(examples)
 
     def getCheckpointFile(self, iteration):
         return 'checkpoint_' + str(iteration) + '.pth.tar'
 
-    def saveTrainExamples(self, iteration):
+    def saveTrainExamples(self, iteration, examples):
         folder = self.args['checkpoint']
         if not os.path.exists(folder):
             os.makedirs(folder)
         filename = os.path.join(folder, self.getCheckpointFile(iteration)+".examples")
         with open(filename, "wb+") as f:
-            Pickler(f).dump(self.trainExamplesHistory)
+            Pickler(f).dump(examples)
         f.closed
 
     def loadTrainExamples(self):
