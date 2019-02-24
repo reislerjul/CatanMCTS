@@ -43,3 +43,8 @@ class Deck():
             return selected
         return -1
 
+    def copy_deck(self):
+        new_deck = Deck()
+        new_deck.cards_left = list(self.cards_left)
+        return new_deck
+

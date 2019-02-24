@@ -1,7 +1,6 @@
 import random
 from MCTSAI import MCTSAI
 from Player import Player
-from utils import Move
 
 class MCTSPlayer(Player):
     def __init__(self, player_num, num_simulations):
@@ -18,7 +17,7 @@ class MCTSPlayer(Player):
         self.avg_cycles_per_move = [0, 0]
         self.avg_legal_moves = [0, 0]
 
-    def decide_move(self, board, deck, players):
+    def decide_move(self, board, deck, players, nn):
         if self.random:
             possible_moves = self.get_legal_moves(board, deck)
             # We should choose a move randomly from the set of possible moves!

@@ -4,8 +4,6 @@ import pickle
 
 # from reference of current player, assume that its player num is 1 and everyone elses 
 # is subsequnt depending on the order of play. assume three total players
-settings.init()
-
 # We first need a mapping of actions to vector
 all_possible_actions = [Move(Move.END_TURN)]
 

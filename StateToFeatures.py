@@ -2,6 +2,7 @@ from utils import Card
 import settings
 from utils import Move
 import random
+import numpy as np
 
 def action_to_move(index, move_array, current_player, total_players, deck):
     move = move_array[index].copy_move()
@@ -33,45 +34,84 @@ def action_to_move(index, move_array, current_player, total_players, deck):
         move.resource = combo
     return move
 
-# Legal moves should be a list of legal moves that the player can make
-def possible_actions_to_vector(legal_moves, current_player_num, total_players, move_to_index):
-    # There are 3151 moves in Catan
-    legal_vect = [0 for i in range(3151)]
-    
-    # Go through each move in legal moves and find its corresponding index. Note that 
-    # some of the moves might not be exactly the same as what's stored in the dictionary.
-    # In these cases, we will reconstruct the right moves.
-    for move in legal_moves:
+def action_to_index(move, current_player_num, total_players, move_to_index):
+    try:
         if ((move.card_type == Card.KNIGHT and move.move_type == move.PLAY_DEV) \
             or move.move_type == move.MOVE_ROBBER or \
             move.move_type == move.CHOOSE_TRADER) and move.player != None:
             victim = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
             else total_players - current_player_num + move.player + 1
-            legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
-                coord=move.coord, player=victim)]] = 1        
-        elif move in move_to_index:
-            legal_vect[move_to_index[move]] = 1
-        elif move.move_type == move.BUY_DEV:
-            legal_vect[move_to_index[Move(Move.BUY_DEV)]] = 1
-        elif move.card_type == Card.ROAD_BUILDING:
-            legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
-                road=move.road2, road2=move.road)]] = 1
-        elif move.move_type == Move.PROPOSE_TRADE:
-            legal_vect[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
-                resource=move.resource)]] = 1
-        elif move.move_type == Move.ROLL_DICE:
-            legal_vect[move_to_index[Move(move.move_type)]] = 1
-        elif move.move_type == Move.DISCARD_HALF:
-            legal_vect[move_to_index[Move(move.move_type)]] = 1
+            return move_to_index[Move(move.move_type, card_type=move.card_type, \
+                coord=move.coord, player=victim)]
+        if move in move_to_index:
+            return move_to_index[move]
+        if move.move_type == move.BUY_DEV:
+            return move_to_index[Move(Move.BUY_DEV)]
+        if move.card_type == Card.ROAD_BUILDING:
+            return move_to_index[Move(move.move_type, card_type=move.card_type, \
+                road=move.road2, road2=move.road)]
+        if move.move_type == Move.PROPOSE_TRADE:
+            return move_to_index[Move(move.move_type, give_resource=move.give_resource, \
+                resource=move.resource)]
+        if move.move_type == Move.ROLL_DICE:
+            return move_to_index[Move(move.move_type)]
+        if move.move_type == Move.DISCARD_HALF:
+            return move_to_index[Move(move.move_type)]
         elif move.card_type == Card.YEAR_OF_PLENTY:
-            legal_vect[move_to_index[Move(move.move_type, card_type=move.card_type, \
-                resource=move.resource2, resource2=move.resource)]] = 1
+            return move_to_index[Move(move.move_type, card_type=move.card_type, \
+                resource=move.resource2, resource2=move.resource)]
         else:
             print("Cannot find index for this move: ")
             print(move)
-            raise(Exception("move not in all possible move array!"))
+            raise(Exception("move not in all possible move array!"))    
+    except:
+        print("Cannot find index for this move; key exception")
+        print(move)
+        raise(Exception("move not in all possible move array!"))           
+
+# Legal moves should be a list of legal moves that the player can make
+def possible_actions_to_vector(legal_moves, current_player_num, total_players, move_to_index):
+    # There are 3151 moves in Catan
+    legal_vect = np.zeros(3151)
+    
+    # Go through each move in legal moves and find its corresponding index. Note that 
+    # some of the moves might not be exactly the same as what's stored in the dictionary.
+    # In these cases, we will reconstruct the right moves.
+    for move in legal_moves:
+        set_value_in_action_vector(legal_vect, current_player_num, total_players, \
+            move_to_index, move, 1)
     return legal_vect
 
+def set_value_in_action_vector(action_vector, current_player_num, \
+    total_players, move_to_index, move, value):
+    if ((move.card_type == Card.KNIGHT and move.move_type == move.PLAY_DEV) \
+        or move.move_type == move.MOVE_ROBBER or \
+        move.move_type == move.CHOOSE_TRADER) and move.player != None:
+        victim = move.player - current_player_num + 1 if move.player - current_player_num > 0 \
+        else total_players - current_player_num + move.player + 1
+        action_vector[move_to_index[Move(move.move_type, card_type=move.card_type, \
+            coord=move.coord, player=victim)]] = value        
+    elif move in move_to_index:
+        action_vector[move_to_index[move]] = value
+    elif move.move_type == move.BUY_DEV:
+        action_vector[move_to_index[Move(Move.BUY_DEV)]] = value
+    elif move.card_type == Card.ROAD_BUILDING:
+        action_vector[move_to_index[Move(move.move_type, card_type=move.card_type, \
+            road=move.road2, road2=move.road)]] = value
+    elif move.move_type == Move.PROPOSE_TRADE:
+        action_vector[move_to_index[Move(move.move_type, give_resource=move.give_resource, \
+            resource=move.resource)]] = value
+    elif move.move_type == Move.ROLL_DICE:
+        action_vector[move_to_index[Move(move.move_type)]] = value
+    elif move.move_type == Move.DISCARD_HALF:
+        action_vector[move_to_index[Move(move.move_type)]] = value
+    elif move.card_type == Card.YEAR_OF_PLENTY:
+        action_vector[move_to_index[Move(move.move_type, card_type=move.card_type, \
+            resource=move.resource2, resource2=move.resource)]] = value
+    else:
+        print("Cannot find index for this move: ")
+        print(move)
+        raise(Exception("move not in all possible move array!"))
 
 
 # This function converts a current board state to a matrix representation of its features
@@ -171,7 +211,7 @@ def board_to_vector(board, deck):
     # deck 
     board_vect.append(len(deck.cards_left))
 
-    return board_vect
+    return np.asarray(board_vect)
 
 
 

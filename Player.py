@@ -11,6 +11,7 @@ class Player(object):
     RANDOM_AI = 1
     MCTS_AI = 2
     MCTSNN_AI = 3
+    NNET = 4
 
     # TODO: Complete this constructor. player_type should be 0 if the player is
     # human, 1 if the player is the random AI, and 2 if the player is the
@@ -65,7 +66,7 @@ class Player(object):
     def print_invalid_move(self):
         return False
 
-    def decide_move(self, board, deck, players):
+    def decide_move(self, board, deck, players, nn):
         return
 
     def trade_other_players(self):
@@ -108,7 +109,6 @@ class Player(object):
         print("Ports: {}".format(self.ports))
         return 0
 
-
     # We use this when the game starts to make sure that the first road attaches to the first
     # settlement and the second road attaches to the second settlement
     def find_possible_road_spots(self, board):
@@ -125,7 +125,6 @@ class Player(object):
         for sink in possible_sinks:
             possible_roads.append(Move(Move.BUY_ROAD, road=frozenset([correct_source, sink])))
         return possible_roads
-
 
     # A helper function used to get a list of all the legal moves. If weighted, we
     # weight better moves so we have a higher chance of choosing them.

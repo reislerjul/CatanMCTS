@@ -77,7 +77,7 @@ class Human(Player):
             else:
                 print("Invalid move! Try again.")
 
-    def decide_move(self, board, deck, players):
+    def decide_move(self, board, deck, players, nn):
         if self.random:
             possible_moves = self.get_legal_moves(board, deck)
             # We should choose a move randomly from the set of possible moves!

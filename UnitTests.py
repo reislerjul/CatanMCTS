@@ -3,28 +3,101 @@ from Player import Player
 from Board import Board
 from Deck import Deck
 from RandomPlayer import RandomPlayer
+from MCTSNNPlayer import MCTSNNPlayer
 from MCTSPlayer import MCTSPlayer
 from Human import Human
 import settings
 from utils import Card
 from unittest.mock import patch
 from utils import Move
+from MCTSNN import MCTSNN
 import StateToFeatures
+import random
+import numpy as np
+import pickle
 
 # Use this class to check that cycles are run correctly. Print statements will need 
 # to be added to the MCTSAI class
 class TestMCTS(unittest.TestCase):
     def test_cycles_work(self):
         player_list = [MCTSPlayer(1, 10), RandomPlayer(2), RandomPlayer(3)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         move = board.active_player.decide_move(board, deck, player_list)
 
-class TestStateToVector(unittest.TestCase):
+class TestMCTSNN(unittest.TestCase):
+    # This function just sets up the MCTSNN to run. Print statements should be 
+    # used within the MCTSNN function to look at things in more detail.
+    def test_cycles_work(self):
+        # Set up a player in an almost win state and see if the cycles can 
+        # find the win state. The nnet used should just return a random value 
+        # between -1 and 1
+        class RandomNNet():
+            def __init__(self):
+                pass
+            def predict(self, canonicalBoard):
+                v = random.uniform(-0.999999999999, 0.999999999999)
+                p = [random.random() for i in range(3151)]
+                p = np.array(p) / sum(p)
+                return p, v
+
+        player_list = [MCTSNNPlayer(1, 50, RandomNNet()), RandomPlayer(2), RandomPlayer(3)]
+        player_list[0].dev_cards[Card.VICTORY_POINT] = 8
+        player_list[0].resources = {'w':2, 'b':4, 'l':4, 'g':2, 'o':0}
+        player_list[0].trades_tried = 2
+        player_list[0].has_rolled = True
+        deck = Deck()
+        board = Board(player_list, False)
+        board.round_num = 3
+        player_list[0].make_move(Move(Move.BUY_SETTLEMENT, coord=(0, 1)), 
+            board, deck, player_list)
+        player_list[0].make_move(Move(Move.BUY_ROAD, road=frozenset([(0, 1), (1, 1)])), 
+            board, deck, player_list)
+        player_list[0].make_move(Move(Move.BUY_ROAD, road=frozenset([(0, 0), (1, 1)])), 
+            board, deck, player_list)
+        print(player_list[0].decide_move(board, deck, player_list))
+
+    def test_randomized_deck(self):
+        player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
+        deck = Deck()
+        board = Board(player_list, False)
+
+        # Give player 1 some knights
+        for i in range(4):
+            player_list[0].dev_cards[deck.take_card(0)] += 1
+
+        # Give player 2 a knight and year of plenty
+        player_list[1].dev_cards[deck.take_card(0)] += 1
+        player_list[1].dev_cards[deck.take_card(len(deck.cards_left) - 1)] += 1
+
+        # Give player 3 victory points
+        for i in range(5):
+            player_list[2].dev_cards[deck.take_card(9)] += 1
+
+        self.assertEqual(len(deck.cards_left), 14)
+        self.assertEqual(player_list[0].dev_cards[Card.KNIGHT], 4)
+        self.assertEqual(player_list[1].dev_cards[Card.KNIGHT], 1)
+        self.assertEqual(player_list[1].dev_cards[Card.YEAR_OF_PLENTY], 1)
+        self.assertEqual(player_list[2].dev_cards[Card.VICTORY_POINT], 5)
+
+        original_deck = list(deck.cards_left)
+
+        AI = MCTSNN(board, 100, deck, board.active_player.player_num, None, None)
+
+        # Make sure that the original deck is unchanged
+        self.assertEqual(original_deck, deck.cards_left)
+
+        # Check to make sure that the randomization left the correct number of cards
+        self.assertEqual(len(original_deck), len(AI.nodes[0].state.deck.cards_left))
+        self.assertEqual(player_list[0].dev_cards, AI.nodes[0].state.board.players[0].dev_cards)
+        self.assertEqual(sum(player_list[1].dev_cards.values()), \
+            sum(AI.nodes[0].state.board.players[1].dev_cards.values()))
+        self.assertEqual(sum(player_list[2].dev_cards.values()), \
+            sum(AI.nodes[0].state.board.players[2].dev_cards.values()))
+
+class TestStateToVector(unittest.TestCase):        
     def test_board_in_vector_mode(self):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         player_list[0].add_road(board, ((0, 0), (1, 0)))
@@ -34,7 +107,6 @@ class TestStateToVector(unittest.TestCase):
         player_list[0].resources = {'w':10, 'b':10, 'l':10, 'g':10, 'o':10}
         player_list[1].resources = {'w':5, 'b':5, 'l':5, 'g':5, 'o':5}
         board_vect = StateToFeatures.board_to_vector(board, deck)
-
         # Check a couple spots to make sure they're encoded correctly
 
         # (2, 0) has no resource
@@ -243,7 +315,6 @@ class TestBoardInitialization(unittest.TestCase):
 class TestLongestRoad(unittest.TestCase):
     def test_longest_path_single_source(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
 
@@ -294,7 +365,6 @@ class TestLongestRoad(unittest.TestCase):
 
     def test_longest_road_building_roads(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
 
@@ -355,7 +425,6 @@ class TestLongestRoad(unittest.TestCase):
 
     def test_player_takes_longest_road(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
 
@@ -424,7 +493,6 @@ class TestLongestRoad(unittest.TestCase):
 class TestPlayDev(unittest.TestCase):
     def test_draw_dev_play_dev_same_turn(self):
         player_list = [RandomPlayer(1)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         board.active_player = player_list[0]
@@ -484,7 +552,6 @@ class TestPlayDev(unittest.TestCase):
         ]
         with patch('builtins.input', side_effect=user_input):
             player_list = [Human(1), RandomPlayer(2)]
-            settings.init()
             deck = Deck()
             board = Board(player_list, False)
             board.round_num = 2
@@ -562,7 +629,6 @@ class TestPlayDev(unittest.TestCase):
 class TestRobber(unittest.TestCase):
     def test_robber_prevents_resource_allocation(self):
         player_list = [RandomPlayer(1), RandomPlayer(2)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         player_list[0].settlements.append((0, 0))
@@ -580,7 +646,6 @@ class TestSevenRolled(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
         for player in player_list:
             player.resources = {'w':0, 'b':0, 'l':3, 'g':2, 'o':0}
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         board.round_num = 3
@@ -601,7 +666,6 @@ class TestSevenRolled(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
         for player in player_list:
             player.resources = {'w':0, 'b':0, 'l':3, 'g':2, 'o':0}
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         board.round_num = 3
@@ -627,7 +691,6 @@ class TestSevenRolled(unittest.TestCase):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
         for player in player_list:
             player.resources = {'w':5, 'b':5, 'l':3, 'g':2, 'o':1}
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         board.round_num = 3
@@ -703,7 +766,6 @@ class TestDevCardDeck(unittest.TestCase):
 class TestCanBuildRoads(unittest.TestCase):
     def test_places_for_road(self):
         player_list = [RandomPlayer(1)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         player_list[0].settlements.append((0, 0))
@@ -721,7 +783,6 @@ class TestCanBuildRoads(unittest.TestCase):
 class TestTradeBetweenPlayers(unittest.TestCase):
     def test_correct_possible_trades(self):
         player_list = [RandomPlayer(1), RandomPlayer(2), RandomPlayer(3)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         board.round_num = 2
@@ -747,7 +808,6 @@ class TestTradeBetweenPlayers(unittest.TestCase):
 class TestTradeWithBank(unittest.TestCase):
     def test_trade_bank(self):
         player_list = [RandomPlayer(1)]
-        settings.init()
         deck = Deck()
         board = Board(player_list, False)
         board.active_player = player_list[0]
