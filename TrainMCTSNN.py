@@ -7,7 +7,7 @@ args = {
     'checkpoint': 'trainExamplesMCTS/',
     'load_folder_file': ('bestNNet','best.pth.tar'),
     'numItersForTrainExamplesHistory': 10, 
-    'num_simulations': 20
+    'num_simulations': 20,
 }
 
 if __name__=="__main__":

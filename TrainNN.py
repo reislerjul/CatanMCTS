@@ -135,16 +135,18 @@ class TrainNN():
         It then pits the new neural network against the old one and a random player
         and accepts it if there is at least a marginal improvement in the win rate.
         """
-        for i in range(1, self.args['numIters'] + 1):
+        if self.args["load_from_checkpoint"] > 0:
+            self.loadModel()
+
+        for i in range(self.args["load_from_checkpoint"] + 1, self.args['numIters'] + 1):
             # bookkeeping
             print('------ITER ' + str(i) + '------')
             # examples of the iteration
             trainExamples = []
 
-            if not self.skipFirstSelfPlay or i > 1:
-                # Run the episodes
-                for j in range(self.args['numEps']):
-                    trainExamples.extend(self.executeEpisode(j + 1))
+            # Run the episodes
+            for j in range(self.args['numEps']):
+                trainExamples.extend(self.executeEpisode(j + 1))
 
             self.saveTrainExamples(i - 1, trainExamples)
             self.trainExamplesHistory.append(trainExamples)
@@ -208,18 +210,5 @@ class TrainNN():
             Pickler(f).dump(win_percent)
         f.closed
 
-    def loadTrainExamples(self):
-        modelFile = os.path.join(self.args['load_folder_file'][0], self.args['load_folder_file'][1])
-        examplesFile = modelFile + ".examples"
-        if not os.path.isfile(examplesFile):
-            print(examplesFile)
-            r = input("File with trainExamples not found. Continue? [y|n]")
-            if r != "y":
-                sys.exit()
-        else:
-            print("File with trainExamples found. Read it.")
-            with open(examplesFile, "rb") as f:
-                self.trainExamplesHistory = Unpickler(f).load()
-            f.closed
-            # examples based on the model were already collected (loaded)
-            self.skipFirstSelfPlay = True
+    def loadModel(self):
+        self.nnet.load_checkpoint(self.args['load_folder_file'][0], self.args['load_folder_file'][1])        

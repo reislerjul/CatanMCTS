@@ -6,10 +6,11 @@ args = {
     'arenaCompare': 50,
     'round_threshold': 100,
     'checkpoint': 'trainExamples/',
-    'load_folder_file': ('bestNNet','best.pth.tar'),
+    'load_folder_file': ('trainExamples/','temp.pth.tar'),
     'numItersForTrainExamplesHistory': 10, 
     'updateThreshold': 0.02, 
-    'randomCompare': 50
+    'randomCompare': 50, 
+    'load_from_checkpoint': 4
 }
 
 if __name__=="__main__":
