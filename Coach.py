@@ -23,7 +23,6 @@ class Coach():
         self.nnet = nn()
         self.args = args
         self.trainExamplesHistory = []    # history of examples from args.numItersForTrainExamplesHistory latest iterations
-        self.skipFirstSelfPlay = False # can be overriden in loadTrainExamples()
         self.move_to_index = pickle.load(open("AllPossibleActionDict.p", "rb"))
 
     def executeEpisode(self, iteration):
@@ -42,12 +41,12 @@ class Coach():
         """
         print("EXECUTING EPISODE" + str(iteration))
         trainExamples = []
-        counter = 0
         deck = Deck()
         players = [MCTSNNPlayer(1, self.args['num_simulations']), \
         MCTSNNPlayer(2, self.args['num_simulations']), MCTSNNPlayer(3, self.args['num_simulations'])]
         board = Board(players, True)
-        winner = None
+        winners = None
+        num_winners = 0
 
         while True:
             AI = MCTSNN(board, self.args['num_simulations'], deck, \
@@ -55,21 +54,27 @@ class Coach():
             pi = AI.getActionProb(temp=1)
             action = np.random.choice(len(pi), p=pi)
             canonicalBoard = AI.canonicalBoard
-            if counter % 5 == 0:
-                trainExamples.append([canonicalBoard, \
-                    board.active_player.player_num, pi])
+            trainExamples.append([canonicalBoard, \
+                board.active_player.player_num, pi])
             move = StateToFeatures.action_to_move(action, board.active_player.move_array, \
                 board.active_player, len(board.players), deck)
             board.active_player.make_move(move, board, deck, players)    
-
             if board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
-                winner = board.active_player.player_num
+                winners = set()
+                winners.add(board.active_player.player_num)
+                num_winners - 1
             if board.round_num >= self.args['round_threshold']:
-                winner = max([(player, player.calculate_vp()) for player in players], 
-                    key=lambda x: x[1])[0].player_num
-            if winner:
-                return [[x[0], x[2], (-1) ** int(x[1] != winner)] for x in trainExamples]
-            counter += 1
+                vps = [player.calculate_vp() for player in players]
+                most = max(vps)
+                winners = set()
+                for i in range(len(vps)):
+                    if vps[i] == most:
+                        winners.add(i + 1)
+                        num_winners += 1
+            if winners:                
+                return [[x[0], x[2], \
+                (-1) ** int(x[1] not in winners) / (1 if x[1] not in winners else num_winners)] \
+                for x in trainExamples]
 
     def learn(self):
         """
@@ -85,10 +90,9 @@ class Coach():
             # examples of the iteration
             trainExamples = []
 
-            if not self.skipFirstSelfPlay or i > 1:
-                # Run the episodes
-                for j in range(self.args['numEps']):
-                    trainExamples.extend(self.executeEpisode(j + 1))
+            # Run the episodes
+            for j in range(self.args['numEps']):
+                trainExamples.extend(self.executeEpisode(j + 1))
 
             self.saveTrainExamples(i - 1, trainExamples)
             self.trainExamplesHistory.append(trainExamples)
@@ -130,4 +134,3 @@ class Coach():
                 self.trainExamplesHistory = Unpickler(f).load()
             f.closed
             # examples based on the model were already collected (loaded)
-            self.skipFirstSelfPlay = True

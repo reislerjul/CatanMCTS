@@ -1,13 +1,13 @@
 from Coach import Coach
 
 args = {
-    'numIters': 40,
-    'numEps': 20,
-    'round_threshold': 70,
+    'numIters': 10,
+    'numEps': 10,
+    'round_threshold': 50,
     'checkpoint': 'trainExamplesMCTS/',
     'load_folder_file': ('bestNNet','best.pth.tar'),
-    'numItersForTrainExamplesHistory': 10, 
-    'num_simulations': 20,
+    'numItersForTrainExamplesHistory': 5, 
+    'num_simulations': 10,
 }
 
 if __name__=="__main__":
