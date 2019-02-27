@@ -13,8 +13,8 @@ import json
 import random
 import csv
 from utils import Card
-from CurrentNN import CurrentNN
-from NNetPlayer import NNetPlayer
+#from CurrentNN import CurrentNN
+#from NNetPlayer import NNetPlayer
 
 # This will contain the main method which will be the entry point into
 # playing the Catan game.
@@ -76,12 +76,12 @@ if __name__ == '__main__':
         elif player["type"] == "MCTS":
             MCTS_player = MCTSPlayer(index, int(player["num_simulations"]))
             player_list.append(MCTS_player)
-        elif player["type"] == "MCTSNN":
-            player_list.append(MCTSNNPlayer(index, int(player["num_simulations"])))
-            nn = CurrentNN()
-            current_nn = nn.currentNN
-        elif player["type"] == "NN":
-            player_list.append(NNetPlayer(index))
+        #elif player["type"] == "MCTSNN":
+        #    player_list.append(MCTSNNPlayer(index, int(player["num_simulations"])))
+        #    nn = CurrentNN()
+        #    current_nn = nn.currentNN
+        #elif player["type"] == "NN":
+        #    player_list.append(NNetPlayer(index))
         index += 1
 
     record_file = int(data["record_data"])
@@ -122,11 +122,11 @@ if __name__ == '__main__':
             elif player_list[j].player_type == Player.MCTS_AI:
                 player_list[j] = MCTSPlayer(j + 1, player_list[j].num_simulations)
                 MCTS_player = player_list[j]
-            elif player_list[j].player_type == Player.MCTSNN_AI:
+            #elif player_list[j].player_type == Player.MCTSNN_AI:
                 # TODO: neural net; right now it does a nn with random weights
-                player_list[j] = MCTSNNPlayer(j + 1, player_list[j].num_simulations)
-            elif player_list[j].player_type == Player.NNET:
-                player_list[j] = (NNetPlayer(j + 1))
+            #    player_list[j] = MCTSNNPlayer(j + 1, player_list[j].num_simulations)
+            #elif player_list[j].player_type == Player.NNET:
+            #    player_list[j] = (NNetPlayer(j + 1))
 
         winner, num_rounds, board = run_game(player_list, bool(int(data["random_board"])), current_nn)
         if record_file:
