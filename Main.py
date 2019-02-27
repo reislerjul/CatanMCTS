@@ -7,7 +7,7 @@ from Game import Game
 from RandomPlayer import RandomPlayer
 from MCTSPlayer import MCTSPlayer
 from Human import Human
-from MCTSNNPlayer import MCTSNNPlayer
+#from MCTSNNPlayer import MCTSNNPlayer
 import settings
 import json
 import random
