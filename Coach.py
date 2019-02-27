@@ -12,6 +12,63 @@ import StateToFeatures
 import settings
 from NNet import NNetWrapper as nn
 from MCTSNNPlayer import MCTSNNPlayer
+import multiprocessing as mp
+
+def saveEpisodeTrainExamples(args, iteration, examples):
+    folder = args['checkpoint']
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    filename = os.path.join(folder, "episode" + \
+        str(iteration) + ".examples")
+    with open(filename, "wb+") as f:
+        Pickler(f).dump(examples)
+    f.closed
+
+def parallelEpisode(argsIteration):
+    iteration = argsIteration[0]
+    args = argsIteration[1]
+    move_to_index = argsIteration[2]
+    print("EXECUTING EPISODE" + str(iteration))
+    trainExamples = []
+    deck = Deck()
+    players = [MCTSNNPlayer(1, args['num_simulations']), \
+    MCTSNNPlayer(2, args['num_simulations']), MCTSNNPlayer(3, args['num_simulations'])]
+    board = Board(players, True)
+    winners = None
+    num_winners = 0
+    nnet = nn()
+    nnet.load_checkpoint(args['load_folder_file'][0], args['load_folder_file'][1])
+
+    while True:
+        AI = MCTSNN(board, args['num_simulations'], deck, \
+            board.active_player.player_num, nnet, move_to_index)
+        pi = AI.getActionProb(temp=1)
+        action = np.random.choice(len(pi), p=pi)
+        canonicalBoard = AI.canonicalBoard
+        trainExamples.append([canonicalBoard, \
+            board.active_player.player_num, pi])
+        move = StateToFeatures.action_to_move(action, board.active_player.move_array, \
+            board.active_player, len(board.players), deck)
+        board.active_player.make_move(move, board, deck, players)    
+        if board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
+            winners = set()
+            winners.add(board.active_player.player_num)
+            num_winners = 1
+        if board.round_num >= args['round_threshold']:
+            vps = [player.calculate_vp() for player in players]
+            most = max(vps)
+            winners = set()
+            for i in range(len(vps)):
+                if vps[i] == most:
+                    winners.add(i + 1)
+                    num_winners += 1
+        if winners:
+            train = [[x[0], x[2], \
+            (-1) ** int(x[1] not in winners) / (1 if x[1] not in winners else num_winners)] \
+            for x in trainExamples]
+            saveEpisodeTrainExamples(args, iteration, train)
+            return train
 
 class Coach():
     """
@@ -25,6 +82,7 @@ class Coach():
         self.trainExamplesHistory = []    # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.move_to_index = pickle.load(open("AllPossibleActionDict.p", "rb"))
 
+    # One episode not run in parallel
     def executeEpisode(self, iteration):
         """
         This function executes one episode of self-play, starting with player 1.
@@ -62,7 +120,7 @@ class Coach():
             if board.active_player.calculate_vp() >= settings.POINTS_TO_WIN:
                 winners = set()
                 winners.add(board.active_player.player_num)
-                num_winners - 1
+                num_winners = 1
             if board.round_num >= self.args['round_threshold']:
                 vps = [player.calculate_vp() for player in players]
                 most = max(vps)
@@ -90,9 +148,19 @@ class Coach():
             # examples of the iteration
             trainExamples = []
 
-            # Run the episodes
+            # Run the episodes 
+            '''
             for j in range(self.args['numEps']):
                 trainExamples.extend(self.executeEpisode(j + 1))
+            '''
+
+            # Run the episodes in parallel
+            num_workers = mp.cpu_count()  
+            arguments = [(i, self.args, self.move_to_index) for i in range(self.args['numEps'])]
+            with mp.Pool(num_workers) as p:
+                data = p.map(parallelEpisode, arguments)
+            for element in data:
+                trainExamples.extend(element)
 
             self.saveTrainExamples(i - 1, trainExamples)
             self.trainExamplesHistory.append(trainExamples)

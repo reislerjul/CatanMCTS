@@ -5,7 +5,7 @@ args = {
     'numEps': 10,
     'round_threshold': 50,
     'checkpoint': 'trainExamplesMCTS/',
-    'load_folder_file': ('bestNNet','best.pth.tar'),
+    'load_folder_file': ('trainExamplesMCTS','temp.pth.tar'),
     'numItersForTrainExamplesHistory': 5, 
     'num_simulations': 10,
 }
