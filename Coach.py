@@ -144,7 +144,7 @@ class Coach():
         """
 
         # Load previous training data and neural net 
-        self.nnet.load_checkpoint(args['load_folder_file'][0], args['load_folder_file'][1])
+        self.nnet.load_checkpoint(self.args['load_folder_file'][0], self.args['load_folder_file'][1])
         examplesFile = "trainExamplesMCTS/checkpoint_0.pth.tar.examples"
         with open(examplesFile, "rb") as f:
             train = Unpickler(f).load()
