@@ -142,6 +142,15 @@ class Coach():
         It then pits the new neural network against the old one and a random player
         and accepts it if there is at least a marginal improvement in the win rate.
         """
+
+        # Load previous training data and neural net 
+        self.nnet.load_checkpoint(args['load_folder_file'][0], args['load_folder_file'][1])
+        examplesFile = "trainExamplesMCTS/checkpoint_0.pth.tar.examples"
+        with open(examplesFile, "rb") as f:
+            train = Unpickler(f).load()
+        f.closed
+        self.trainExamplesHistory.append(train)
+
         for i in range(1, self.args['numIters'] + 1):
             # bookkeeping
             print('------ITER ' + str(i) + '------')
@@ -149,18 +158,18 @@ class Coach():
             trainExamples = []
 
             # Run the episodes 
-            '''
             for j in range(self.args['numEps']):
                 trainExamples.extend(self.executeEpisode(j + 1))
-            '''
 
             # Run the episodes in parallel
+            '''
             num_workers = mp.cpu_count()  
             arguments = [(i, self.args, self.move_to_index) for i in range(self.args['numEps'])]
             with mp.Pool(num_workers) as p:
                 data = p.map(parallelEpisode, arguments)
             for element in data:
                 trainExamples.extend(element)
+            '''
 
             self.saveTrainExamples(i - 1, trainExamples)
             self.trainExamplesHistory.append(trainExamples)
