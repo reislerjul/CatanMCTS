@@ -7,8 +7,8 @@
             "type": "random"
         },
         {
-            "type": "MCTS",
-            "num_simulations": "100"
+            "type": "MCTSNN",
+            "num_simulations": "20"
         }, 
         {
             "type": "None"
