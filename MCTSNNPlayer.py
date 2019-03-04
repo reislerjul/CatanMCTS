@@ -11,6 +11,8 @@ class MCTSNNPlayer(Player):
         self.num_simulations = num_simulations
         self.move_to_index = pickle.load(open("AllPossibleActionDict.p", "rb"))
         self.move_array = pickle.load(open("AllPossibleActionVector.p", "rb"))
+        self.avg_cycles_per_move = [1, 1]
+        self.avg_legal_moves = [1, 1]
 
     def decide_move(self, board, deck, players, nn):
         if self.random:

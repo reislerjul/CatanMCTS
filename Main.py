@@ -131,8 +131,10 @@ if __name__ == '__main__':
                 MCTS_player = player_list[j]
             elif player_list[j].player_type == Player.MCTSNN_AI:
                 player_list[j] = MCTSNNPlayer(j + 1, player_list[j].num_simulations)
+                MCTS_player = player_list[j]
             elif player_list[j].player_type == Player.NNET:
                 player_list[j] = (NNetPlayer(j + 1))
+                MCTS_player = player_list[j]
 
         winner, num_rounds, board = run_game(player_list, bool(int(data["random_board"])), current_nn)
         if record_file:
